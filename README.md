@@ -1,3 +1,5 @@
+![NN Logo](logo.png)
+
 # Neural Nonsense
 #### A party game where you try to be funnier than an AI and your friends
 
