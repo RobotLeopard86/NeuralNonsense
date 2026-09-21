@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { fly } from 'svelte/transition';
 	import { ArrowLeftOutline, ArrowRightOutline } from 'flowbite-svelte-icons';
 
 	import Logo from '../components/Logo.svelte';
@@ -58,7 +57,3 @@
 		</div>
 	{/if}
 </main>
-
-<footer class="h-10">
-	<p class="text-center text-white/50 text-sm mb-8">&#169; 2026 Owen Z. Siebers. <a href="https://github.com/RobotLeopard86/NeuralNonsense"><u>Source code</u></a> available under the PolyForm Perimeter License 1.0.1.</p>
-</footer>

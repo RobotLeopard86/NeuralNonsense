@@ -17,4 +17,8 @@
 	<div class="relative z-10 min-h-screen flex flex-col justify-self-center items-center justify-center px-6 py-12 gap-5 md:w-1/2 lg:w-1/3">
 		<Router {routes} />
 	</div>
+
+	<footer class="h-10">
+		<p class="text-center text-white/50 text-sm mb-8">&#169; 2026 Owen Z. Siebers. <a href="https://github.com/RobotLeopard86/NeuralNonsense"><u>Source code</u></a> available under the PolyForm Perimeter License 1.0.1.</p>
+	</footer>
 </div>

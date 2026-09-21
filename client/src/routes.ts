@@ -1,5 +1,9 @@
 import Home from './routes/Home.svelte';
+import JoinLink from './routes/JoinLink.svelte';
+import Lobby from './routes/Lobby.svelte';
 
 export default {
-	'/': Home
+	'/': Home,
+	'/join/:code': JoinLink,
+	'/lobby': Lobby
 }
