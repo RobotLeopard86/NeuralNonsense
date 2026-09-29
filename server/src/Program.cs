@@ -17,6 +17,8 @@ if(app.Environment.IsDevelopment()) {
 }
 app.UseCors();
 app.UseHttpsRedirection();
+app.MapHub<NeuralNonsense.NNHub>("/hub");
+app.MapPost("/api/join");
 
 //Run
 app.Run();
