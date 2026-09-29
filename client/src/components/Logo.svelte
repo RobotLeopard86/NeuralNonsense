@@ -1,5 +1,5 @@
 <script lang="ts">
-	import logo from '../assets/logo.png';
+	import logo from "../assets/logo.png";
 </script>
 
 <div class="w-1/2 mx-auto">
