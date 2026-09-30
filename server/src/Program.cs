@@ -1,3 +1,5 @@
+using NeuralNonsense;
+
 //Setup ASP.NET
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -18,7 +20,7 @@ if(app.Environment.IsDevelopment()) {
 app.UseCors();
 app.UseHttpsRedirection();
 app.MapHub<NeuralNonsense.NNHub>("/hub");
-app.MapPost("/api/join");
+app.MapPost("/api/join", async () => API.instance.Test());
 
 //Run
 app.Run();
