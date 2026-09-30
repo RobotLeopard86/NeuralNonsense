@@ -2,13 +2,16 @@ import * as SignalR from "@microsoft/signalr";
 import { game } from "./state.svelte";
 
 let hc: SignalR.HubConnection | null = null;
+export const connection = () => {
+    if (hc) return hc;
+    else throw "The connection is not available yet, you idiot!"
+};
 
 const configureHandlers = () => {
     //TODO
 }
 
-export const connection = () => {
-    if(hc) return hc;
+export const connect = async () => {
     hc = new SignalR.HubConnectionBuilder()
         .withUrl("/hub", {
             accessTokenFactory: () => game.token
@@ -17,5 +20,5 @@ export const connection = () => {
         .withAutomaticReconnect()
         .build();
     configureHandlers();
-    return hc;
-};
+    await hc.start();
+}
