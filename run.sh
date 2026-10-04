@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-CMD1="${1:-(cd client; pnpm dev)}"
+CMD1="${1:-(cd client; pnpm dev --host)}"
 CMD2="${2:-(cd server; dotnet run)}"
 SESSION="dual-pane-$$"   # unique per invocation; avoids clashing with existing sessions
 

@@ -22,8 +22,8 @@
 
 <main class="mb-auto w-full flex flex-col items-center px-4">
 	{#if phase == "Initial"}
-		<NeonButton variant="Cyan" onclick={() => (phase = "Join")} class="w-full max-w-md my-4">Join an Existing Game</NeonButton>
-		<NeonButton variant="Red" onclick={() => (phase = "Create")} class="w-full max-w-md my-4">Create a New Game</NeonButton>
+		<NeonButton variant="Cyan" onclick={() => (phase = "Join")} class="w-full max-w-md my-4">Join an Existing Room</NeonButton>
+		<NeonButton variant="Red" onclick={() => (phase = "Create")} class="w-full max-w-md my-4">Create a New Room</NeonButton>
 	{:else if phase == "Join"}
 		<div class="flex flex-col max-w-md w-full">
 			<button class="text-left text-white/50 text-sm mb-8 flex flex-row hover:text-white/75 transition-colors" onclick={() => (phase = "Initial")}
