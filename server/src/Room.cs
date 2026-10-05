@@ -24,5 +24,11 @@ namespace NeuralNonsense {
 		public string code = "";
 		public Phase phase = Phase.Lobby;
 		public List<Player> players = new List<Player>();
+
+		public async Task RunAsync() {
+			while(true) {
+				//TODO
+			}
+		}
 	}
 }

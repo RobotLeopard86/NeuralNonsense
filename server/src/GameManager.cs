@@ -17,6 +17,7 @@ namespace NeuralNonsense {
 			} while(!badWordChecker.IsOffensive(code) && !rooms.ContainsKey(code) && rooms.TryAdd(code, new Room()));
 			Room room = rooms[code];
 			room.code = code;
+			_ = room.RunAsync();
 			return code;
 		}
 	}
