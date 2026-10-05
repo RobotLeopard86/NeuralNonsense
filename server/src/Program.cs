@@ -1,7 +1,16 @@
 using NeuralNonsense;
+using System.Security.Cryptography.X509Certificates;
 
 //Setup ASP.NET
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+
+//Configure HTTPS certificates
+X509Certificate2 cert = X509Certificate2.CreateFromPemFile("../.certs/cert.pem", "../.certs/dev.pem");
+builder.WebHost.ConfigureKestrel(kopts => {
+	kopts.ListenAnyIP(6171, lopts => {
+		lopts.UseHttps(cert);
+	});
+});
 
 //Configure services
 builder.Services.AddSignalR();
@@ -17,9 +26,8 @@ if(app.Environment.IsDevelopment()) {
 	app.UseHsts();
 	app.UseExceptionHandler("/Error");
 }
-app.UseCors();
 app.UseHttpsRedirection();
-app.MapHub<NeuralNonsense.NNHub>("/hub");
+app.MapHub<NNHub>("/hub");
 app.MapPost("/api/join", async () => API.instance.Test());
 
 //Run

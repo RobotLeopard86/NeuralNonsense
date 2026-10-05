@@ -6,6 +6,7 @@ dist/
 build/
 .svelte-kit/
 .output/
+.certs
 
 # Vite
 .vite/

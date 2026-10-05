@@ -15,8 +15,12 @@ Neural Nonsense's code is provided under the terms of the PolyForm Perimeter Lic
 ## Project Structure
 This repository is structured into two parts: the client and server, the code for which can be found in the respectively-named directories.  
 
-The client is written using Svelte, TailwindCSS, and TypeScript.  
+The client is written using Svelte 5, TailwindCSS, and TypeScript.  
 
-The server is written in C# using ASP.NET, using AWS services to handle LLM calls and databases in production. Local development uses Ollama and SQLite.  
-Neural Nonsense's game server runs in an OCI container that can be built using the included `Containerfile` in production.
+The server is written in C# using ASP.NET with SignalR and stores all state in-memory. There is no external database.
 
+## How to Run
+First, install dependencies. You'll need Node.js, PNPM, and the .NET SDK including ASP.NET.  
+
+Then, simply clone the repository and use the provided `run.sh` script. Neural Nonsense is designed to run on Unix-like systems **only**. Do not expect to get it running on Windows.  
+On first run, all necessary NPM packages will be installed via `pnpm`. The development HTTPS certificate will also be created at this point, and will ask for a root password to generate it.

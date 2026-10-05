@@ -29,7 +29,6 @@
 		" " +
 		(props.class || "")}
 	onclick={props.onclick}
-	disabled={props.disabled}
->
+	disabled={props.disabled}>
 	{@render props.children?.()}
 </button>

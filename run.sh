@@ -3,7 +3,7 @@
 set -euo pipefail
 
 CMD1="${1:-(cd client; pnpm dev --host)}"
-CMD2="${2:-(cd server; dotnet run)}"
+CMD2="${2:-(cd server; dotnet watch)}"
 SESSION="dual-pane-$$"   # unique per invocation; avoids clashing with existing sessions
 
 if ! command -v tmux >/dev/null 2>&1; then
