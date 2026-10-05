@@ -1,8 +1,20 @@
 <script lang="ts">
 	import Card from "../components/Card.svelte";
 	import Logo from "../components/Logo.svelte";
-	import SvgQR from "@svelte-put/qr/svg/QR.svelte";
+	import SVGQR from "@svelte-put/qr/svg/QR.svelte";
 	import { game } from "../lib/state.svelte";
+	import { onMount } from "svelte";
+	import { connection } from "../lib/connection.svelte";
+	import { push } from "svelte-spa-router";
+
+	onMount(() => {
+		try {
+			connection();
+		} catch (_) {
+			console.log("No session exists, redirecting to home...");
+			push("/");
+		}
+	});
 
 	let joinLink = $derived.by(() => "https://" + window.location.host + "/#/join/" + game.roomCode.toLowerCase());
 </script>
@@ -29,7 +41,7 @@
 				<p class="text-center text-white font-bold text-md">Or, scan me:</p>
 				<div class="flex-row justify-items-center">
 					<div class="rounded-2xl w-1/2 bg-white border-black border-5">
-						<SvgQR data={joinLink} class="inset-3"></SvgQR>
+						<SVGQR data={joinLink} class="inset-3" />
 					</div>
 				</div>
 			</div>

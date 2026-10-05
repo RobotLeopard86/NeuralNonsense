@@ -2,9 +2,14 @@
 
 set -euo pipefail
 
+if ! [ -d ".certs" ]; then
+    echo "error: please run ./setup.sh first" >&2
+    exit 1
+fi
+
 CMD1="${1:-(cd client; pnpm dev --host)}"
 CMD2="${2:-(cd server; dotnet watch)}"
-SESSION="dual-pane-$$"   # unique per invocation; avoids clashing with existing sessions
+SESSION="nnrun-dualpane-$$"   # unique per invocation; avoids clashing with existing sessions
 
 if ! command -v tmux >/dev/null 2>&1; then
     echo "error: tmux is not installed" >&2
