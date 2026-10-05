@@ -28,12 +28,15 @@ if(app.Environment.IsDevelopment()) {
 	app.UseExceptionHandler("/Error");
 }
 app.UseHttpsRedirection();
-app.MapHub<NNHub>("/hub");
-app.MapPost("/api/join", async ctx => {});
+app.MapHub<NNHub>("/portal/hub");
+app.MapPost("/portal/create", async() => {
+	string code = await GameManager.instance.CreateRoom();
+	return Results.Ok("{\"code\": \"" + code + "\"}");
+});
 
 //Get hub context
 app.Use(async (ctx, next) => {
-	RoomManager.instance.hubCtx = ctx.RequestServices.GetRequiredService<IHubContext<NNHub>>();
+	GameManager.instance.hubCtx = ctx.RequestServices.GetRequiredService<IHubContext<NNHub>>();
 	if(next != null) await next.Invoke();
 });
 

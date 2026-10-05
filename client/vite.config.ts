@@ -10,8 +10,8 @@ export default defineConfig({
   ],
   server: {
     proxy: {
-      '/hub': {target: 'https://localhost:6171', ws: true, changeOrigin: true},
-      '/api': {target: 'https://localhost:6171', ws: true, changeOrigin: true}
+      '/portal':
+          {target: 'https://localhost:6171', ws: true, changeOrigin: true},
     }
   }
 })
