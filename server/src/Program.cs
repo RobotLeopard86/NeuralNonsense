@@ -1,4 +1,5 @@
 using NeuralNonsense;
+using Microsoft.AspNetCore.SignalR;
 using System.Security.Cryptography.X509Certificates;
 
 //Setup ASP.NET
@@ -28,7 +29,13 @@ if(app.Environment.IsDevelopment()) {
 }
 app.UseHttpsRedirection();
 app.MapHub<NNHub>("/hub");
-app.MapPost("/api/join", async () => API.instance.Test());
+app.MapPost("/api/join", async ctx => {});
+
+//Get hub context
+app.Use(async (ctx, next) => {
+	RoomManager.instance.hubCtx = ctx.RequestServices.GetRequiredService<IHubContext<NNHub>>();
+	if(next != null) await next.Invoke();
+});
 
 //Run
 app.Run();
