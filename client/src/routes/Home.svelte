@@ -4,8 +4,8 @@
 	import Logo from "../components/Logo.svelte";
 	import NeonButton from "../components/NeonButton.svelte";
 	import TextField from "../components/TextField.svelte";
-    import { game } from "../lib/state.svelte";
-    import { push } from "svelte-spa-router";
+	import { game } from "../lib/state.svelte";
+	import { push } from "svelte-spa-router";
 
 	type Phase = "Initial" | "Join" | "Create";
 	let phase: Phase = $state("Initial");
@@ -18,16 +18,16 @@
 
 	let canJoin = $derived(playerName && roomCode && roomCode.length === 4);
 
-	const join = async() => {
+	const join = async () => {
 		game.roomCode = roomCode;
 		push("/lobby");
 	};
 
-	const create = async() => {
+	const create = async () => {
 		const result = await fetch("/portal/create", {
-			method: "POST"	
+			method: "POST",
 		});
-		if(!result.ok) {
+		if (!result.ok) {
 			alert("ERROR!");
 			return;
 		}
@@ -46,14 +46,16 @@
 		<NeonButton variant="Red" onclick={() => (phase = "Create")} class="w-full max-w-md my-4">Create a New Room</NeonButton>
 	{:else if phase == "Join"}
 		<div class="flex flex-col max-w-md w-full">
-			<button class="text-left text-white/50 text-sm mb-8 flex flex-row hover:text-white/75 transition-colors" onclick={() => (phase = "Initial")}><ArrowLeftOutline size="md" /> Back</button>
+			<button class="text-left text-white/50 text-sm mb-8 flex flex-row hover:text-white/75 transition-colors" onclick={() => (phase = "Initial")}
+				><ArrowLeftOutline size="md" /> Back</button
+			>
 			<p class="text-left text-white/50 text-md mb-2">YOUR NAME</p>
 			<TextField placeholder="What will you call yourself?" bind:value={playerName} class="w-full max-w-md" maxLength={20} />
 			<br />
 			<p class="text-left text-white/50 text-md mb-2">ROOM CODE</p>
 			<input
 				type="text"
-				maxlength="4"
+				maxlength="6"
 				placeholder="CODE"
 				bind:value={roomCode}
 				class="w-full max-w-md focus:outline-none px-8 py-4 rounded-2xl text-lg bg-white/5 border-2 border-white/10 text-white placeholder:text-white/30 font-bold text-center tracking-[1em] placeholder:tracking-normal placeholder:font-normal"
@@ -65,21 +67,19 @@
 					alert(`You joined game ${roomCode} as ${playerName}!`);
 				}}
 				class="w-full max-w-md my-4"
-				disabled={!canJoin}>Join Game <ArrowRightOutline size="xl" />
+				disabled={!canJoin}
+				>Join Game <ArrowRightOutline size="xl" />
 			</NeonButton>
 		</div>
 	{:else if phase == "Create"}
 		<div class="flex flex-col max-w-md w-full">
-			<button class="text-left text-white/50 text-sm mb-8 flex flex-row hover:text-white/75 transition-colors" onclick={() => (phase = "Initial")}><ArrowLeftOutline size="md" /> Back</button>
+			<button class="text-left text-white/50 text-sm mb-8 flex flex-row hover:text-white/75 transition-colors" onclick={() => (phase = "Initial")}
+				><ArrowLeftOutline size="md" /> Back</button
+			>
 			<p class="text-left text-white/50 text-md mb-2">YOUR NAME</p>
 			<TextField placeholder="What will you call yourself?" bind:value={playerName} class="w-full max-w-md" maxLength={20} />
 			<br />
-			<NeonButton
-				variant="Red"
-				onclick={create}
-				class="w-full max-w-md my-4"
-				disabled={!playerName}>Create <ArrowRightOutline size="xl" />
-			</NeonButton>
+			<NeonButton variant="Red" onclick={create} class="w-full max-w-md my-4" disabled={!playerName}>Create <ArrowRightOutline size="xl" /></NeonButton>
 		</div>
 	{/if}
 </main>

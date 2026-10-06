@@ -28,10 +28,30 @@ if(app.Environment.IsDevelopment()) {
 	app.UseExceptionHandler("/Error");
 }
 app.UseHttpsRedirection();
+
+//Map routes
 app.MapHub<NNHub>("/portal/hub");
-app.MapPost("/portal/create", async() => {
-	string code = await GameManager.instance.CreateRoom();
-	return Results.Ok("{\"code\": \"" + code + "\"}");
+app.MapPost("/portal/create", async () => {
+	try {
+		CreateRoomResponse res = new CreateRoomResponse {
+			code = await GameManager.instance.CreateRoom()
+		};
+		return Results.Json(res, statusCode: StatusCodes.Status200OK);
+	} catch(ClientCausedException e) {
+		return Results.BadRequest(e.Message);
+	} catch(ServerCausedException e) {
+		return Results.InternalServerError(e.Message);
+	}
+});
+app.MapPost("/portal/join", async (JoinRoomRequest req) => {
+	try {
+		JoinRoomResponse res = await GameManager.instance.JoinRoom(req.code, req.playerName);
+		return Results.Json(res, statusCode: StatusCodes.Status200OK);
+	} catch(ClientCausedException e) {
+		return Results.BadRequest(e.Message);
+	} catch(ServerCausedException e) {
+		return Results.InternalServerError(e.Message);
+	}
 });
 
 //Get hub context

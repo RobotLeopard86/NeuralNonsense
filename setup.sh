@@ -61,8 +61,12 @@ if [ "$ASP_OK" == "1" ] || [ "$NET_OK" == "1" ]; then
     exit 1
 fi
 
+echo -e "\nrestoring .net server dependencies... "
+cd server
+dotnet restore
+
 echo -e "\ninstalling npm packages..."
-cd client
+cd ../client
 pnpm i
 
 echo "generating certificates (you may be asked to authenticate)..."

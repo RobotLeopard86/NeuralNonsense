@@ -13,9 +13,7 @@ const configureHandlers = () => {
 
 export const connect = async () => {
     hc = new SignalR.HubConnectionBuilder()
-        .withUrl("/portal/hub", {
-            accessTokenFactory: () => game.token
-        })
+        .withUrl("/portal/hub")
         .configureLogging(SignalR.LogLevel.Information)
         .withAutomaticReconnect()
         .build();
