@@ -7,7 +7,7 @@ namespace NeuralNonsense {
         public string playerName;
     }
     public struct JoinRoomResponse {
-        public string playerUUID;
+        public string memberID;
     }
 
     public class ClientCausedException : Exception {

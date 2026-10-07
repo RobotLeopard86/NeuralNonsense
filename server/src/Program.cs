@@ -1,8 +1,11 @@
 using NeuralNonsense;
 using Microsoft.AspNetCore.SignalR;
 using System.Security.Cryptography.X509Certificates;
+using System.Text.Json.Serialization;
+using System.Text.Json;
 
 //Setup ASP.NET
+Environment.SetEnvironmentVariable("DOTNET_hostBuilder:reloadConfigOnChange", "false");
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 //Configure HTTPS certificates
@@ -15,6 +18,9 @@ builder.WebHost.ConfigureKestrel(kopts => {
 
 //Configure services
 builder.Services.AddSignalR();
+builder.Services.ConfigureHttpJsonOptions(options => {
+    options.SerializerOptions.IncludeFields = true;
+});
 if(builder.Environment.IsDevelopment()) builder.Services.AddCors(options => {
 	options.AddDefaultPolicy(builder => {
 		builder.WithOrigins("http://localhost:5173", "https://localhost:5173").AllowAnyHeader().AllowAnyMethod().AllowCredentials();
@@ -34,7 +40,7 @@ app.MapHub<NNHub>("/portal/hub");
 app.MapPost("/portal/create", async () => {
 	try {
 		CreateRoomResponse res = new CreateRoomResponse {
-			code = await GameManager.instance.CreateRoom()
+			code = await GameManager.instance.CreateRoom(app.Lifetime.ApplicationStopping)
 		};
 		return Results.Json(res, statusCode: StatusCodes.Status200OK);
 	} catch(ClientCausedException e) {
