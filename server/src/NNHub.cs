@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 
 namespace NeuralNonsense {
@@ -5,9 +6,14 @@ namespace NeuralNonsense {
         Task ConnectionEstablished();
     }
 
+    [Authorize]
     public class NNHub : Hub<INNClient> {
-        public async Task Connect() {
+        private Room ResolveRoom() {
 
+        }
+
+        public override Task OnConnectedAsync() {
+            return base.OnConnectedAsync();
         }
     }
 }

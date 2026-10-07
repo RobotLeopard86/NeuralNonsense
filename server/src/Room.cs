@@ -36,14 +36,16 @@ namespace NeuralNonsense {
 			public Kind kind;
 			public CancellationTokenSource cancel;
 			public long dueBy;
-			public object? additionalData;
+			public object additionalData;
 		}
 		private List<Deadline> deadlines = new List<Deadline>();
 
 		public string code = "";
 		public Phase phase = Phase.Lobby;
-		public List<Member> members = new List<Member>();
+		public Dictionary<string, Member> members = new Dictionary<string, Member>(); //UUID, member object
+
 		public string hostUUID = "";
+		private uint numProjectorsConnected = 0;
 
 		private Channel<Command> commandQueue;
 		public ChannelWriter<Command> writer;
@@ -60,10 +62,14 @@ namespace NeuralNonsense {
 			return TimeProvider.System.GetTimestamp() + (TimeProvider.System.TimestampFrequency * seconds);
 		}
 
+		private void RemoveMemberAndPromote(string uuid) {
+
+		}
+
 		private void HandleInitialJoin(InitialJoinCommand ijc) {
 			//Check member slot availability
-			if(members.Count > 32) throw new ServerCausedException("Too many people in this room!");
-			if(members.Count((m) => m.name == ijc.playerName) > 0) throw new ClientCausedException("Name is in use!");
+			if(members.Count > (32 + numProjectorsConnected)) throw new ServerCausedException("Too many people in this room!");
+			if(members.Count((m) => m.Value.name == ijc.playerName) > 0) throw new ClientCausedException("Name is in use!");
 
 			//Create member object
 			Member member = new Member() {
@@ -75,7 +81,7 @@ namespace NeuralNonsense {
 					return members.Count <= 8 ? Member.Type.Player : Member.Type.Audience;
 				}).Invoke()
 			};
-			members.Add(member);
+			members.Add(member.uuid, member);
 
 			//Default host
 			if(members.Count == 1) hostUUID = member.uuid;
@@ -99,61 +105,66 @@ namespace NeuralNonsense {
 
 		public async Task RunAsync(CancellationToken token) {
 			while(!token.IsCancellationRequested) {
-				//Process commands
-				Command? cmd;
-				while(commandQueue.Reader.TryRead(out cmd)) {
-					switch(cmd) {
-						case InitialJoinCommand ijc:
-							HandleInitialJoin(ijc);
-							break;
-					}
-				}
-
-				//Check deadlines
-				List<Deadline> toRemove = new List<Deadline>();
-				long untilNext = long.MaxValue;
-				long now = TimeProvider.System.GetTimestamp();
-				foreach(Deadline deadline in deadlines) {
-					if(deadline.cancel.IsCancellationRequested) {
-						toRemove.Add(deadline);
-						continue;
-					}
-					if(deadline.dueBy >= now) {
-						toRemove.Add(deadline);
-						switch(deadline.kind) {
-							case Deadline.Kind.JoinExpire:
+				try {
+					//Process commands
+					Command? cmd;
+					while(commandQueue.Reader.TryRead(out cmd)) {
+						switch(cmd) {
+							case InitialJoinCommand ijc:
+								HandleInitialJoin(ijc);
 								break;
 						}
-						continue;
 					}
-					untilNext = Math.Min(untilNext, deadline.dueBy - now);
-				}
-				deadlines.RemoveAll((d) => toRemove.Contains(d));
 
-				//Game state machine
-				switch(phase) {
-					case Phase.Lobby:
-						break;
-					case Phase.ContentGen:
-						break;
-					case Phase.R1Answer:
-						break;
-					case Phase.R1Vote:
-						break;
-					case Phase.R2Answer:
-						break;
-					case Phase.R2Vote:
-						break;
-					case Phase.R3Answer:
-						break;
-					case Phase.R3Vote:
-						break;
-					case Phase.Results:
-						break;
-				}
+					//Check deadlines
+					List<Deadline> toRemove = new List<Deadline>();
+					long untilNext = long.MaxValue;
+					long now = TimeProvider.System.GetTimestamp();
+					foreach(Deadline deadline in deadlines) {
+						if(deadline.cancel.IsCancellationRequested) {
+							toRemove.Add(deadline);
+							continue;
+						}
+						if(deadline.dueBy >= now) {
+							toRemove.Add(deadline);
+							switch(deadline.kind) {
+								case Deadline.Kind.JoinExpire:
+									RemoveMemberAndPromote(deadline.additionalData as string);
+									break;
+							}
+							continue;
+						}
+						untilNext = Math.Min(untilNext, deadline.dueBy - now);
+					}
+					deadlines.RemoveAll((d) => toRemove.Contains(d));
 
-				//Wait until we get a new command or until the next deadline
-				await commandQueue.Reader.WaitToReadAsync(token);
+					//Game state machine
+					switch(phase) {
+						case Phase.Lobby:
+							break;
+						case Phase.ContentGen:
+							break;
+						case Phase.R1Answer:
+							break;
+						case Phase.R1Vote:
+							break;
+						case Phase.R2Answer:
+							break;
+						case Phase.R2Vote:
+							break;
+						case Phase.R3Answer:
+							break;
+						case Phase.R3Vote:
+							break;
+						case Phase.Results:
+							break;
+					}
+
+					//Wait until we get a new command or until the next deadline
+					await commandQueue.Reader.WaitToReadAsync(token);
+				} catch(Exception e) {
+					Console.Error.WriteLine("ROOM " + code + " ERROR: " + e.Message);
+				}
 			}
 		}
 	}

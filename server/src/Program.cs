@@ -1,8 +1,6 @@
 using NeuralNonsense;
 using Microsoft.AspNetCore.SignalR;
 using System.Security.Cryptography.X509Certificates;
-using System.Text.Json.Serialization;
-using System.Text.Json;
 
 //Setup ASP.NET
 Environment.SetEnvironmentVariable("DOTNET_hostBuilder:reloadConfigOnChange", "false");
@@ -19,13 +17,14 @@ builder.WebHost.ConfigureKestrel(kopts => {
 //Configure services
 builder.Services.AddSignalR();
 builder.Services.ConfigureHttpJsonOptions(options => {
-    options.SerializerOptions.IncludeFields = true;
+	options.SerializerOptions.IncludeFields = true;
 });
 if(builder.Environment.IsDevelopment()) builder.Services.AddCors(options => {
 	options.AddDefaultPolicy(builder => {
 		builder.WithOrigins("http://localhost:5173", "https://localhost:5173").AllowAnyHeader().AllowAnyMethod().AllowCredentials();
 	});
 });
+builder.Services.AddAuthentication().AddJwtBearer();
 
 //Prepare app
 WebApplication app = builder.Build();
