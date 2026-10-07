@@ -88,10 +88,11 @@ namespace NeuralNonsense {
 				additionalData = member.uuid
 			};
 			deadlines.Add(expiry);
-			
+
 			//Reply
 			JoinRoomResponse jrr = new JoinRoomResponse() {
-				memberID = member.uuid
+				memberID = member.uuid,
+				type = member.type
 			};
 			ijc.task.SetResult(jrr);
 		}

@@ -8,6 +8,7 @@ namespace NeuralNonsense {
     }
     public struct JoinRoomResponse {
         public string memberID;
+        public Room.Member.Type type;
     }
 
     public class ClientCausedException : Exception {
