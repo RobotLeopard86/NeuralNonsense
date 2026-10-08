@@ -7,30 +7,27 @@ namespace NeuralNonsense {
 		public static GameManager instance = new GameManager();
 
 		public ConcurrentDictionary<string, Room> rooms = new ConcurrentDictionary<string, Room>();
-		public IHubContext<NNHub>? hubCtx;
-		public BadWordChecker badWordChecker = new FakeBadWordChecker();
 
 		public async Task<string> CreateRoom(CancellationToken shutdownToken) {
-			const string alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 			string code;
 			do {
-				code = Random.Shared.GetString(alphabet, 6);
-			} while(!badWordChecker.IsOffensive(code) && !rooms.ContainsKey(code) && rooms.TryAdd(code, new Room()));
+				code = Random.Shared.GetString(Constants.ROOM_CODE_ALPHABET, (int)Constants.ROOM_CODE_LENGTH);
+			} while(!ServiceContainer.instance.badWordChecker.IsOffensive(code) && !rooms.ContainsKey(code) && rooms.TryAdd(code, new Room()));
 			Room room = rooms[code];
 			room.code = code;
 			_ = room.RunAsync(shutdownToken);
 			return code;
 		}
 
-		public async Task<JoinRoomResponse> JoinRoom(string roomCode, string playerName) {
-			if(roomCode.Length != 6) throw new ClientCausedException("Invalid room code!");
-			if(roomCode.Count((c) => !"ABCDEFGHIJKLMNOPQRSTUVWXYZ".Contains(c)) > 0) throw new ClientCausedException("Invalid room code!");
-			if(!rooms.ContainsKey(roomCode)) throw new ClientCausedException("No such room!");
-			if(badWordChecker.IsOffensive(playerName)) throw new ClientCausedException("No bad words in names, please!");
+		public async Task<JoinRoomResponse> JoinRoom(JoinRoomRequest req) {
+			if(req.code.Length != Constants.ROOM_CODE_LENGTH) throw new ClientCausedException("Invalid room code!");
+			if(req.code.Count((c) => !Constants.ROOM_CODE_ALPHABET.Contains(c)) > 0) throw new ClientCausedException("Invalid room code!");
+			if(!rooms.ContainsKey(req.code)) throw new ClientCausedException("No such room!");
+			if(!Constants.MASTER_MODERATION_DISABLE && ServiceContainer.instance.badWordChecker.IsOffensive(req.name)) throw new ClientCausedException("No bad words in names, please!");
 			InitialJoinCommand ijc = new InitialJoinCommand() {
-				playerName = playerName
+				name = req.name
 			};
-			await rooms[roomCode].writer.WriteAsync(ijc);
+			await rooms[req.code].writer.WriteAsync(ijc);
 			await ijc.task.Task;
 			return ijc.task.Task.Result;
 		}

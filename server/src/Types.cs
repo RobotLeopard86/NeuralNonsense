@@ -4,7 +4,7 @@ namespace NeuralNonsense {
     }
     public struct JoinRoomRequest {
         public string code;
-        public string playerName;
+        public string name;
     }
     public struct JoinRoomResponse {
         public string memberID;

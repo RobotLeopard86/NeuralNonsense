@@ -1,9 +1,9 @@
 namespace NeuralNonsense {
-	public interface BadWordChecker {
+	public interface IBadWordCheckerService {
 		public bool IsOffensive(string input);
 	}
 
-	public sealed class FakeBadWordChecker : BadWordChecker {
+	public sealed class FakeBadWordCheckerService : IBadWordCheckerService {
 		public bool IsOffensive(string input) {
 			return false;
 		}

@@ -69,11 +69,11 @@ namespace NeuralNonsense {
 		private void HandleInitialJoin(InitialJoinCommand ijc) {
 			//Check member slot availability
 			if(members.Count > (32 + numProjectorsConnected)) throw new ServerCausedException("Too many people in this room!");
-			if(members.Count((m) => m.Value.name == ijc.playerName) > 0) throw new ClientCausedException("Name is in use!");
+			if(members.Count((m) => m.Value.name == ijc.name) > 0) throw new ClientCausedException("Name is in use!");
 
 			//Create member object
 			Member member = new Member() {
-				name = ijc.playerName,
+				name = ijc.name,
 				uuid = Guid.NewGuid().ToString(),
 				score = 0,
 				type = new Func<Member.Type>(() => {
@@ -103,6 +103,10 @@ namespace NeuralNonsense {
 			ijc.task.SetResult(jrr);
 		}
 
+		private void HandleMemberConnectionComplete(MemberConnectionCompleteCommand mccc) {
+			deadlines.First(deadline => deadline.kind == Deadline.Kind.JoinExpire && (deadline.additionalData as string) == mccc.memberID).cancel.Cancel();
+		}
+
 		public async Task RunAsync(CancellationToken token) {
 			while(!token.IsCancellationRequested) {
 				try {
@@ -112,6 +116,9 @@ namespace NeuralNonsense {
 						switch(cmd) {
 							case InitialJoinCommand ijc:
 								HandleInitialJoin(ijc);
+								break;
+							case MemberConnectionCompleteCommand mccc:
+								HandleMemberConnectionComplete(mccc);
 								break;
 						}
 					}
@@ -129,7 +136,7 @@ namespace NeuralNonsense {
 							toRemove.Add(deadline);
 							switch(deadline.kind) {
 								case Deadline.Kind.JoinExpire:
-									RemoveMemberAndPromote(deadline.additionalData as string);
+									RemoveMemberAndPromote(deadline.additionalData as string ?? throw new ServerCausedException("Unexpected deadline data format error!"));
 									break;
 							}
 							continue;
