@@ -15,7 +15,3 @@ export let game: GameState = $state({
 	type: MemberType.Spectator,
 	score: 0
 });
-
-$effect.pre(() => {
-	localStorage.setItem("nn:tkn", game.token);
-})

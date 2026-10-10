@@ -4,36 +4,44 @@
 	import Logo from "../components/Logo.svelte";
 	import NeonButton from "../components/NeonButton.svelte";
 	import TextField from "../components/TextField.svelte";
-	import { game } from "../lib/state.svelte";
-	import { push } from "svelte-spa-router";
+	import { game, MemberType } from "../lib/state.svelte";
+    import { connect, joinGame, rejoinIfConnected } from "../lib/connection.svelte";
+    import { onMount } from "svelte";
+    import { push } from "svelte-spa-router";
 
 	type Phase = "Initial" | "Join" | "Create";
 	let phase: Phase = $state("Initial");
 
-	let playerName = $state("");
+	let memberName = $state("");
 	let roomCode = $state("");
 	$effect(() => {
 		roomCode = roomCode.toUpperCase();
 	});
 
-	let canJoin = $derived(playerName && roomCode && roomCode.length === 4);
+	let canJoin = $derived(memberName && roomCode && roomCode.length === 6);
+
+	onMount(rejoinIfConnected);
 
 	const join = async () => {
-		game.roomCode = roomCode;
-		push("/lobby");
+		joinGame(roomCode, memberName);
 	};
 
 	const create = async () => {
+		//Call room creation endpoint
 		const result = await fetch("/portal/create", {
 			method: "POST",
 		});
+
+		//Alert if it went wrong
 		if (!result.ok) {
-			alert("ERROR!");
+			alert("Failed to create room!");
 			return;
 		}
-		const body = JSON.parse(await result.json());
+		
+		//Set room code and proceed with join flow
+		const body = await result.json()
 		roomCode = body.code;
-		join();
+		await join();
 	};
 </script>
 
@@ -50,7 +58,7 @@
 				><ArrowLeftOutline size="md" /> Back</button
 			>
 			<p class="text-left text-white/50 text-md mb-2">YOUR NAME</p>
-			<TextField placeholder="What will you call yourself?" bind:value={playerName} class="w-full max-w-md" maxLength={20} />
+			<TextField placeholder="What will you call yourself?" bind:value={memberName} class="w-full max-w-md" maxLength={32} />
 			<br />
 			<p class="text-left text-white/50 text-md mb-2">ROOM CODE</p>
 			<input
@@ -63,9 +71,7 @@
 			<br />
 			<NeonButton
 				variant="Cyan"
-				onclick={() => {
-					alert(`You joined game ${roomCode} as ${playerName}!`);
-				}}
+				onclick={join}
 				class="w-full max-w-md my-4"
 				disabled={!canJoin}
 				>Join Game <ArrowRightOutline size="xl" />
@@ -77,9 +83,9 @@
 				><ArrowLeftOutline size="md" /> Back</button
 			>
 			<p class="text-left text-white/50 text-md mb-2">YOUR NAME</p>
-			<TextField placeholder="What will you call yourself?" bind:value={playerName} class="w-full max-w-md" maxLength={20} />
+			<TextField placeholder="What will you call yourself?" bind:value={memberName} class="w-full max-w-md" maxLength={32} />
 			<br />
-			<NeonButton variant="Red" onclick={create} class="w-full max-w-md my-4" disabled={!playerName}>Create <ArrowRightOutline size="xl" /></NeonButton>
+			<NeonButton variant="Red" onclick={create} class="w-full max-w-md my-4" disabled={!memberName}>Create <ArrowRightOutline size="xl" /></NeonButton>
 		</div>
 	{/if}
 </main>

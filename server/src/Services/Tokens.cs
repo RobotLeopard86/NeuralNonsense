@@ -23,9 +23,4 @@ namespace NeuralNonsense {
 			});
 		}
 	}
-
-	//Small helper to deal with JWT field name conversion for SignalR
-	public sealed class SubUserIdProvider : IUserIdProvider {
-		public string? GetUserId(HubConnectionContext c) => c.User?.FindFirst("sub")?.Value;
-	}
 }

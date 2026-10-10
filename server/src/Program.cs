@@ -4,6 +4,8 @@ using System.Security.Cryptography.X509Certificates;
 using Microsoft.IdentityModel.Tokens;
 using System.Security.Cryptography;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.DataProtection.KeyManagement;
+using Microsoft.AspNetCore.DataProtection.XmlEncryption;
 
 //Setup ASP.NET
 Environment.SetEnvironmentVariable("DOTNET_hostBuilder:reloadConfigOnChange", "false");
@@ -18,6 +20,7 @@ builder.WebHost.ConfigureKestrel(kopts => {
 });
 
 //Generate JWT key
+builder.Services.Configure<KeyManagementOptions>(opts => opts.XmlEncryptor = new CertificateXmlEncryptor(cert, new LoggerFactory()));
 SymmetricSecurityKey jwtSigningKey = new SymmetricSecurityKey(RandomNumberGenerator.GetBytes(32)) {
 	KeyId = Guid.NewGuid().ToString("N")
 };
@@ -33,7 +36,6 @@ if(builder.Environment.IsDevelopment()) builder.Services.AddCors(options => {
 		builder.WithOrigins("http://" + Constants.DEV_SERVER_HOSTNAME, "https://" + Constants.DEV_SERVER_HOSTNAME).AllowAnyHeader().AllowAnyMethod().AllowCredentials();
 	});
 });
-builder.Services.AddSingleton<IUserIdProvider, SubUserIdProvider>();
 builder.Services.AddAuthentication().AddJwtBearer(opts => {
 	opts.TokenValidationParameters = new TokenValidationParameters {
 		ValidateIssuer = true,

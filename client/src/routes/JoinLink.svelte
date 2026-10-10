@@ -1,13 +1,21 @@
 <script lang="ts">
-	import { ArrowLeftOutline, ArrowRightOutline } from "flowbite-svelte-icons";
+	import { ArrowRightOutline } from "flowbite-svelte-icons";
 
 	import Logo from "../components/Logo.svelte";
 	import NeonButton from "../components/NeonButton.svelte";
 	import TextField from "../components/TextField.svelte";
+    import { onMount } from "svelte";
+    import { joinGame, rejoinIfConnected } from "../lib/connection.svelte";
 
 	let { params = {} } = $props();
-	let playerName = $state("");
+	let memberName = $state("");
 	let roomCode = $derived.by(() => params.code.toUpperCase());
+
+	onMount(rejoinIfConnected);
+
+	const join = async () => {
+		joinGame(roomCode, memberName);
+	};
 </script>
 
 <Logo />
@@ -21,15 +29,13 @@
 		</div>
 		<br />
 		<p class="text-left text-white/50 text-md mb-2">YOUR NAME</p>
-		<TextField placeholder="What will you call yourself?" bind:value={playerName} class="w-full max-w-md" maxLength={20} />
+		<TextField placeholder="What will you call yourself?" bind:value={memberName} class="w-full max-w-md" maxLength={32} />
 		<br />
 		<NeonButton
 			variant="Yellow"
-			onclick={() => {
-				alert(`You joined game ${roomCode} as ${playerName}!`);
-			}}
+			onclick={join}
 			class="w-full max-w-md my-4"
-			disabled={!playerName}>Join Game <ArrowRightOutline size="xl" /></NeonButton
+			disabled={!memberName}>Join Game <ArrowRightOutline size="xl" /></NeonButton
 		>
 	</div>
 </main>

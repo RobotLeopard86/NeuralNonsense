@@ -1,5 +1,3 @@
-
-using System.Data;
 using System.Threading.Channels;
 using NeuralNonsense.Commands;
 
@@ -104,7 +102,9 @@ namespace NeuralNonsense {
 		}
 
 		private void HandleMemberConnectionComplete(MemberConnectionCompleteCommand mccc) {
-			deadlines.First(deadline => deadline.kind == Deadline.Kind.JoinExpire && (deadline.additionalData as string) == mccc.memberID).cancel.Cancel();
+			try {
+				deadlines.First(deadline => deadline.kind == Deadline.Kind.JoinExpire && (deadline.additionalData as string) == mccc.memberID).cancel.Cancel();
+			} catch { }
 		}
 
 		public async Task RunAsync(CancellationToken token) {

@@ -8,7 +8,7 @@ if ! [ -d ".certs" ]; then
 fi
 
 CMD1="${1:-(cd client; pnpm dev --host)}"
-CMD2="${2:-(cd server; dotnet watch)}"
+CMD2="${2:-(cd server; ASPNETCORE_ENVIRONMENT=Development dotnet watch)}"
 SESSION="nnrun-dualpane-$$"   # unique per invocation; avoids clashing with existing sessions
 
 if ! command -v tmux >/dev/null 2>&1; then
