@@ -11,6 +11,16 @@ export const connection = () => {
 
 const configureHandlers = () => {
 	//Disconnection
+	connection().onclose((e?: Error) => {
+		//Present error if applicable
+		if(e) {
+			alert(`You have been unexpectedly disconnected from the room: ${e.message}`);
+			console.error(`Full Error Stacktrace: ${e.stack ? e.stack : "Not Available"}`);
+		}
+
+		//Go to homepage
+		push("/");
+	});
     connection().on("Disconnected", async(reason: string) => {
 		//Obediently disconnect like the good website we are
 		await connection().stop();
@@ -18,6 +28,11 @@ const configureHandlers = () => {
 		//Return to homepage and present error
 		push("/");
 		alert(`You have been disconnected from the room: ${reason}`);
+	});
+
+	//View transition
+	connection().on("ViewTransition", async(view: string) => {
+		push(`/play/${view}`);
 	});
 }
 

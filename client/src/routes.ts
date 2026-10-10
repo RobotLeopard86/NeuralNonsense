@@ -5,5 +5,5 @@ import Lobby from "./routes/Lobby.svelte";
 export default {
 	"/": Home,
 	"/join/:code": JoinLink,
-	"/lobby": Lobby
+	"/play/lobby": Lobby
 }

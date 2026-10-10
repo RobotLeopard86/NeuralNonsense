@@ -5,6 +5,7 @@ using NeuralNonsense.Commands;
 namespace NeuralNonsense {
 	public interface INNClient {
 		Task Disconnected(string reason);
+		Task ViewTransition(string view);
 	}
 
 	[Authorize]

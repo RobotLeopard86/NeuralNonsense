@@ -17,13 +17,13 @@ namespace NeuralNonsense {
 		public enum Phase {
 			Lobby,
 			ContentGen,
-			R1Answer,
-			R1Vote,
-			R2Answer,
-			R2Vote,
+			Answer,
+			Vote,
+			Results,
 			R3Answer,
 			R3Vote,
-			Results
+			R3Results,
+			End
 		}
 
 		private struct Deadline {
@@ -101,77 +101,105 @@ namespace NeuralNonsense {
 			ijc.task.SetResult(jrr);
 		}
 
-		private void HandleMemberConnectionComplete(MemberConnectionCompleteCommand mccc) {
+		private async Task HandleMemberConnectionComplete(MemberConnectionCompleteCommand mccc) {
+			//Cancel join deadline
 			try {
 				deadlines.First(deadline => deadline.kind == Deadline.Kind.JoinExpire && (deadline.additionalData as string) == mccc.memberID).cancel.Cancel();
 			} catch { }
+
+			//Send client to the appropriate view
+			switch(phase) {
+				case Phase.Lobby:
+					await ServiceContainer.instance.hubCtx.Clients.User(mccc.memberID).ViewTransition("lobby");
+					break;
+				case Phase.ContentGen:
+					await ServiceContainer.instance.hubCtx.Clients.User(mccc.memberID).ViewTransition("generation");
+					break;
+				case Phase.Answer:
+					await ServiceContainer.instance.hubCtx.Clients.User(mccc.memberID).ViewTransition("answer");
+					break;
+				case Phase.Vote:
+					await ServiceContainer.instance.hubCtx.Clients.User(mccc.memberID).ViewTransition("voting");
+					break;
+				case Phase.Results:
+					await ServiceContainer.instance.hubCtx.Clients.User(mccc.memberID).ViewTransition("results");
+					break;
+				case Phase.R3Answer:
+					await ServiceContainer.instance.hubCtx.Clients.User(mccc.memberID).ViewTransition("answer3");
+					break;
+				case Phase.R3Vote:
+					await ServiceContainer.instance.hubCtx.Clients.User(mccc.memberID).ViewTransition("vote3");
+					break;
+				case Phase.R3Results:
+					await ServiceContainer.instance.hubCtx.Clients.User(mccc.memberID).ViewTransition("results3");
+					break;
+				case Phase.End:
+					await ServiceContainer.instance.hubCtx.Clients.User(mccc.memberID).ViewTransition("end");
+					break;
+			}
 		}
 
 		public async Task RunAsync(CancellationToken token) {
 			while(!token.IsCancellationRequested) {
-				try {
-					//Process commands
-					Command? cmd;
-					while(commandQueue.Reader.TryRead(out cmd)) {
-						switch(cmd) {
-							case InitialJoinCommand ijc:
-								HandleInitialJoin(ijc);
-								break;
-							case MemberConnectionCompleteCommand mccc:
-								HandleMemberConnectionComplete(mccc);
-								break;
-						}
-					}
-
-					//Check deadlines
-					List<Deadline> toRemove = new List<Deadline>();
-					long untilNext = long.MaxValue;
-					long now = TimeProvider.System.GetTimestamp();
-					foreach(Deadline deadline in deadlines) {
-						if(deadline.cancel.IsCancellationRequested) {
-							toRemove.Add(deadline);
-							continue;
-						}
-						if(deadline.dueBy >= now) {
-							toRemove.Add(deadline);
-							switch(deadline.kind) {
-								case Deadline.Kind.JoinExpire:
-									RemoveMemberAndPromote(deadline.additionalData as string ?? throw new ServerCausedException("Unexpected deadline data format error!"));
-									break;
-							}
-							continue;
-						}
-						untilNext = Math.Min(untilNext, deadline.dueBy - now);
-					}
-					deadlines.RemoveAll((d) => toRemove.Contains(d));
-
-					//Game state machine
-					switch(phase) {
-						case Phase.Lobby:
+				//Process commands
+				Command? cmd;
+				while(commandQueue.Reader.TryRead(out cmd)) {
+					switch(cmd) {
+						case InitialJoinCommand ijc:
+							HandleInitialJoin(ijc);
 							break;
-						case Phase.ContentGen:
-							break;
-						case Phase.R1Answer:
-							break;
-						case Phase.R1Vote:
-							break;
-						case Phase.R2Answer:
-							break;
-						case Phase.R2Vote:
-							break;
-						case Phase.R3Answer:
-							break;
-						case Phase.R3Vote:
-							break;
-						case Phase.Results:
+						case MemberConnectionCompleteCommand mccc:
+							await HandleMemberConnectionComplete(mccc);
 							break;
 					}
-
-					//Wait until we get a new command or until the next deadline
-					await commandQueue.Reader.WaitToReadAsync(token);
-				} catch(Exception e) {
-					Console.Error.WriteLine("ROOM " + code + " ERROR: " + e.Message);
 				}
+
+				//Check deadlines
+				List<Deadline> toRemove = new List<Deadline>();
+				long untilNext = long.MaxValue;
+				long now = TimeProvider.System.GetTimestamp();
+				foreach(Deadline deadline in deadlines) {
+					if(deadline.cancel.IsCancellationRequested) {
+						toRemove.Add(deadline);
+						continue;
+					}
+					if(deadline.dueBy >= now) {
+						toRemove.Add(deadline);
+						switch(deadline.kind) {
+							case Deadline.Kind.JoinExpire:
+								RemoveMemberAndPromote(deadline.additionalData as string ?? throw new ServerCausedException("Unexpected deadline data format error!"));
+								break;
+						}
+						continue;
+					}
+					untilNext = Math.Min(untilNext, deadline.dueBy - now);
+				}
+				deadlines.RemoveAll((d) => toRemove.Contains(d));
+
+				//Game state machine
+				switch(phase) {
+					case Phase.Lobby:
+						break;
+					case Phase.ContentGen:
+						break;
+					case Phase.Answer:
+						break;
+					case Phase.Vote:
+						break;
+					case Phase.Results:
+						break;
+					case Phase.R3Answer:
+						break;
+					case Phase.R3Vote:
+						break;
+					case Phase.R3Results:
+						break;
+					case Phase.End:
+						break;
+				}
+
+				//Wait until we get a new command or until the next deadline
+				await commandQueue.Reader.WaitToReadAsync(token);
 			}
 		}
 	}
