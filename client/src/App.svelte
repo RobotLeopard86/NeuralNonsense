@@ -1,6 +1,6 @@
 <script lang="ts">
-	import Router from 'svelte-spa-router';
-	import routes from './routes';
+	import Router from "svelte-spa-router";
+	import routes from "./routes";
 </script>
 
 <div class="relative min-h-screen bg-[#1A1035] overflow-hidden">

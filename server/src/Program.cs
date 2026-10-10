@@ -51,7 +51,7 @@ builder.Services.AddAuthentication().AddJwtBearer(opts => {
 			var token = ctx.Request.Query["access_token"];
 			if(!string.IsNullOrEmpty(token) && ctx.Request.Path.StartsWithSegments("/portal/hub")) ctx.Token = token;
 			return Task.CompletedTask;
-		}	
+		}
 	};
 });
 builder.Services.AddAuthorization();

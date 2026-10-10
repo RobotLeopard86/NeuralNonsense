@@ -4,17 +4,9 @@
 	import SVGQR from "@svelte-put/qr/svg/QR.svelte";
 	import { game } from "../lib/state.svelte";
 	import { onMount } from "svelte";
-	import { connection } from "../lib/connection.svelte";
-	import { push } from "svelte-spa-router";
+	import { ejectIfNoConnection } from "../lib/connection.svelte";
 
-	onMount(() => {
-		try {
-			connection();
-		} catch (_) {
-			console.log("No session exists, redirecting to home...");
-			push("/");
-		}
-	});
+	onMount(ejectIfNoConnection);
 
 	let joinLink = $derived.by(() => "https://" + window.location.host + "/#/join/" + game.roomCode.toLowerCase());
 </script>

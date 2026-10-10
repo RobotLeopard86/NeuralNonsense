@@ -1,15 +1,21 @@
 export enum MemberType {
-    Player, Audience, Spectator, Projector
+	Player, Audience, Spectator, Projector
 }
 
 export interface GameState {
-    roomCode: string,
-    memberID: string,
-    role: MemberType
+	roomCode: string,
+	token: string,
+	type: MemberType,
+	score: number
 }
 
 export let game: GameState = $state({
-    roomCode: "",
-    memberID: "",
-    role: MemberType.Spectator
+	roomCode: "",
+	token: "",
+	type: MemberType.Spectator,
+	score: 0
 });
+
+$effect.pre(() => {
+	localStorage.setItem("nn:tkn", game.token);
+})

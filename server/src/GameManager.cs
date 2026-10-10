@@ -1,5 +1,4 @@
 using System.Collections.Concurrent;
-using Microsoft.AspNetCore.SignalR;
 using NeuralNonsense.Commands;
 
 namespace NeuralNonsense {
@@ -20,9 +19,12 @@ namespace NeuralNonsense {
 		}
 
 		public async Task<JoinRoomResponse> JoinRoom(JoinRoomRequest req) {
+			if(string.IsNullOrEmpty(req.code)) throw new ClientCausedException("Invalid room code!");
 			if(req.code.Length != Constants.ROOM_CODE_LENGTH) throw new ClientCausedException("Invalid room code!");
 			if(req.code.Count((c) => !Constants.ROOM_CODE_ALPHABET.Contains(c)) > 0) throw new ClientCausedException("Invalid room code!");
 			if(!rooms.ContainsKey(req.code)) throw new ClientCausedException("No such room!");
+			if(string.IsNullOrWhiteSpace(req.name)) throw new ClientCausedException("Names cannot be empty!");
+			if(req.name.Length > Constants.MAX_NAME_LENGTH) throw new ClientCausedException("Selected name is too long!");
 			if(!Constants.MASTER_MODERATION_DISABLE && ServiceContainer.instance.badWordChecker.IsOffensive(req.name)) throw new ClientCausedException("No bad words in names, please!");
 			InitialJoinCommand ijc = new InitialJoinCommand() {
 				name = req.name

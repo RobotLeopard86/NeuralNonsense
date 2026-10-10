@@ -97,7 +97,7 @@ namespace NeuralNonsense {
 
 			//Reply
 			JoinRoomResponse jrr = new JoinRoomResponse() {
-				memberID = member.uuid,
+				token = ServiceContainer.instance.tokenGenerator.GenToken(code, member),
 				type = member.type
 			};
 			ijc.task.SetResult(jrr);
