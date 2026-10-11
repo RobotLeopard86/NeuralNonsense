@@ -5,7 +5,7 @@
 	import NeonButton from "../components/NeonButton.svelte";
 	import TextField from "../components/TextField.svelte";
 	import { game, MemberType } from "../lib/state.svelte";
-    import { connect, joinGame, rejoinIfConnected } from "../lib/connection.svelte";
+    import { connect, joinGame, tryRestore } from "../lib/connection.svelte";
     import { onMount } from "svelte";
     import { push } from "svelte-spa-router";
 
@@ -20,10 +20,10 @@
 
 	let canJoin = $derived(memberName && roomCode && roomCode.length === 6);
 
-	onMount(rejoinIfConnected);
+	onMount(tryRestore);
 
 	const join = async () => {
-		joinGame(roomCode, memberName);
+		await joinGame(roomCode, memberName);
 	};
 
 	const create = async () => {
@@ -39,7 +39,7 @@
 		}
 		
 		//Set room code and proceed with join flow
-		const body = await result.json()
+		const body = await result.json();
 		roomCode = body.code;
 		await join();
 	};

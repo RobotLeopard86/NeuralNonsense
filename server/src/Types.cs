@@ -8,7 +8,7 @@ namespace NeuralNonsense {
 	}
 	public struct JoinRoomResponse {
 		public string token;
-		public Room.Member.Type type;
+		public string type;
 	}
 
 	public class ClientCausedException : Exception {
@@ -17,4 +17,39 @@ namespace NeuralNonsense {
 	public class ServerCausedException : Exception {
 		public ServerCausedException(string msg) : base(msg) { }
 	};
+
+	public struct ClientMember {
+		public string name;
+		public string uuid;
+		public uint score;
+		public string type;
+
+		public ClientMember(Room.Member m) {
+			name = m.name;
+			uuid = m.uuid;
+			score = m.score;
+			switch(m.type) {
+				case Room.Member.Type.Player:
+					type = "p";
+					break;
+				case Room.Member.Type.Audience:
+					type = "a";
+					break;
+				case Room.Member.Type.Projector:
+					type = "d";
+					break;
+				case Room.Member.Type.Spectator:
+					type = "s";
+					break;
+				default:
+					type = "";
+					break;
+			}
+		}
+	}
+
+	public struct ClientGameState {
+		public string hostID;
+		public ClientMember[] members;
+	}
 }

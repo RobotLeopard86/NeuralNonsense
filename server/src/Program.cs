@@ -26,7 +26,9 @@ SymmetricSecurityKey jwtSigningKey = new SymmetricSecurityKey(RandomNumberGenera
 };
 
 //Configure services
-builder.Services.AddSignalR();
+builder.Services.AddSignalR().AddJsonProtocol(options => {
+	options.PayloadSerializerOptions.IncludeFields = true;
+});
 builder.Services.AddSingleton(jwtSigningKey);
 builder.Services.ConfigureHttpJsonOptions(options => {
 	options.SerializerOptions.IncludeFields = true;

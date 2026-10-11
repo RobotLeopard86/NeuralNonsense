@@ -5,16 +5,21 @@
 	import NeonButton from "../components/NeonButton.svelte";
 	import TextField from "../components/TextField.svelte";
     import { onMount } from "svelte";
-    import { joinGame, rejoinIfConnected } from "../lib/connection.svelte";
+    import { joinGame, tryRestore } from "../lib/connection.svelte";
+    import { push } from "svelte-spa-router";
 
 	let { params = {} } = $props();
 	let memberName = $state("");
 	let roomCode = $derived.by(() => params.code.toUpperCase());
 
-	onMount(rejoinIfConnected);
+	onMount(tryRestore);
+	onMount(() => {
+		alert("Invalid join link!");
+		if(roomCode.length != 6) push("/");
+	})
 
 	const join = async () => {
-		joinGame(roomCode, memberName);
+		await joinGame(roomCode, memberName);
 	};
 </script>
 

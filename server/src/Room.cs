@@ -96,8 +96,22 @@ namespace NeuralNonsense {
 			//Reply
 			JoinRoomResponse jrr = new JoinRoomResponse() {
 				token = ServiceContainer.instance.tokenGenerator.GenToken(code, member),
-				type = member.type
+				type = ""
 			};
+			switch(member.type) {
+				case Member.Type.Player:
+					jrr.type = "p";
+					break;
+				case Member.Type.Audience:
+					jrr.type = "a";
+					break;
+				case Member.Type.Projector:
+					jrr.type = "d";
+					break;
+				case Member.Type.Spectator:
+					jrr.type = "s";
+					break;
+			}
 			ijc.task.SetResult(jrr);
 		}
 

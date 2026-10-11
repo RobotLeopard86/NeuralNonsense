@@ -1,5 +1,5 @@
 import * as SignalR from "@microsoft/signalr";
-import { game, MemberType } from "./state.svelte";
+import { deriveGameState, deriveMember, game, MemberType, resetState, type ServerGameState, type Member, type ServerMember } from "./state.svelte";
 import { push } from "svelte-spa-router";
 import * as jose from "jose";
 
@@ -25,6 +25,9 @@ const configureHandlers = () => {
 		//Obediently disconnect like the good website we are
 		await connection().stop();
 
+		//Reset game state
+		resetState();
+
 		//Return to homepage and present error
 		push("/");
 		alert(`You have been disconnected from the room: ${reason}`);
@@ -33,6 +36,11 @@ const configureHandlers = () => {
 	//View transition
 	connection().on("ViewTransition", async(view: string) => {
 		push(`/play/${view}`);
+	});
+
+	//Player list update
+	connection().on("UpdateMemberList", async(members: ServerMember[]) => {
+		game.state.members = members.map(deriveMember);
 	});
 }
 
@@ -59,12 +67,7 @@ interface JWTPayload {
 	name: string
 }
 
-interface StatusUpdateResponse {
-	type: string,
-	score: number
-}
-
-export const tryRestoreConnection = async() => {
+export const tryRestore = async() => {
 	//Don't restore if we already have a token
 	if(game.token !== "") return;
 
@@ -76,61 +79,59 @@ export const tryRestoreConnection = async() => {
 	game.token = localToken!;
 	const claims = jose.decodeJwt<JWTPayload>(localToken);
 	game.roomCode = claims.room;
+	game.self.name = claims.name;
+	game.self.uuid = claims.sub;
 
 	//Reconnect and request status update
 	try {
 		await connect();
 	} catch(e) {
-		game.token = "";
-		localStorage.removeItem("nn:tkn");
+		resetState();
 		alert(`Failed to reconnect to the room: ${e}`);
+		push("/");
 		return;
 	}
-	const status: StatusUpdateResponse = await connection().invoke("RequestStatusUpdate");
+	console.log("I am once again asking");
+	const state: ServerGameState = await connection().invoke("RestoreCurrentState");
+	const self: ServerMember = await connection().invoke("RestoreCurrentSelf");
 
 	//Enable tab close warning dialog
 	window.addEventListener("beforeunload", (e: BeforeUnloadEvent) => e.preventDefault());
 
 	//Restore from status
-	game.score = status.score;
-	switch(status.type) {
+	game.state = deriveGameState(state);
+	game.self.score = self.score;
+	switch(self.type) {
 		case "p":
-			game.type = MemberType.Player;
+			game.self.type = MemberType.Player;
 			break;
 		case "a":
-			game.type = MemberType.Audience;
+			game.self.type = MemberType.Audience;
 			break;
 		case "d":
-			game.type = MemberType.Projector;
+			game.self.type = MemberType.Projector;
 			break;
 		case "s":
-			game.type = MemberType.Spectator;
+			game.self.type = MemberType.Spectator;
 			break;	
-	} 
+	}
 }
 
 export const ejectIfNoConnection = async() => {
 	//Try to restore connection before checking
-	await tryRestoreConnection();
+	await tryRestore();
 
 	if(!hc) {
 		console.log("No session exists, redirecting to home...");
+		resetState();
 		push("/");
 	}
 }
 
-export const rejoinIfConnected = async() => {
-	//Try to restore connection before checking
-	await tryRestoreConnection();
-
-	//Have the server update our state
-	hc && await connection().invoke("SendRejoinViewUpdate");
-}
-
 export const joinGame = async(roomCode: string, memberName: string) => {
 	//Reset game state
+	resetState();
 	game.roomCode = roomCode;
-	game.score = 0;
 
 	//Call join endpoint
 	const result = await fetch("/portal/join", {
@@ -146,6 +147,7 @@ export const joinGame = async(roomCode: string, memberName: string) => {
 
 	//Alert the user on failure
 	if (!result.ok) {
+		resetState();
 		alert(`Failed to join the room: ${await result.text()}`);
 		return;
 	}
@@ -154,18 +156,22 @@ export const joinGame = async(roomCode: string, memberName: string) => {
 	const body = await result.json();
 	game.token = body.token;
 	localStorage.setItem("nn:tkn", game.token);
+	const claims = jose.decodeJwt<JWTPayload>(game.token);
+	game.self.name = claims.name;
+	game.self.uuid = claims.sub;
+	game.self.score = 0;
 	switch(body.type) {
 		case "p":
-			game.type = MemberType.Player;
+			game.self.type = MemberType.Player;
 			break;
 		case "a":
-			game.type = MemberType.Audience;
+			game.self.type = MemberType.Audience;
 			break;
 		case "d":
-			game.type = MemberType.Projector;
+			game.self.type = MemberType.Projector;
 			break;
 		case "s":
-			game.type = MemberType.Spectator;
+			game.self.type = MemberType.Spectator;
 			break;	
 	}
 
@@ -173,12 +179,35 @@ export const joinGame = async(roomCode: string, memberName: string) => {
 	try {
 		await connect();
 	} catch(e) {
-		game.token = "";
-		localStorage.removeItem("nn:tkn");
+		resetState();
 		alert(`Failed to connect to the room: ${e}`);
 		return;
 	}
 
+	//Request status
+	console.log("I am once again asking");
+	const state: ServerGameState = await connection().invoke("RestoreCurrentState");
+	const self: ServerMember = await connection().invoke("RestoreCurrentSelf");
+	console.log("I have once again received an answer");
+
 	//Enable tab close warning dialog
 	window.addEventListener("beforeunload", (e: BeforeUnloadEvent) => e.preventDefault());
+
+	//Restore from status
+	game.state = deriveGameState(state);
+	game.self.score = self.score;
+	switch(self.type) {
+		case "p":
+			game.self.type = MemberType.Player;
+			break;
+		case "a":
+			game.self.type = MemberType.Audience;
+			break;
+		case "d":
+			game.self.type = MemberType.Projector;
+			break;
+		case "s":
+			game.self.type = MemberType.Spectator;
+			break;	
+	}
 };

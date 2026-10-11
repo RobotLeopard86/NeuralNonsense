@@ -6,6 +6,7 @@ namespace NeuralNonsense {
 	public interface INNClient {
 		Task Disconnected(string reason);
 		Task ViewTransition(string view);
+		Task UpdateMemberList(ClientMember[] members);
 	}
 
 	[Authorize]
@@ -41,6 +42,7 @@ namespace NeuralNonsense {
 
 			//Add to group
 			await Groups.AddToGroupAsync(Context.ConnectionId, roomCode);
+			await Clients.Group(roomCode).UpdateMemberList(GameManager.instance.rooms[roomCode].members.Values.Select(member => new ClientMember(member)).ToArray());
 
 			//Send connection complete command
 			MemberConnectionCompleteCommand mccc = new MemberConnectionCompleteCommand() {
@@ -54,10 +56,33 @@ namespace NeuralNonsense {
 		}
 
 		public override async Task OnDisconnectedAsync(Exception? exception) {
+			//Verify
+			await LoadUserAndVerify();
+
 			//Remove from group and send exception if needed
 			await Groups.RemoveFromGroupAsync(Context.ConnectionId, roomCode);
 			if(exception != null) await Abort(exception!.Message);
 			await base.OnDisconnectedAsync(exception);
+		}
+
+		public async Task<ClientMember> RestoreCurrentSelf() {
+			//Verify
+			await LoadUserAndVerify();
+
+			//Return the user
+			return new ClientMember(GameManager.instance.rooms[roomCode].members.Values.First(m => m.uuid == memberID));
+		}
+
+		public async Task<ClientGameState> RestoreCurrentState() {
+			//Verify
+			await LoadUserAndVerify();
+
+			//Return the state
+			Room room = GameManager.instance.rooms[roomCode];
+			return new ClientGameState {
+				hostID = room.hostUUID,
+				members = room.members.Values.Select(member => new ClientMember(member)).ToArray()
+			};
 		}
 
 		public async Task ExplicitLeave() {
