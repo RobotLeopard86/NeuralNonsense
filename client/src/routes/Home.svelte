@@ -8,6 +8,7 @@
     import { connect, joinGame, tryRestore } from "../lib/connection.svelte";
     import { onMount } from "svelte";
     import { push } from "svelte-spa-router";
+    import RingTimer from "../components/RingTimer.svelte";
 
 	type Phase = "Initial" | "Join" | "Create";
 	let phase: Phase = $state("Initial");

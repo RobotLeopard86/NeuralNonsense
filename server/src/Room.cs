@@ -12,6 +12,7 @@ namespace NeuralNonsense {
 			public string uuid = "";
 			public uint score = 0;
 			public Type type;
+			public string currentConnection = "";
 		}
 
 		public enum Phase {
@@ -58,10 +59,6 @@ namespace NeuralNonsense {
 
 		private long ComputeDeadline(uint seconds) {
 			return TimeProvider.System.GetTimestamp() + (TimeProvider.System.TimestampFrequency * seconds);
-		}
-
-		private void RemoveMemberAndPromote(string uuid) {
-
 		}
 
 		private void HandleInitialJoin(InitialJoinCommand ijc) {
@@ -121,6 +118,15 @@ namespace NeuralNonsense {
 				deadlines.First(deadline => deadline.kind == Deadline.Kind.JoinExpire && (deadline.additionalData as string) == mccc.memberID).cancel.Cancel();
 			} catch { }
 
+			//Kick old connection
+			if(!string.IsNullOrEmpty(members[mccc.memberID].currentConnection)) {
+				await ServiceContainer.instance.hubCtx.Groups.RemoveFromGroupAsync(members[mccc.memberID].currentConnection, code);
+				await ServiceContainer.instance.hubCtx.Clients.Client(members[mccc.memberID].currentConnection).Disconnected("You have logged in from somewhere else!");
+			}
+
+			//Save connection
+			members[mccc.memberID].currentConnection = mccc.connID;
+
 			//Send client to the appropriate view
 			switch(phase) {
 				case Phase.Lobby:
@@ -154,6 +160,10 @@ namespace NeuralNonsense {
 
 			//Set the result
 			mccc.task.SetResult();
+		}
+
+		public void RemoveMemberAndPromote(string uuid) {
+
 		}
 
 		public async Task RunAsync(CancellationToken token) {

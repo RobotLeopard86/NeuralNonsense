@@ -46,7 +46,8 @@ namespace NeuralNonsense {
 
 			//Send connection complete command
 			MemberConnectionCompleteCommand mccc = new MemberConnectionCompleteCommand() {
-				memberID = memberID
+				memberID = memberID,
+				connID = Context.ConnectionId
 			};
 			await GameManager.instance.rooms[roomCode].writer.WriteAsync(mccc);
 			await mccc.task.Task;
@@ -89,7 +90,12 @@ namespace NeuralNonsense {
 			//Verify
 			await LoadUserAndVerify();
 
-			//TODO: actually make them leave
+			//Remove from message group and room
+			GameManager.instance.rooms[roomCode].RemoveMemberAndPromote(memberID);
+			await Groups.RemoveFromGroupAsync(Context.ConnectionId, roomCode);
+
+			//Abort connection
+			await Abort("Thanks for playing!");
 		}
 	}
 }

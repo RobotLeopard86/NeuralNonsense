@@ -23,5 +23,6 @@ namespace NeuralNonsense.Commands {
 
 	public class MemberConnectionCompleteCommand : CommandWithoutValue {
 		public required string memberID;
+		public required string connID;
 	}
 }

@@ -9,6 +9,8 @@ export const connection = () => {
     else throw "The connection is not available yet, you idiot!"
 };
 
+const tabClosePreventHandler = (e: BeforeUnloadEvent) => e.preventDefault();
+
 const configureHandlers = () => {
 	//Disconnection
 	connection().onclose((e?: Error) => {
@@ -19,6 +21,7 @@ const configureHandlers = () => {
 		}
 
 		//Go to homepage
+		window.removeEventListener("beforeunload", tabClosePreventHandler);
 		push("/");
 	});
     connection().on("Disconnected", (reason: string) => {
@@ -29,6 +32,7 @@ const configureHandlers = () => {
 
 			//Return to homepage and present error
 			push("/");
+			window.removeEventListener("beforeunload", tabClosePreventHandler);
 			alert(`You have been disconnected from the room: ${reason}`);
 		});
 	});
@@ -101,7 +105,7 @@ export const tryRestore = async() => {
 	const self: ServerMember = await connection().invoke("RestoreCurrentSelf");
 
 	//Enable tab close warning dialog
-	window.addEventListener("beforeunload", (e: BeforeUnloadEvent) => e.preventDefault());
+	window.addEventListener("beforeunload", tabClosePreventHandler);
 
 	//Restore from status
 	game.state = deriveGameState(state);
@@ -129,6 +133,7 @@ export const ejectIfNoConnection = async() => {
 	if(!hc) {
 		console.log("No session exists, redirecting to home...");
 		resetState();
+		window.removeEventListener("beforeunload", tabClosePreventHandler);
 		push("/");
 	}
 }
@@ -194,7 +199,7 @@ export const joinGame = async(roomCode: string, memberName: string) => {
 	const self: ServerMember = await connection().invoke("RestoreCurrentSelf");
 
 	//Enable tab close warning dialog
-	window.addEventListener("beforeunload", (e: BeforeUnloadEvent) => e.preventDefault());
+	window.addEventListener("beforeunload", tabClosePreventHandler);
 
 	//Restore from status
 	game.state = deriveGameState(state);

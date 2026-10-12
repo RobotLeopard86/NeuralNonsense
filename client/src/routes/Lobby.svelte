@@ -5,10 +5,13 @@
 	import { game } from "../lib/state.svelte";
 	import { onMount } from "svelte";
 	import { ejectIfNoConnection } from "../lib/connection.svelte";
+    import NeonButton from "../components/NeonButton.svelte";
+    import { ArrowRightOutline } from "flowbite-svelte-icons";
 
 	onMount(ejectIfNoConnection);
 
 	let joinLink = $derived.by(() => "https://" + window.location.host + "/#/join/" + game.roomCode.toLowerCase());
+	let canStart = $derived(game.state.members.length >= 3);
 </script>
 
 <Logo />
@@ -58,4 +61,15 @@
 			</Card>
 		{/each}
 	</Card>
+
+	<!-- Start button -->
+	{#if game.self.uuid == game.state.hostID}
+		<NeonButton variant="Yellow" onclick={() => {}} disabled={!canStart} class="w-full my-4">
+			{#if game.state.members.length < 3}
+			Need 3 Players to Start
+			{:else}
+			Start Game <ArrowRightOutline size="xl" />
+			{/if}
+		</NeonButton>
+	{/if}
 </main>
