@@ -2,6 +2,7 @@
     import { onMount } from "svelte";
     import { ejectIfNoConnection } from "../lib/connection.svelte";
     import LoadingSpinner from "../components/LoadingSpinner.svelte";
+    import { game, MemberType } from "../lib/state.svelte";
 
     //onMount(ejectIfNoConnection);
 
@@ -12,7 +13,7 @@
     }
 
     const slideTime = 5000;
-    const slides: Slide[] = [
+    const pslides: Slide[] = [
         {
             title: "Read the Prompt",
             body: "You'll see a prompt on your device. Try to respond in a funny, clever, or absurd way.",
@@ -34,6 +35,29 @@
             body2: "The game will begin momentarily..."
         }
     ];
+    const aslides: Slide[] = [
+        {
+            title: "You're in the Audience",
+            body: "Players will receive a prompt and respond in a funny, clever, or absurd way.",
+            body2: "Everyone gets a different prompt, and they'll have 60 seconds to answer."
+        },
+        {
+            title: "A Battle of Wits",
+            body: "Everybody's answer goes up against an AI's response to the same prompt.",
+            body2: "The authors are hidden, so pick your favorite response!"
+        },
+        {
+            title: "3 Rounds. One Winner.",
+            body: "Players earn points each round depending on how well their answer do.",
+            body2: "The player with the most points after all 3 rounds wins!"
+        },
+        {
+            title: "Hang Tight!",
+            body: "We're cooking up some fresh AI content, just for you!",
+            body2: "The game will begin momentarily..."
+        }
+    ];
+    const slides: Slide[] = game.self.type == MemberType.Player ? pslides : aslides;
 
     let slideIndex = $state(0);
     let currentSlide: Slide = $derived(slides[slideIndex]);

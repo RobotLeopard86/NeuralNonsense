@@ -24,7 +24,7 @@
 </script>
 
 <button
-	class={"px-4 py-2 rounded-2xl font-bold text-lg transition-all duration-300 disabled:opacity-30 disabled:cursor-not-allowed active:scale-95 flex items-center justify-center " +
+	class={"px-4 py-1 rounded-2xl font-bold text-sm transition-all duration-300 disabled:opacity-30 disabled:cursor-not-allowed active:scale-95 flex items-center justify-center " +
 		getStyle() +
 		" " +
 		(props.class || "")}

@@ -2,6 +2,7 @@ import * as SignalR from "@microsoft/signalr";
 import { deriveGameState, deriveMember, game, MemberType, resetState, type ServerGameState, type Member, type ServerMember } from "./state.svelte";
 import { push } from "svelte-spa-router";
 import * as jose from "jose";
+import { configureHandlers } from "./handlers";
 
 let hc: SignalR.HubConnection | null = null;
 export const connection = () => {
@@ -9,54 +10,7 @@ export const connection = () => {
 	else throw "The connection is not available yet, you idiot!"
 };
 
-const tabClosePreventHandler = (e: BeforeUnloadEvent) => e.preventDefault();
-
-const configureHandlers = () => {
-	//Disconnection
-	connection().onclose((e?: Error) => {
-		//Present error if applicable
-		if(e) {
-			alert(`You have been unexpectedly disconnected from the room: ${e.message}`);
-			console.error(`Full Error Stacktrace: ${e.stack ? e.stack : "Not Available"}`);
-		}
-
-		//Go to homepage
-		window.removeEventListener("beforeunload", tabClosePreventHandler);
-		push("/");
-	});
-	connection().on("Disconnected", (reason: string) => {
-		//Obediently disconnect like the good website we are
-		connection().stop().finally(() => {
-			//Reset game state
-			resetState();
-
-			//Return to homepage and present error
-			push("/");
-			window.removeEventListener("beforeunload", tabClosePreventHandler);
-			alert(`You have been disconnected from the room: ${reason}`);
-		});
-	});
-
-	//View transition
-	connection().on("ViewTransition", (view: string) => {
-		push(`/play/${view}`);
-	});
-
-	//Player list update
-	connection().on("UpdateMemberList", (members: ServerMember[]) => {
-		game.state.members = members.map(deriveMember);
-	});
-
-	//Host change
-	connection().on("HostChanged", (newHost: string) => {
-		game.state.hostID = newHost;
-	});
-
-	//Round update
-	connection().on("NextRound", () => {
-		game.state.round++;
-	});
-}
+export const tabClosePreventHandler = (e: BeforeUnloadEvent) => e.preventDefault();
 
 export const connect = async () => {
 	//Build hub connection
@@ -148,7 +102,7 @@ export const ejectIfNoConnection = async () => {
 	}
 }
 
-export const joinGame = async (roomCode: string, memberName: string) => {
+export const joinRoom = async (roomCode: string, memberName: string) => {
 	//Reset game state
 	resetState();
 	game.roomCode = roomCode;
@@ -229,3 +183,9 @@ export const joinGame = async (roomCode: string, memberName: string) => {
 			break;
 	}
 };
+
+export const leaveRoom = async () => {
+	await connection().off("Disconnected");
+	await connection().invoke("ExplicitLeave");
+	push("/");
+}

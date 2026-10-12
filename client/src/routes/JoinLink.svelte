@@ -5,7 +5,7 @@
 	import NeonButton from "../components/NeonButton.svelte";
 	import TextField from "../components/TextField.svelte";
 	import { onMount } from "svelte";
-	import { joinGame, tryRestore } from "../lib/connection.svelte";
+	import { joinRoom, tryRestore } from "../lib/connection.svelte";
 	import { push } from "svelte-spa-router";
 
 	let { params = {} } = $props();
@@ -21,7 +21,7 @@
 	});
 
 	const join = async () => {
-		await joinGame(roomCode, memberName);
+		await joinRoom(roomCode, memberName);
 	};
 </script>
 

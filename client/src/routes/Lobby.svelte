@@ -2,21 +2,18 @@
 	import Card from "../components/Card.svelte";
 	import Logo from "../components/Logo.svelte";
 	import SVGQR from "@svelte-put/qr/svg/QR.svelte";
-	import { game } from "../lib/state.svelte";
+	import { game, MemberType } from "../lib/state.svelte";
 	import { onMount } from "svelte";
-	import { connection, ejectIfNoConnection } from "../lib/connection.svelte";
+	import { connection, ejectIfNoConnection, leaveRoom } from "../lib/connection.svelte";
 	import NeonButton from "../components/NeonButton.svelte";
 	import { ArrowRightOutline, OpenDoorOutline, UserRemoveOutline } from "flowbite-svelte-icons";
     import SmallNeonButton from "../components/SmallNeonButton.svelte";
+    import LoadingSpinner from "../components/LoadingSpinner.svelte";
 
 	onMount(ejectIfNoConnection);
 
 	let joinLink = $derived.by(() => "https://" + window.location.host + "/#/join/" + game.roomCode.toLowerCase());
 	let canStart = $derived(game.state.members.length >= 3);
-
-	const leave = async() => {
-		await connection().invoke("ExplicitLeave");
-	}
 </script>
 
 <Logo />
@@ -24,7 +21,7 @@
 
 <main class="mb-auto w-full flex flex-col items-center px-4">
 	<!-- Leave button -->
-	<SmallNeonButton variant="Red" onclick={leave} class="absolute top-4 left-4"><OpenDoorOutline size="xl" /> Leave Room</SmallNeonButton>
+	<SmallNeonButton variant="Red" onclick={leaveRoom} class="absolute top-4 left-4"><OpenDoorOutline size="lg" />&nbsp;&nbsp;Leave Room</SmallNeonButton>
 
 	<!-- How to join -->
 	<Card class="w-full">
@@ -55,7 +52,7 @@
 	<Card class="w-full flex flex-col items-center">
 		<p class="text-center text-white/50 text-md col-span-2 mb-2">{game.state.members.length}/8 PLAYERS</p>
 		{#each game.state.members as member}
-			<Card class="w-11/12 mx-auto mb-2">
+			<Card class="w-11/12 mx-auto mb-2 flex flex-row items-center">
 				<span class="text-left text-white font-bold"
 					>{member.name}
 					{#if member.uuid == game.self.uuid}
@@ -65,15 +62,19 @@
 						{/if}
 					{:else if member.uuid == game.state.hostID}
 						<span class="text-[#FF2D78] rounded-4xl bg-[#FF2D78]/25 px-4 py-1 mx-4">HOST</span>
-					{:else if game.self.uuid == game.state.hostID}
-						<br />
-						<SmallNeonButton variant="Red" onclick={async() => {
-							await connection().invoke("KickUser", member.uuid);
-						}}><UserRemoveOutline size="xl"/> Kick</SmallNeonButton>
 					{/if}
 				</span>
+				{#if game.self.uuid == game.state.hostID && member.uuid != game.self.uuid}
+				<span class="mx-auto"></span>
+				<SmallNeonButton variant="Red" onclick={async() => {
+							await connection().invoke("KickUser", member.uuid);
+						}}><UserRemoveOutline size="lg"/>&nbsp;&nbsp;Kick</SmallNeonButton>
+				{/if}
 			</Card>
 		{/each}
+		{#if game.self.type == MemberType.Audience}
+			<p class="text-center text-white text-md font-bold">You're in the audience!</p>
+		{/if}
 	</Card>
 	<br />
 
@@ -86,5 +87,11 @@
 				Start Game <ArrowRightOutline size="xl" />
 			{/if}
 		</NeonButton>
+	{:else}
+		<div class="flex flex-row items-center">
+			<LoadingSpinner size={25} stroke={2} minDegrees={1} maxDegrees={120} />
+			<span>&nbsp;&nbsp;&nbsp;&nbsp;</span>
+			<p class="text-center text-white/50 text-sm">Waiting for the host to start the game...</p>
+		</div>
 	{/if}
 </main>

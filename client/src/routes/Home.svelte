@@ -4,7 +4,7 @@
 	import Logo from "../components/Logo.svelte";
 	import NeonButton from "../components/NeonButton.svelte";
 	import TextField from "../components/TextField.svelte";
-	import { joinGame, tryRestore } from "../lib/connection.svelte";
+	import { joinRoom, tryRestore } from "../lib/connection.svelte";
 	import { onMount } from "svelte";
 
 	type Phase = "Initial" | "Join" | "Create";
@@ -21,7 +21,7 @@
 	onMount(tryRestore);
 
 	const join = async () => {
-		await joinGame(roomCode, memberName);
+		await joinRoom(roomCode, memberName);
 	};
 
 	const create = async () => {
