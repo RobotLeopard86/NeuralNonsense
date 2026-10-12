@@ -4,11 +4,8 @@
 	import Logo from "../components/Logo.svelte";
 	import NeonButton from "../components/NeonButton.svelte";
 	import TextField from "../components/TextField.svelte";
-	import { game, MemberType } from "../lib/state.svelte";
-    import { connect, joinGame, tryRestore } from "../lib/connection.svelte";
-    import { onMount } from "svelte";
-    import { push } from "svelte-spa-router";
-    import RingTimer from "../components/RingTimer.svelte";
+	import { joinGame, tryRestore } from "../lib/connection.svelte";
+	import { onMount } from "svelte";
 
 	type Phase = "Initial" | "Join" | "Create";
 	let phase: Phase = $state("Initial");
@@ -38,7 +35,7 @@
 			alert("Failed to create room!");
 			return;
 		}
-		
+
 		//Set room code and proceed with join flow
 		const body = await result.json();
 		roomCode = body.code;
@@ -70,13 +67,7 @@
 				class="w-full max-w-md focus:outline-none px-8 py-4 rounded-2xl text-lg bg-white/5 border-2 border-white/10 text-white placeholder:text-white/30 font-bold text-center tracking-[1em] placeholder:tracking-normal placeholder:font-normal"
 			/>
 			<br />
-			<NeonButton
-				variant="Cyan"
-				onclick={join}
-				class="w-full max-w-md my-4"
-				disabled={!canJoin}
-				>Join Game <ArrowRightOutline size="xl" />
-			</NeonButton>
+			<NeonButton variant="Cyan" onclick={join} class="w-full max-w-md my-4" disabled={!canJoin}>Join Game <ArrowRightOutline size="xl" /></NeonButton>
 		</div>
 	{:else if phase == "Create"}
 		<div class="flex flex-col max-w-md w-full">

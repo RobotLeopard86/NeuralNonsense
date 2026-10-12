@@ -5,8 +5,8 @@
 	import { game } from "../lib/state.svelte";
 	import { onMount } from "svelte";
 	import { ejectIfNoConnection } from "../lib/connection.svelte";
-    import NeonButton from "../components/NeonButton.svelte";
-    import { ArrowRightOutline } from "flowbite-svelte-icons";
+	import NeonButton from "../components/NeonButton.svelte";
+	import { ArrowRightOutline } from "flowbite-svelte-icons";
 
 	onMount(ejectIfNoConnection);
 
@@ -29,7 +29,7 @@
 				</p>
 				<br />
 				<p class="text-left text-white font-bold text-md">Use room code:</p>
-				<p class="text-left text-white text-4xl font-bold mb-8 tracking-[0.5em] lg:tracking-[1em] wrap-break-word">
+				<p class="text-left text-white text-4xl font-bold mb-8 tracking-[0.5em] lg:tracking-[0.9em] wrap-break-word">
 					{game.roomCode}
 				</p>
 			</div>
@@ -48,27 +48,29 @@
 		<p class="text-center text-white/50 text-md col-span-2 mb-2">{game.state.members.length}/8 PLAYERS</p>
 		{#each game.state.members as member}
 			<Card class="w-11/12 mx-auto mb-2">
-				<span class="text-left text-white font-bold">{member.name}
-					{#if member.uuid == game.self.uuid}	
+				<span class="text-left text-white font-bold"
+					>{member.name}
+					{#if member.uuid == game.self.uuid}
 						<span class="text-[#00E5FF] rounded-4xl bg-[#00E5FF]/25 px-4 py-1 mx-4">YOU</span>
-						{#if member.uuid == game.state.hostID}	
+						{#if member.uuid == game.state.hostID}
 							<span class="text-[#FF2D78] rounded-4xl bg-[#FF2D78]/25 px-4 py-1">HOST</span>
 						{/if}
-					{:else if member.uuid == game.state.hostID}	
+					{:else if member.uuid == game.state.hostID}
 						<span class="text-[#FF2D78] rounded-4xl bg-[#FF2D78]/25 px-4 py-1 mx-4">HOST</span>
 					{/if}
 				</span>
 			</Card>
 		{/each}
 	</Card>
+	<br />
 
 	<!-- Start button -->
 	{#if game.self.uuid == game.state.hostID}
 		<NeonButton variant="Yellow" onclick={() => {}} disabled={!canStart} class="w-full my-4">
 			{#if game.state.members.length < 3}
-			Need 3 Players to Start
+				Need 3 Players to Start
 			{:else}
-			Start Game <ArrowRightOutline size="xl" />
+				Start Game <ArrowRightOutline size="xl" />
 			{/if}
 		</NeonButton>
 	{/if}

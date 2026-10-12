@@ -7,7 +7,7 @@ if ! [ -d ".certs" ]; then
     exit 1
 fi
 
-CMD1="${1:-(cd client; pnpm dev --host)}"
+CMD1="${1:-(cd client; NODE_USE_SYSTEM_CA=1 pnpm dev --host)}"
 CMD2="${2:-(cd server; ASPNETCORE_ENVIRONMENT=Development dotnet watch)}"
 SESSION="nnrun-dualpane-$$"   # unique per invocation; avoids clashing with existing sessions
 

@@ -70,11 +70,12 @@ cd ../client
 pnpm i
 
 echo "generating certificates (you may be asked to authenticate)..."
-pnpm dev &
+pnpm dev 2>/dev/null &
 until curl https://localhost:5173 >/dev/null 2>/dev/null; do
     sleep 1
 done
 pkill -INT -f vite
+../.certs/mkcert -install
 
 echo "setup complete."
 echo "note: if you see an error above related to virtual module imports, this is not a real error and may be disregarded."

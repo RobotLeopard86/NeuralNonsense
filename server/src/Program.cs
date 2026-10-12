@@ -20,7 +20,7 @@ builder.WebHost.ConfigureKestrel(kopts => {
 });
 
 //Generate JWT key
-builder.Services.Configure<KeyManagementOptions>(opts => opts.XmlEncryptor = new CertificateXmlEncryptor(cert, new LoggerFactory()));
+builder.Services.Configure<KeyManagementOptions>(opts => opts.XmlEncryptor = new NullXmlEncryptor());
 SymmetricSecurityKey jwtSigningKey = new SymmetricSecurityKey(RandomNumberGenerator.GetBytes(32)) {
 	KeyId = Guid.NewGuid().ToString("N")
 };
