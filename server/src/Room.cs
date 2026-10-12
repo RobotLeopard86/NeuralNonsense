@@ -41,6 +41,7 @@ namespace NeuralNonsense {
 
 		public string code = "";
 		public Phase phase = Phase.Lobby;
+		public uint roundNumber = 0;
 		public Dictionary<string, Member> members = new Dictionary<string, Member>(); //UUID, member object
 
 		public string hostUUID = "";

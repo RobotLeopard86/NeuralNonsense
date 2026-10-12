@@ -51,5 +51,6 @@ namespace NeuralNonsense {
 	public struct ClientGameState {
 		public string hostID;
 		public ClientMember[] members;
+		public uint round;
 	}
 }

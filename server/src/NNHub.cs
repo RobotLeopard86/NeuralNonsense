@@ -82,7 +82,8 @@ namespace NeuralNonsense {
 			Room room = GameManager.instance.rooms[roomCode];
 			return new ClientGameState {
 				hostID = room.hostUUID,
-				members = room.members.Values.Select(member => new ClientMember(member)).ToArray()
+				members = room.members.Values.Select(member => new ClientMember(member)).ToArray(),
+				round = room.roundNumber
 			};
 		}
 

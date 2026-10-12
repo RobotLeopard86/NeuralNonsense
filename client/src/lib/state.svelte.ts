@@ -6,14 +6,14 @@ export interface Member {
 	name: string,
 	uuid: string,
 	score: number,
-	type: MemberType	
+	type: MemberType
 }
 
 export interface ServerMember {
 	name: string,
 	uuid: string,
 	score: number,
-	type: string	
+	type: string
 }
 
 export const deriveMember = (member: ServerMember) => {
@@ -35,27 +35,30 @@ export const deriveMember = (member: ServerMember) => {
 			break;
 		case "s":
 			mem.type = MemberType.Spectator;
-			break;	
-	} 
+			break;
+	}
 	return mem;
+}
+
+export interface GameState {
+	members: Member[],
+	hostID: string,
+	round: number
 }
 
 export interface ServerGameState {
 	members: ServerMember[],
-	hostID: string
+	hostID: string,
+	round: number
 }
 
 export const deriveGameState = (state: ServerGameState) => {
 	let gs: GameState = {
 		members: state.members.map(deriveMember),
-		hostID: state.hostID
+		hostID: state.hostID,
+		round: state.round
 	};
 	return gs;
-}
-
-export interface GameState {
-	members: Member[],
-	hostID: string
 }
 
 export interface AllGameState {
@@ -76,7 +79,8 @@ export let game: AllGameState = $state({
 	},
 	state: {
 		members: [],
-		hostID: ""
+		hostID: "",
+		round: 0
 	}
 });
 
