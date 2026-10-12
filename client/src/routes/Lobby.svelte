@@ -9,8 +9,6 @@
 	onMount(ejectIfNoConnection);
 
 	let joinLink = $derived.by(() => "https://" + window.location.host + "/#/join/" + game.roomCode.toLowerCase());
-
-	$inspect(game);
 </script>
 
 <Logo />
@@ -49,10 +47,12 @@
 			<Card class="w-11/12 mx-auto mb-2">
 				<span class="text-left text-white font-bold">{member.name}
 					{#if member.uuid == game.self.uuid}	
-						<span class="text-[#00E5FF] rounded-4xl bg-[#00E5FF]/25 px-2 mx-4">YOU</span>
-					{/if}
-					{#if member.uuid == game.state.hostID}	
-						<span class="text-[#FF2D78] rounded-4xl bg-[#FF2D78]/25 px-2 mx-4">HOST</span>
+						<span class="text-[#00E5FF] rounded-4xl bg-[#00E5FF]/25 px-4 py-1 mx-4">YOU</span>
+						{#if member.uuid == game.state.hostID}	
+							<span class="text-[#FF2D78] rounded-4xl bg-[#FF2D78]/25 px-4 py-1">HOST</span>
+						{/if}
+					{:else if member.uuid == game.state.hostID}	
+						<span class="text-[#FF2D78] rounded-4xl bg-[#FF2D78]/25 px-4 py-1 mx-4">HOST</span>
 					{/if}
 				</span>
 			</Card>

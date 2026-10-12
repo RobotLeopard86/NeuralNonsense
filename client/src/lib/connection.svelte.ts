@@ -21,25 +21,25 @@ const configureHandlers = () => {
 		//Go to homepage
 		push("/");
 	});
-    connection().on("Disconnected", async(reason: string) => {
+    connection().on("Disconnected", (reason: string) => {
 		//Obediently disconnect like the good website we are
-		await connection().stop();
+		connection().stop().finally(() => {
+			//Reset game state
+			resetState();
 
-		//Reset game state
-		resetState();
-
-		//Return to homepage and present error
-		push("/");
-		alert(`You have been disconnected from the room: ${reason}`);
+			//Return to homepage and present error
+			push("/");
+			alert(`You have been disconnected from the room: ${reason}`);
+		});
 	});
 
 	//View transition
-	connection().on("ViewTransition", async(view: string) => {
+	connection().on("ViewTransition", (view: string) => {
 		push(`/play/${view}`);
 	});
 
 	//Player list update
-	connection().on("UpdateMemberList", async(members: ServerMember[]) => {
+	connection().on("UpdateMemberList", (members: ServerMember[]) => {
 		game.state.members = members.map(deriveMember);
 	});
 }
@@ -78,20 +78,25 @@ export const tryRestore = async() => {
 	//Decode claims
 	game.token = localToken!;
 	const claims = jose.decodeJwt<JWTPayload>(localToken);
+	if(claims.exp && claims.exp < Math.round(+new Date() / 1000)) {
+		//Token expired, definitely can't restore
+		resetState();
+		return;
+	}
+
+	//Set data
 	game.roomCode = claims.room;
 	game.self.name = claims.name;
 	game.self.uuid = claims.sub;
 
-	//Reconnect and request status update
+	//Reconnect to server and request status update
 	try {
 		await connect();
 	} catch(e) {
 		resetState();
 		alert(`Failed to reconnect to the room: ${e}`);
-		push("/");
 		return;
 	}
-	console.log("I am once again asking");
 	const state: ServerGameState = await connection().invoke("RestoreCurrentState");
 	const self: ServerMember = await connection().invoke("RestoreCurrentSelf");
 
@@ -185,10 +190,8 @@ export const joinGame = async(roomCode: string, memberName: string) => {
 	}
 
 	//Request status
-	console.log("I am once again asking");
 	const state: ServerGameState = await connection().invoke("RestoreCurrentState");
 	const self: ServerMember = await connection().invoke("RestoreCurrentSelf");
-	console.log("I have once again received an answer");
 
 	//Enable tab close warning dialog
 	window.addEventListener("beforeunload", (e: BeforeUnloadEvent) => e.preventDefault());

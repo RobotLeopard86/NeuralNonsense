@@ -151,6 +151,9 @@ namespace NeuralNonsense {
 					await ServiceContainer.instance.hubCtx.Clients.User(mccc.memberID).ViewTransition("end");
 					break;
 			}
+
+			//Set the result
+			mccc.task.SetResult();
 		}
 
 		public async Task RunAsync(CancellationToken token) {

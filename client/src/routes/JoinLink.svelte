@@ -14,8 +14,9 @@
 
 	onMount(tryRestore);
 	onMount(() => {
-		alert("Invalid join link!");
-		if(roomCode.length != 6) push("/");
+		if(roomCode.length != 6) { alert("Invalid join link!");
+			push("/");
+		}
 	})
 
 	const join = async () => {
