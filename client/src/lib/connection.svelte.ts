@@ -5,8 +5,8 @@ import * as jose from "jose";
 
 let hc: SignalR.HubConnection | null = null;
 export const connection = () => {
-    if (hc) return hc;
-    else throw "The connection is not available yet, you idiot!"
+	if(hc) return hc;
+	else throw "The connection is not available yet, you idiot!"
 };
 
 const tabClosePreventHandler = (e: BeforeUnloadEvent) => e.preventDefault();
@@ -24,7 +24,7 @@ const configureHandlers = () => {
 		window.removeEventListener("beforeunload", tabClosePreventHandler);
 		push("/");
 	});
-    connection().on("Disconnected", (reason: string) => {
+	connection().on("Disconnected", (reason: string) => {
 		//Obediently disconnect like the good website we are
 		connection().stop().finally(() => {
 			//Reset game state
@@ -46,20 +46,30 @@ const configureHandlers = () => {
 	connection().on("UpdateMemberList", (members: ServerMember[]) => {
 		game.state.members = members.map(deriveMember);
 	});
+
+	//Host change
+	connection().on("HostChanged", (newHost: string) => {
+		game.state.hostID = newHost;
+	});
+
+	//Round update
+	connection().on("NextRound", () => {
+		game.state.round++;
+	});
 }
 
 export const connect = async () => {
 	//Build hub connection
-    hc = new SignalR.HubConnectionBuilder()
-        .withUrl("/portal/hub", {
-            accessTokenFactory: () => game.token
-        })
-        .configureLogging(SignalR.LogLevel.Information)
-        .withAutomaticReconnect()
-        .build();
+	hc = new SignalR.HubConnectionBuilder()
+		.withUrl("/portal/hub", {
+			accessTokenFactory: () => game.token
+		})
+		.configureLogging(SignalR.LogLevel.Information)
+		.withAutomaticReconnect()
+		.build();
 
 	//Register client methods
-    configureHandlers();
+	configureHandlers();
 
 	//Connect to hub
 	await hc.start();
@@ -71,7 +81,7 @@ interface JWTPayload {
 	name: string
 }
 
-export const tryRestore = async() => {
+export const tryRestore = async () => {
 	//Don't restore if we already have a token
 	if(game.token !== "") return;
 
@@ -122,11 +132,11 @@ export const tryRestore = async() => {
 			break;
 		case "s":
 			game.self.type = MemberType.Spectator;
-			break;	
+			break;
 	}
 }
 
-export const ejectIfNoConnection = async() => {
+export const ejectIfNoConnection = async () => {
 	//Try to restore connection before checking
 	await tryRestore();
 
@@ -138,7 +148,7 @@ export const ejectIfNoConnection = async() => {
 	}
 }
 
-export const joinGame = async(roomCode: string, memberName: string) => {
+export const joinGame = async (roomCode: string, memberName: string) => {
 	//Reset game state
 	resetState();
 	game.roomCode = roomCode;
@@ -156,7 +166,7 @@ export const joinGame = async(roomCode: string, memberName: string) => {
 	});
 
 	//Alert the user on failure
-	if (!result.ok) {
+	if(!result.ok) {
 		resetState();
 		alert(`Failed to join the room: ${await result.text()}`);
 		return;
@@ -182,7 +192,7 @@ export const joinGame = async(roomCode: string, memberName: string) => {
 			break;
 		case "s":
 			game.self.type = MemberType.Spectator;
-			break;	
+			break;
 	}
 
 	//Connect to the hub
@@ -216,6 +226,6 @@ export const joinGame = async(roomCode: string, memberName: string) => {
 			break;
 		case "s":
 			game.self.type = MemberType.Spectator;
-			break;	
+			break;
 	}
 };

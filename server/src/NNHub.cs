@@ -7,6 +7,8 @@ namespace NeuralNonsense {
 		Task Disconnected(string reason);
 		Task ViewTransition(string view);
 		Task UpdateMemberList(ClientMember[] members);
+		Task HostChanged(string newHost);
+		Task NextRound();
 	}
 
 	[Authorize]
@@ -95,8 +97,29 @@ namespace NeuralNonsense {
 			GameManager.instance.rooms[roomCode].RemoveMemberAndPromote(memberID);
 			await Groups.RemoveFromGroupAsync(Context.ConnectionId, roomCode);
 
+			//Send member list update
+			await Clients.Group(roomCode).UpdateMemberList(GameManager.instance.rooms[roomCode].members.Values.Select(member => new ClientMember(member)).ToArray());
+
 			//Abort connection
 			await Abort("Thanks for playing!");
+		}
+
+		public async Task KickUser(string uuid) {
+			//Verify
+			await LoadUserAndVerify();
+
+			//Check host permissions
+			Room room = GameManager.instance.rooms[roomCode];
+			if(memberID != room.hostUUID) throw new ClientCausedException("You cannot perform this action as you are not the host!");
+
+			//Kick the user
+			string conn = room.members[uuid].currentConnection;
+			GameManager.instance.rooms[roomCode].RemoveMemberAndPromote(uuid);
+			await Groups.RemoveFromGroupAsync(conn, roomCode);
+			await Clients.User(uuid).Disconnected("You have been kicked by the host.");
+
+			//Send member list update
+			await Clients.Group(roomCode).UpdateMemberList(GameManager.instance.rooms[roomCode].members.Values.Select(member => new ClientMember(member)).ToArray());
 		}
 	}
 }

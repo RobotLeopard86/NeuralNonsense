@@ -15,7 +15,7 @@
 	</div>
 
 	<div class="relative z-10 min-h-screen flex flex-col justify-self-center items-center justify-center px-6 py-12 gap-5 lg:w-1/2 md:w-3/4 sm:w-full">
-		<Router {routes} />
+		<Router {routes} restoreScrollState={true} />
 	</div>
 
 	<footer class="h-10">

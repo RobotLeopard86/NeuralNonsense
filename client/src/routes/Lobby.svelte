@@ -4,20 +4,28 @@
 	import SVGQR from "@svelte-put/qr/svg/QR.svelte";
 	import { game } from "../lib/state.svelte";
 	import { onMount } from "svelte";
-	import { ejectIfNoConnection } from "../lib/connection.svelte";
+	import { connection, ejectIfNoConnection } from "../lib/connection.svelte";
 	import NeonButton from "../components/NeonButton.svelte";
-	import { ArrowRightOutline } from "flowbite-svelte-icons";
+	import { ArrowRightOutline, OpenDoorOutline, UserRemoveOutline } from "flowbite-svelte-icons";
+    import SmallNeonButton from "../components/SmallNeonButton.svelte";
 
 	onMount(ejectIfNoConnection);
 
 	let joinLink = $derived.by(() => "https://" + window.location.host + "/#/join/" + game.roomCode.toLowerCase());
 	let canStart = $derived(game.state.members.length >= 3);
+
+	const leave = async() => {
+		await connection().invoke("ExplicitLeave");
+	}
 </script>
 
 <Logo />
 <p class="text-center text-white/50 text-sm mb-8">Can you out-funny an AI?</p>
 
 <main class="mb-auto w-full flex flex-col items-center px-4">
+	<!-- Leave button -->
+	<SmallNeonButton variant="Red" onclick={leave} class="absolute top-4 left-4"><OpenDoorOutline size="xl" /> Leave Room</SmallNeonButton>
+
 	<!-- How to join -->
 	<Card class="w-full">
 		<p class="text-center text-white/50 text-md col-span-2">HOW TO JOIN</p>
@@ -57,6 +65,11 @@
 						{/if}
 					{:else if member.uuid == game.state.hostID}
 						<span class="text-[#FF2D78] rounded-4xl bg-[#FF2D78]/25 px-4 py-1 mx-4">HOST</span>
+					{:else if game.self.uuid == game.state.hostID}
+						<br />
+						<SmallNeonButton variant="Red" onclick={async() => {
+							await connection().invoke("KickUser", member.uuid);
+						}}><UserRemoveOutline size="xl"/> Kick</SmallNeonButton>
 					{/if}
 				</span>
 			</Card>

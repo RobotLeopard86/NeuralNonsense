@@ -41,11 +41,18 @@ namespace NeuralNonsense {
 
 		public string code = "";
 		public Phase phase = Phase.Lobby;
-		public uint roundNumber = 0;
+		public uint roundNumber {
+			get; private set {
+				if(value != field + 1) return;
+				field = value;
+				ServiceContainer.instance.hubCtx.Clients.Group(code).NextRound();
+			}
+		} = 0;
 		public Dictionary<string, Member> members = new Dictionary<string, Member>(); //UUID, member object
 
 		public string hostUUID = "";
 		private uint numProjectorsConnected = 0;
+		private bool closeRoom = false;
 
 		private Channel<Command> commandQueue;
 		public ChannelWriter<Command> writer;
@@ -164,11 +171,31 @@ namespace NeuralNonsense {
 		}
 
 		public void RemoveMemberAndPromote(string uuid) {
+			//Remove them
+			members.Remove(uuid);
 
+			//Set room close flag if this was the last person
+			if(members.Count <= 0) {
+				closeRoom = true;
+				return;
+			}
+
+			//Promotion check
+			if(phase == Phase.Lobby) {
+				//Promotion permitted in the lobby
+			} else {
+				//Promotion not allowed during the game
+			}
+
+			//Re-assign host role
+			if(hostUUID == uuid) {
+				hostUUID = members[members.Keys.ElementAt(0)].uuid;
+				ServiceContainer.instance.hubCtx.Clients.Group(code).HostChanged(hostUUID);
+			}
 		}
 
 		public async Task RunAsync(CancellationToken token) {
-			while(!token.IsCancellationRequested) {
+			while(!closeRoom && !token.IsCancellationRequested) {
 				//Process commands
 				Command? cmd;
 				while(commandQueue.Reader.TryRead(out cmd)) {
@@ -191,7 +218,7 @@ namespace NeuralNonsense {
 						toRemove.Add(deadline);
 						continue;
 					}
-					if(deadline.dueBy >= now) {
+					if(deadline.dueBy <= now) {
 						toRemove.Add(deadline);
 						switch(deadline.kind) {
 							case Deadline.Kind.JoinExpire:
@@ -202,7 +229,7 @@ namespace NeuralNonsense {
 					}
 					untilNext = Math.Min(untilNext, deadline.dueBy - now);
 				}
-				deadlines.RemoveAll((d) => toRemove.Contains(d));
+				deadlines.RemoveAll(toRemove.Contains);
 
 				//Game state machine
 				switch(phase) {
