@@ -1,9 +1,11 @@
 <script lang="ts">
     import { onMount } from "svelte";
-    import { ejectIfNoConnection } from "../lib/connection.svelte";
+    import { ejectIfNoConnection, leaveRoom } from "../lib/connection.svelte";
     import LoadingSpinner from "../components/LoadingSpinner.svelte";
     import { game, MemberType } from "../lib/state.svelte";
     import { fade } from "svelte/transition";
+    import { OpenDoorOutline } from "flowbite-svelte-icons";
+    import SmallNeonButton from "../components/SmallNeonButton.svelte";
 
     //onMount(ejectIfNoConnection);
 
@@ -72,6 +74,9 @@
 </script>
 
 <main class="w-full min-h-full flex flex-col place-content-center px-4">
+    <!-- Leave button -->
+	<SmallNeonButton variant="Red" onclick={leaveRoom} class="absolute top-4 left-4"><OpenDoorOutline size="lg" />&nbsp;&nbsp;Leave Room</SmallNeonButton>
+
     <LoadingSpinner size={150} stroke={7} minDegrees={1} maxDegrees={120} />
     <br/>
     <div class="grid">

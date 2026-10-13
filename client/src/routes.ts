@@ -2,10 +2,12 @@ import Home from "./routes/Home.svelte";
 import JoinLink from "./routes/JoinLink.svelte";
 import Lobby from "./routes/Lobby.svelte";
 import ContentGen from "./routes/ContentGen.svelte";
+import Answering from "./routes/Answering.svelte";
 
 export default {
 	"/": Home,
 	"/join/:code": JoinLink,
 	"/play/lobby": Lobby,
-	"/play/generation": ContentGen
+	"/play/generation": ContentGen,
+	"/play/answer": Answering
 }
