@@ -27,4 +27,8 @@ namespace NeuralNonsense.Commands {
 	}
 
 	public class StartCommand : CommandWithoutValue { }
+
+	public class MarkReadyCommand : CommandWithoutValue {
+		public required string memberID;
+	}
 }

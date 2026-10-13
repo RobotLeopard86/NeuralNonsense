@@ -6,7 +6,7 @@
     import { game, MemberType } from "./lib/state.svelte";
 </script>
 
-<div class="relative min-h-screen bg-[#1A1035] overflow-hidden">
+<div class="relative min-h-dvh bg-[#1A1035] overflow-hidden">
 	<div
 		class="absolute inset-0 pointer-events-none"
 		style="

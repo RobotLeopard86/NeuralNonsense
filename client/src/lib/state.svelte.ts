@@ -1,3 +1,5 @@
+import type { AnswerPhaseData, R3ResultsPhaseData, R3VotePhaseData, ResultsPhaseData, VotePhaseData } from "./phase";
+
 export enum MemberType {
 	Player, Audience, Spectator, Projector
 }
@@ -61,16 +63,21 @@ export const deriveGameState = (state: ServerGameState) => {
 	return gs;
 }
 
+export type PhaseData = AnswerPhaseData | VotePhaseData | ResultsPhaseData | R3VotePhaseData | R3ResultsPhaseData;
+
 export interface AllGameState {
 	roomCode: string,
 	token: string,
-	self: Member
-	state: GameState;
+	r3AnswerIndexMapping: number[],
+	self: Member,
+	state: GameState,
+	phase: PhaseData | null
 }
 
 export let game: AllGameState = $state({
 	roomCode: "",
 	token: "",
+	r3AnswerIndexMapping: [],
 	self: {
 		name: "",
 		uuid: "",
@@ -81,12 +88,15 @@ export let game: AllGameState = $state({
 		members: [],
 		hostID: "",
 		round: 0
-	}
+	},
+	phase: null
 });
 
 export const resetState = () => {
 	game.roomCode = "";
 	game.token = "";
+	game.r3AnswerIndexMapping = [];
+	game.phase = null;
 	localStorage.removeItem("nn:tkn");
 	game.self.name = "";
 	game.self.uuid = "";

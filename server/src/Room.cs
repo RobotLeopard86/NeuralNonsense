@@ -13,6 +13,7 @@ namespace NeuralNonsense {
 			public uint score = 0;
 			public Type type;
 			public string currentConnection = "";
+			public bool ready = false;
 		}
 
 		public enum Phase {
@@ -243,6 +244,10 @@ namespace NeuralNonsense {
 					case Phase.Lobby:
 						break;
 					case Phase.ContentGen:
+						if(members.Values.Where(m => m.type == Member.Type.Player || m.type == Member.Type.Audience).Count(m => !m.ready) == 0) {
+							phase = Phase.Answer;
+							await ServiceContainer.instance.hubCtx.Clients.Group(code).ViewTransition("answer");
+						}
 						break;
 					case Phase.Answer:
 						break;

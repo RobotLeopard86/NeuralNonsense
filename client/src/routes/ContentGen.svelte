@@ -1,6 +1,6 @@
 <script lang="ts">
     import { onMount } from "svelte";
-    import { ejectIfNoConnection, leaveRoom } from "../lib/connection.svelte";
+    import { connection, ejectIfNoConnection, leaveRoom } from "../lib/connection.svelte";
     import LoadingSpinner from "../components/LoadingSpinner.svelte";
     import { game, MemberType } from "../lib/state.svelte";
     import { fade } from "svelte/transition";
@@ -68,7 +68,10 @@
         const interval = setInterval(() => {
 			slideIndex++;
 		}, slideTime);
-		setTimeout(() => clearInterval(interval), slideTime * (slides.length - 1));
+		setTimeout(async() => {
+            clearInterval(interval);
+            await connection().invoke("SignalReady");
+        }, slideTime * (slides.length - 1));
 		return () => clearInterval(interval);
     });
 </script>

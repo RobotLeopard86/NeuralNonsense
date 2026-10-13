@@ -138,5 +138,17 @@ namespace NeuralNonsense {
 			await GameManager.instance.rooms[roomCode].writer.WriteAsync(sc);
 			await sc.task.Task;
 		}
+
+		public async Task SignalReady() {
+			//Verify
+			await LoadUserAndVerify();
+
+			//Send ready command
+			MarkReadyCommand mrc = new MarkReadyCommand() {
+				memberID = memberID
+			};
+			await GameManager.instance.rooms[roomCode].writer.WriteAsync(mrc);
+			await mrc.task.Task;
+		}
 	}
 }
