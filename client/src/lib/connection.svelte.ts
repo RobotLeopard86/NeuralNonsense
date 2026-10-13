@@ -3,6 +3,7 @@ import { deriveGameState, deriveMember, game, MemberType, resetState, type Serve
 import { push } from "svelte-spa-router";
 import * as jose from "jose";
 import { configureHandlers } from "./handlers";
+import { addToast } from "./toast.svelte";
 
 let hc: SignalR.HubConnection | null = null;
 export const connection = () => {
@@ -62,7 +63,7 @@ export const tryRestore = async () => {
 		await connect();
 	} catch(e) {
 		resetState();
-		alert(`Failed to reconnect to the room: ${e}`);
+		addToast(`Failed to reconnect to the room: "${e}"`, 5000);
 		return;
 	}
 	const state: ServerGameState = await connection().invoke("RestoreCurrentState");
@@ -122,7 +123,7 @@ export const joinRoom = async (roomCode: string, memberName: string) => {
 	//Alert the user on failure
 	if(!result.ok) {
 		resetState();
-		alert(`Failed to join the room: ${await result.text()}`);
+		addToast(`Failed to join the room: "${await result.text()}"`, 5000);
 		return;
 	}
 
@@ -154,7 +155,7 @@ export const joinRoom = async (roomCode: string, memberName: string) => {
 		await connect();
 	} catch(e) {
 		resetState();
-		alert(`Failed to connect to the room: ${e}`);
+		addToast(`Failed to connect to the room: "${e}"`, 5000);
 		return;
 	}
 

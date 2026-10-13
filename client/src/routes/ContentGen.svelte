@@ -3,6 +3,7 @@
     import { ejectIfNoConnection } from "../lib/connection.svelte";
     import LoadingSpinner from "../components/LoadingSpinner.svelte";
     import { game, MemberType } from "../lib/state.svelte";
+    import { fade } from "svelte/transition";
 
     //onMount(ejectIfNoConnection);
 
@@ -70,10 +71,22 @@
     });
 </script>
 
-<main class="w-full min-h-screen flex flex-col place-content-center px-4">
+<main class="w-full min-h-full flex flex-col place-content-center px-4">
     <LoadingSpinner size={150} stroke={7} minDegrees={1} maxDegrees={120} />
     <br/>
-    <p class="text-white font-bold text-4xl text-center mb-4">{currentSlide.title}</p>
-    <p class="text-white/50 text-lg text-center">{currentSlide.body}</p>
-    <p class="text-white/50 text-lg text-center">{currentSlide.body2}</p>
+    <div class="grid">
+        {#key currentSlide}
+            <div class="layer">
+                <p class="text-white font-bold text-4xl text-center mb-4" in:fade={{ delay: 500, duration: 500 }} out:fade={{ duration: 500 }}>{currentSlide.title}</p>
+                <p class="text-white/50 text-lg text-center" in:fade={{ delay: 500, duration: 500 }} out:fade={{ duration: 500 }}>{currentSlide.body}</p>
+                <p class="text-white/50 text-lg text-center" in:fade={{ delay: 500, duration: 500 }} out:fade={{ duration: 500 }}>{currentSlide.body2}</p>
+            </div>
+        {/key}
+    </div>
 </main>
+
+<style scoped>
+    .layer {
+        grid-area: 1 / 1;
+    }
+</style>

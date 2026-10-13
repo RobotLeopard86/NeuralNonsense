@@ -6,6 +6,8 @@
 	import TextField from "../components/TextField.svelte";
 	import { joinRoom, tryRestore } from "../lib/connection.svelte";
 	import { onMount } from "svelte";
+    import { addToast } from "../lib/toast.svelte";
+    import SmallNeonButton from "../components/SmallNeonButton.svelte";
 
 	type Phase = "Initial" | "Join" | "Create";
 	let phase: Phase = $state("Initial");
@@ -32,7 +34,7 @@
 
 		//Alert if it went wrong
 		if (!result.ok) {
-			alert("Failed to create room!");
+			addToast("Failed to create room!", 5000);
 			return;
 		}
 

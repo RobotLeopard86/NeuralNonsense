@@ -2,6 +2,7 @@ import type { HubConnection } from "@microsoft/signalr";
 import { connection, tabClosePreventHandler } from "./connection.svelte";
 import { push } from "svelte-spa-router";
 import { resetState, type ServerMember, game, deriveMember } from "./state.svelte";
+import { addToast } from "./toast.svelte";
 
 export const configureHandlers = () => {
     let conn: HubConnection = connection();
@@ -10,8 +11,8 @@ export const configureHandlers = () => {
     conn.onclose((e?: Error) => {
         //Present error if applicable
         if(e) {
-            alert(`You have been unexpectedly disconnected from the room: ${e.message}`);
-            console.error(`Full Error Stacktrace: ${e.stack ? e.stack : "Not Available"}`);
+            addToast(`You have been unexpectedly disconnected from the room: "${e.message}"`, 5000);
+            console.error(`Full Error Stacktrace: "${e.stack ? e.stack : "Not Available"}"`);
         }
 
         //Go to homepage
@@ -27,7 +28,7 @@ export const configureHandlers = () => {
             //Return to homepage and present error
             push("/");
             window.removeEventListener("beforeunload", tabClosePreventHandler);
-            alert(`You have been disconnected from the room: ${reason}`);
+            addToast(`You have been disconnected from the room: "${reason}"`, 5000);
         });
     });
 

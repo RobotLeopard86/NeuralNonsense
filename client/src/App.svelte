@@ -1,6 +1,8 @@
 <script lang="ts">
 	import Router from "svelte-spa-router";
 	import routes from "./routes";
+    import Toast from "./components/Toast.svelte";
+    import { toasts } from "./lib/toast.svelte";
 </script>
 
 <div class="relative min-h-screen bg-[#1A1035] overflow-hidden">
@@ -14,7 +16,13 @@
     ">
 	</div>
 
-	<div class="relative z-10 min-h-screen flex flex-col justify-self-center items-center justify-center px-6 py-12 gap-5 lg:w-1/2 md:w-3/4 sm:w-full">
+	<div class="absolute top-4 right-4 flex flex-col max-w-1/3 items-start align-bottom">
+		{#each toasts.filter((t) => !t.done) as toast (toast.id)}
+			<Toast message={toast.message} duration={toast.duration} bind:done={toast.done} />
+		{/each}
+	</div>
+
+	<div class="relative z-10 min-h-[95dvh] flex flex-col justify-self-center items-center justify-center px-6 py-12 gap-5 lg:w-1/2 md:w-3/4 sm:w-full">
 		<Router {routes} restoreScrollState={true} />
 	</div>
 

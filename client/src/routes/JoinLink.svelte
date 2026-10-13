@@ -7,6 +7,7 @@
 	import { onMount } from "svelte";
 	import { joinRoom, tryRestore } from "../lib/connection.svelte";
 	import { push } from "svelte-spa-router";
+    import { addToast } from "../lib/toast.svelte";
 
 	let { params = {} } = $props();
 	let memberName = $state("");
@@ -15,7 +16,7 @@
 	onMount(tryRestore);
 	onMount(() => {
 		if (roomCode.length != 6) {
-			alert("Invalid join link!");
+			addToast("Invalid join link!", 5000);
 			push("/");
 		}
 	});

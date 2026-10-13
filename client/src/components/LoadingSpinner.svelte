@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { onMount } from "svelte";
-
 	interface Props {
 		size: number;
 		stroke: number;
@@ -16,6 +14,7 @@
 	let growRange = $state(true);
 
 	$effect(() => {
+		range = props.minDegrees;
 		const interval = setInterval(() => {
 			begin = (begin + 2) % 360;
 
@@ -35,10 +34,6 @@
 		}, 1000 / 360);
 
 		return () => clearInterval(interval);
-	});
-
-	onMount(() => {
-		range = props.minDegrees;
 	});
 
 	let radius = $derived((props.size - props.stroke) / 2);

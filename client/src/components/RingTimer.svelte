@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { onMount } from "svelte";
-
 	interface Props {
 		duration: number;
 		size: number;
@@ -11,17 +9,14 @@
 	let props: Props = $props();
 
 	let timeRemaining = $state(0);
+	let configured = $state(false);
 	$effect(() => {
+		timeRemaining = props.duration;
 		const interval = setInterval(() => {
 			timeRemaining -= 1000;
+			if(timeRemaining <= 0) clearInterval(interval);
 		}, 1000);
-		setTimeout(() => clearInterval(interval), props.duration);
-
 		return () => clearInterval(interval);
-	});
-
-	onMount(() => {
-		timeRemaining = props.duration;
 	});
 
 	let radius: number = $derived((props.size - props.stroke) / 2);

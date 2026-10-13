@@ -183,8 +183,8 @@ namespace NeuralNonsense {
 			//Promotion check
 			if(phase == Phase.Lobby) {
 				//Promotion permitted in the lobby
-			} else {
-				//Promotion not allowed during the game
+				members.Values.First(m => m.type == Member.Type.Audience).type = Member.Type.Player;
+				ServiceContainer.instance.hubCtx.Clients.Group(code).UpdateMemberList(members.Values.Select(member => new ClientMember(member)).ToArray());
 			}
 
 			//Re-assign host role
