@@ -9,11 +9,13 @@
 	import { ArrowRightOutline, OpenDoorOutline, UserRemoveOutline } from "flowbite-svelte-icons";
     import SmallNeonButton from "../components/SmallNeonButton.svelte";
     import LoadingSpinner from "../components/LoadingSpinner.svelte";
+    import { startGame } from "../lib/client";
 
 	onMount(ejectIfNoConnection);
 
 	let joinLink = $derived.by(() => "https://" + window.location.host + "/#/join/" + game.roomCode.toLowerCase());
 	let canStart = $derived(game.state.members.length >= 3);
+	let started = $state(false);
 </script>
 
 <Logo />
@@ -80,11 +82,20 @@
 
 	<!-- Start button -->
 	{#if game.self.uuid == game.state.hostID}
-		<NeonButton variant="Yellow" onclick={() => {}} disabled={!canStart} class="w-full my-4">
-			{#if game.state.members.length < 3}
-				Need 3 Players to Start
+		<NeonButton variant="Yellow" onclick={() => {
+			startGame();
+			started = true;
+		}} disabled={!canStart || started} class="w-full my-4">
+			{#if started}
+				<LoadingSpinner size={25} stroke={2} minDegrees={1} maxDegrees={120} />
+				<span>&nbsp;&nbsp;&nbsp;&nbsp;</span>
+				<p class="text-center text-lg">Starting...</p>
 			{:else}
-				Start Game <ArrowRightOutline size="xl" />
+				{#if game.state.members.length < 3}
+					Need 3 Players to Start
+				{:else}
+					Start Game <ArrowRightOutline size="xl" />
+				{/if}
 			{/if}
 		</NeonButton>
 	{:else}

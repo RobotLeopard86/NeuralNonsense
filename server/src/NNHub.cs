@@ -121,5 +121,22 @@ namespace NeuralNonsense {
 			//Send member list update
 			await Clients.Group(roomCode).UpdateMemberList(GameManager.instance.rooms[roomCode].members.Values.Select(member => new ClientMember(member)).ToArray());
 		}
+
+		public async Task StartGame() {
+			//Verify
+			await LoadUserAndVerify();
+
+			//Check host permissions
+			Room room = GameManager.instance.rooms[roomCode];
+			if(memberID != room.hostUUID) throw new ClientCausedException("You cannot perform this action as you are not the host!");
+
+			//Validate player count to be sure
+			if(room.members.Count < 3) throw new ClientCausedException("3+ players required to start the game!");
+
+			//Send start command
+			StartCommand sc = new StartCommand();
+			await GameManager.instance.rooms[roomCode].writer.WriteAsync(sc);
+			await sc.task.Task;
+		}
 	}
 }

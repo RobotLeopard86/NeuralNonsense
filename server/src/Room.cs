@@ -170,6 +170,14 @@ namespace NeuralNonsense {
 			mccc.task.SetResult();
 		}
 
+		private async Task HandleStart(StartCommand _) {
+			//Set phase
+			phase = Phase.ContentGen;
+
+			//View transition
+			await ServiceContainer.instance.hubCtx.Clients.Group(code).ViewTransition("generation");
+		}
+
 		public void RemoveMemberAndPromote(string uuid) {
 			//Remove them
 			members.Remove(uuid);
@@ -205,6 +213,9 @@ namespace NeuralNonsense {
 							break;
 						case MemberConnectionCompleteCommand mccc:
 							await HandleMemberConnectionComplete(mccc);
+							break;
+						case StartCommand sc:
+							await HandleStart(sc);
 							break;
 					}
 				}
@@ -254,7 +265,11 @@ namespace NeuralNonsense {
 				}
 
 				//Wait until we get a new command or until the next deadline
-				await commandQueue.Reader.WaitToReadAsync(token);
+				if(untilNext == long.MaxValue) {
+					await commandQueue.Reader.WaitToReadAsync(token);
+				} else {
+					await Task.WhenAny(commandQueue.Reader.WaitToReadAsync(token).AsTask(), Task.Delay(TimeSpan.FromSeconds((double)untilNext / TimeProvider.System.TimestampFrequency), token));
+				}
 			}
 		}
 	}

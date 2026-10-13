@@ -25,4 +25,6 @@ namespace NeuralNonsense.Commands {
 		public required string memberID;
 		public required string connID;
 	}
+
+	public class StartCommand : CommandWithoutValue { }
 }

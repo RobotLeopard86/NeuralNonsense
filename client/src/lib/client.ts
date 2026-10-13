@@ -52,3 +52,7 @@ export const configureHandlers = () => {
         game.state.round++;
     });
 }
+
+export const startGame = async () => {
+    await connection().invoke("StartGame");
+}
