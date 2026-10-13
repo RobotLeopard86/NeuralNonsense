@@ -4,7 +4,6 @@
 		stroke: number;
 		minDegrees: number;
 		maxDegrees: number;
-		class?: string;
 	}
 
 	let props: Props = $props();

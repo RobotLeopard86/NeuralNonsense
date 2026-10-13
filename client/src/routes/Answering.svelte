@@ -10,6 +10,7 @@
 
     //onMount(ejectIfNoConnection);
 
+    let maxAnswerLength = $derived(((game.phase ? game.phase : {}) as AnswerPhaseData).maxAnswerLength || 200);
     let answer = $state("");
 </script>
 
@@ -36,10 +37,10 @@
             <h1 class="text-white font-black text-4xl text-center mb-8">{((game.phase ? game.phase : {}) as AnswerPhaseData).prompt || "An amazing prompt"}</h1>
 
             <!-- Response area -->
-            <textarea placeholder="Respond to the prompt!" rows={3} maxlength={((game.phase ? game.phase : {}) as AnswerPhaseData).maxAnswerLength || 200} bind:value={answer}
+            <textarea placeholder="Respond to the prompt!" rows={3} maxlength={maxAnswerLength} bind:value={answer}
                 class="w-full bg-white/5 rounded-2xl p-4 text-white text-lg border-2 border-white/10 focus:border-[#FF2D78] focus:outline-none resize-none transition-colors">
             </textarea>
-            <p class="w-full text-right text-white/50 text-sm mr-4">{answer.length}/{((game.phase ? game.phase : {}) as AnswerPhaseData).maxAnswerLength || 200}</p>
+            <p class={`w-full text-right ${answer.length == maxAnswerLength ? "font-semibold text-[#FF2D78]" : "text-white/50"} text-sm mr-4`}>{answer.length}/{maxAnswerLength}</p>
                 
         </main>
     {:else}

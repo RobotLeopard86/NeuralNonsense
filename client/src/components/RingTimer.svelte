@@ -3,13 +3,11 @@
 		duration: number;
 		size: number;
 		stroke: number;
-		class?: string;
 	}
 
 	let props: Props = $props();
 
 	let timeRemaining = $state(0);
-	let configured = $state(false);
 	$effect(() => {
 		timeRemaining = props.duration;
 		const interval = setInterval(() => {
