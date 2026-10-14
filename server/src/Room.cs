@@ -72,7 +72,7 @@ namespace NeuralNonsense {
 		private void HandleInitialJoin(InitialJoinCommand ijc) {
 			//Check member slot availability
 			if(members.Count > (32 + numProjectorsConnected)) throw new ServerCausedException("Too many people in this room!");
-			if(members.Count((m) => m.Value.name == ijc.name) > 0) throw new ClientCausedException("Name is in use!");
+			if(members.Values.Where(m => m.type != Member.Type.Projector).Count((m) => m.name == ijc.name) > 0) throw new ClientCausedException("Name is in use!");
 
 			//Create member object
 			Member member = new Member() {
@@ -186,6 +186,30 @@ namespace NeuralNonsense {
 			mrc.task.SetResult();
 		}
 
+		private async Task HandleAddProjector(AddProjectorCommand apc) {
+			//Create projector member object
+			Member member = new Member() {
+				name = "__PROJECTOR__",
+				uuid = Guid.NewGuid().ToString(),
+				score = 0,
+				type = Member.Type.Spectator
+			};
+			members.Add(member.uuid, member);
+
+			//Set expiry deadline
+			Deadline expiry = new Deadline() {
+				kind = Deadline.Kind.JoinExpire,
+				cancel = new CancellationTokenSource(),
+				dueBy = ComputeDeadline(15),
+				additionalData = member.uuid
+			};
+			deadlines.Add(expiry);
+
+			//Return token
+			numProjectorsConnected++;
+			apc.task.SetResult(ServiceContainer.instance.tokenGenerator.GenToken(code, member));
+		}
+
 		public void RemoveMemberAndPromote(string uuid) {
 			//Remove them
 			members.Remove(uuid);
@@ -227,6 +251,9 @@ namespace NeuralNonsense {
 							break;
 						case MarkReadyCommand mrc:
 							await HandleMarkReady(mrc);
+							break;
+						case AddProjectorCommand apc:
+							await HandleAddProjector(apc);
 							break;
 					}
 				}

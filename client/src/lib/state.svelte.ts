@@ -92,16 +92,20 @@ export let game: AllGameState = $state({
 	phase: null
 });
 
-export const resetState = () => {
+export const resetTabState = () => {
 	game.roomCode = "";
 	game.token = "";
 	game.r3AnswerIndexMapping = [];
 	game.phase = null;
-	localStorage.removeItem("nn:tkn");
 	game.self.name = "";
 	game.self.uuid = "";
 	game.self.score = 0;
 	game.self.type = MemberType.Spectator;
 	game.state.members = []
 	game.state.hostID = "";
+}
+
+export const resetState = () => {
+	resetTabState();
+	localStorage.removeItem("nn:tkn");
 }

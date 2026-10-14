@@ -31,4 +31,6 @@ namespace NeuralNonsense.Commands {
 	public class MarkReadyCommand : CommandWithoutValue {
 		public required string memberID;
 	}
+
+	public class AddProjectorCommand : CommandWithValue<string> { }
 }

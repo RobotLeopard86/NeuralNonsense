@@ -6,7 +6,7 @@
 	import { onMount } from "svelte";
 	import { connection, ejectIfNoConnection, leaveRoom } from "../lib/connection.svelte";
 	import NeonButton from "../components/NeonButton.svelte";
-	import { ArrowRightOutline, OpenDoorOutline, UserRemoveOutline } from "flowbite-svelte-icons";
+	import { ArrowRightOutline, EyeOutline, OpenDoorOutline, UserRemoveOutline } from "flowbite-svelte-icons";
     import SmallNeonButton from "../components/SmallNeonButton.svelte";
     import LoadingSpinner from "../components/LoadingSpinner.svelte";
     import { startGame } from "../lib/client";
@@ -30,6 +30,14 @@
 		await navigator.clipboard.writeText(game.roomCode);
 		copiedCode = true;
 		setTimeout(() => copiedCode = false, 3000);
+	}
+	
+	const launchProjector = async() => {
+		//Have the server create a projector slot
+		let ptoken = await connection().invoke<string>("AddProjector");
+
+		//Open the projector window with the token
+		window.open(`/#/projector-launch/${ptoken}`, "_blank");
 	}
 </script>
 
@@ -101,6 +109,13 @@
 		{/if}
 	</Card>
 	<br />
+
+	<!-- Projector view launch button -->
+	{#if game.self.uuid == game.state.hostID}
+		<NeonButton variant="Translucent" onclick={launchProjector} class="w-full my-4">
+			<EyeOutline size="xl" />&nbsp;&nbsp;Launch Projector View (New Tab)
+		</NeonButton>
+	{/if}
 
 	<!-- Start button -->
 	{#if game.self.uuid == game.state.hostID}

@@ -31,7 +31,7 @@ export const connect = async () => {
 	await hc.start();
 }
 
-interface JWTPayload {
+export interface JWTPayload {
 	sub: string,
 	room: string,
 	name: string

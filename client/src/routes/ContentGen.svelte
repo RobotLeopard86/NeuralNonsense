@@ -23,7 +23,7 @@
             body2: "Everyone gets a different prompt, and you'll have 60 seconds to answer."
         },
         {
-            title: "A Battle of Wits",
+            title: "The People Decide",
             body: "Everybody's answer goes up against an AI's response to the same prompt.",
             body2: "The authors are hidden, so pick your favorite response!"
         },
@@ -45,7 +45,7 @@
             body2: "Everyone gets a different prompt, and they'll have 60 seconds to answer."
         },
         {
-            title: "A Battle of Wits",
+            title: "The People Decide",
             body: "Everybody's answer goes up against an AI's response to the same prompt.",
             body2: "The authors are hidden, so pick your favorite response!"
         },
@@ -80,6 +80,7 @@
     <!-- Leave button -->
 	<SmallNeonButton variant="Red" onclick={leaveRoom} class="absolute top-4 left-4"><OpenDoorOutline size="lg" />&nbsp;&nbsp;Leave Room</SmallNeonButton>
 
+    <!-- Spinner and slides -->
     <LoadingSpinner size={150} stroke={7} minDegrees={1} maxDegrees={120} />
     <br/>
     <div class="grid">

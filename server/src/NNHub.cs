@@ -139,6 +139,23 @@ namespace NeuralNonsense {
 			await sc.task.Task;
 		}
 
+		public async Task<string> AddProjector() {
+			//Verify
+			await LoadUserAndVerify();
+
+			//Check host permissions
+			Room room = GameManager.instance.rooms[roomCode];
+			if(memberID != room.hostUUID) throw new ClientCausedException("You cannot perform this action as you are not the host!");
+
+			//Send projector addition command
+			AddProjectorCommand apc = new AddProjectorCommand();
+			await GameManager.instance.rooms[roomCode].writer.WriteAsync(apc);
+			await apc.task.Task;
+
+			//Return projector token
+			return apc.task.Task.Result;
+		}
+
 		public async Task SignalReady() {
 			//Verify
 			await LoadUserAndVerify();
