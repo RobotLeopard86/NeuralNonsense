@@ -167,12 +167,23 @@ namespace NeuralNonsense {
 			mccc.task.SetResult();
 		}
 
-		private async Task HandleStart(StartCommand _) {
+		private async Task HandleStart(StartCommand sc) {
 			//Set phase
 			phase = Phase.ContentGen;
 
 			//View transition
 			await ServiceContainer.instance.hubCtx.Clients.Group(code).ViewTransition("generation");
+
+			//Set the result
+			sc.task.SetResult();
+		}
+
+		private async Task HandleMarkReady(MarkReadyCommand mrc) {
+			//Set that the member is ready
+			members[mrc.memberID].ready = true;
+
+			//Set the result
+			mrc.task.SetResult();
 		}
 
 		public void RemoveMemberAndPromote(string uuid) {
@@ -214,6 +225,9 @@ namespace NeuralNonsense {
 						case StartCommand sc:
 							await HandleStart(sc);
 							break;
+						case MarkReadyCommand mrc:
+							await HandleMarkReady(mrc);
+							break;
 					}
 				}
 
@@ -246,6 +260,7 @@ namespace NeuralNonsense {
 					case Phase.ContentGen:
 						if(members.Values.Where(m => m.type == Member.Type.Player || m.type == Member.Type.Audience).Count(m => !m.ready) == 0) {
 							phase = Phase.Answer;
+							foreach(Member m in members.Values) m.ready = false;
 							await ServiceContainer.instance.hubCtx.Clients.Group(code).ViewTransition("answer");
 						}
 						break;

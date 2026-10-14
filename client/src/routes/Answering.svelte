@@ -1,62 +1,116 @@
 <script lang="ts">
     import { onMount } from "svelte";
-    import { ejectIfNoConnection, leaveRoom } from "../lib/connection.svelte";
+    import { connection, ejectIfNoConnection, leaveRoom } from "../lib/connection.svelte";
     import LoadingSpinner from "../components/LoadingSpinner.svelte";
     import { game, MemberType } from "../lib/state.svelte";
     import SmallNeonButton from "../components/SmallNeonButton.svelte";
-    import { OpenDoorOutline } from "flowbite-svelte-icons";
+    import { OpenDoorOutline, PaperPlaneOutline } from "flowbite-svelte-icons";
     import RingTimer from "../components/RingTimer.svelte";
     import type { AnswerPhaseData } from "../lib/phase";
+    import NeonButton from "../components/NeonButton.svelte";
+    import { fly } from "svelte/transition";
+	import xss from "xss";
 
     //onMount(ejectIfNoConnection);
 
     let maxAnswerLength = $derived(((game.phase ? game.phase : {}) as AnswerPhaseData).maxAnswerLength || 200);
     let answer = $state("");
+
+	let canSubmit = $derived(answer ? true : false);
+	let submitted = $state(false);
+	let received = $state(false);
+
+	const submit = async() => {
+		//Mark submitted
+		submitted = true;
+		
+		//Send to server
+		await connection().invoke("SubmitAnswer", xss(answer));
+
+		//Mark received
+		received = true;	
+	}
 </script>
 
-<main class="mb-auto w-full flex flex-col items-center px-4">
-    {#if game.self.type == MemberType.Spectator}
-        <header class="absolute h-10 inset-x-0 top-4 w-full">
-            <!-- Leave button and round indicator -->
-            <div class="absolute top-0 left-4 flex flex-col items-center w-1/5">
-                <SmallNeonButton variant="Red" onclick={leaveRoom} class="mb-2 min-w-full"><OpenDoorOutline size="lg" />&nbsp;&nbsp;Leave Room</SmallNeonButton>
-                <div class="px-4 py-1 min-w-full rounded-2xl font-bold text-sm flex items-center justify-center bg-white/5 border-2 border-white/20 text-white">
-                    Round {game.state.round} | {game.self.score} pts
-                </div>
-            </div>
+<main class="w-full min-h-full flex flex-col items-center px-4">
+	<!-- Leave button -->
+	<SmallNeonButton variant="Red" onclick={leaveRoom} class="absolute top-4 left-4"><OpenDoorOutline size="lg" />&nbsp;&nbsp;Leave Room</SmallNeonButton>
 
-            <!-- Timer -->
-            <div class="absolute top-0 right-4">
-                <RingTimer size={72} stroke={4} duration={60000} />
-            </div>
-        </header>
+    {#if game.self.type == MemberType.Player}
+		<!-- Score indicator -->
+		<div class="absolute top-4 right-4 px-4 py-1 rounded-2xl font-bold text-sm flex items-center justify-center bg-white/5 border-2 border-white/20 text-white">
+			{game.self.score} Points
+		</div>
 
-        <!-- Body zone -->
-        <main class="mb-auto mt-16 w-full h-[90dvh] flex flex-col items-center px-4">
-            <!-- Prompt -->
-            <h1 class="text-white font-black text-4xl text-center mb-8">{((game.phase ? game.phase : {}) as AnswerPhaseData).prompt || "An amazing prompt"}</h1>
+        <!-- Body zone-->
+		<div class="w-3/4 min-h-[85dvh] flex flex-col place-content-center px-4">
+			{#if !received}
+				<div out:fly={{ duration: 500, x: 0, y: 100 }}>
+					<!-- Header -->
+					<div class="w-full flex flex-row items-center mb-8">
+						<!-- Round indicator -->
+						<span class="px-4 py-1 rounded-2xl w-1/7 font-bold text-lg flex items-center justify-center bg-white/5 border-2 border-white/20 text-white">
+							Round {game.state.round}
+						</span>
 
-            <!-- Response area -->
-            <textarea placeholder="Respond to the prompt!" rows={3} maxlength={maxAnswerLength} bind:value={answer}
-                class="w-full bg-white/5 rounded-2xl p-4 text-white text-lg border-2 border-white/10 focus:border-[#FF2D78] focus:outline-none resize-none transition-colors">
-            </textarea>
-            <p class={`w-full text-right ${answer.length == maxAnswerLength ? "font-semibold text-[#FF2D78]" : "text-white/50"} text-sm mr-4`}>{answer.length}/{maxAnswerLength}</p>
-                
-        </main>
+						<!-- Spacer -->
+						<span class="mx-auto"></span>
+						
+						<!-- Timer -->
+						<RingTimer size={72} stroke={4} duration={60000} />
+					</div>
+
+					<!-- Prompt -->
+					<p class="text-white/50 text-md text-left mb-2">YOUR PROMPT:</p>
+					<p class="text-white font-black text-4xl text-left mb-4 pb-6">{((game.phase ? game.phase : {}) as AnswerPhaseData).prompt || "An amazing prompt"}</p>
+
+					<!-- Response area -->
+					<p class="text-white/50 text-md text-left mb-2">YOUR RESPONSE:</p>
+					<textarea name="Answer" placeholder="Respond to the prompt!" rows={3} maxlength={maxAnswerLength} bind:value={answer}
+						class="w-full bg-white/5 rounded-2xl p-4 text-white text-lg border-2 border-white/10 focus:border-[#FF2D78] focus:outline-none resize-none transition-colors">
+					</textarea>
+					<p class={`w-full text-right ${answer.length == maxAnswerLength ? "font-semibold text-[#FF2D78]" : "text-white/50"} text-sm mr-8`}>{answer.length}/{maxAnswerLength}</p>
+
+					<!-- Submission button -->
+					<NeonButton variant="Yellow" onclick={submit} disabled={!canSubmit || submitted} class="w-full my-4">
+						{#if submitted}
+							<LoadingSpinner size={25} stroke={2} minDegrees={1} maxDegrees={120} />
+							<span>&nbsp;&nbsp;&nbsp;&nbsp;</span>
+							<p class="text-center text-lg">Working...</p>
+						{:else}
+							<PaperPlaneOutline size="xl" /> Submit Answer
+						{/if}
+					</NeonButton>
+				</div>
+			{:else}
+				<div in:fly={{ delay: 500, duration: 500, x: 0, y: -100 }}>
+					<LoadingSpinner size={150} stroke={7} minDegrees={1} maxDegrees={120} />
+					<br/>
+					<p class="text-white font-bold text-4xl text-center mb-4">Response received!</p>
+					<p class="text-white/50 text-lg text-center">Waiting for other players...</p>
+				</div>
+			{/if}
+		</div>
     {:else}
-        <!-- Leave button and round indicator -->
-        <div class="absolute top-4 left-4 flex flex-col items-center w-1/5">
-            <SmallNeonButton variant="Red" onclick={leaveRoom} class="mb-2 min-w-full"><OpenDoorOutline size="lg" />&nbsp;&nbsp;Leave Room</SmallNeonButton>
-            <div class="px-4 py-1 min-w-full rounded-2xl font-bold text-sm flex items-center justify-center bg-white/5 border-2 border-white/20 text-white">
-                Round {game.state.round}
-            </div>
-        </div>
+		<div class="w-3/4 min-h-[85dvh] flex flex-col place-content-center px-4">
+			<!-- Header -->
+			<div class="w-full flex flex-row items-center mb-25">
+				<!-- Round indicator -->
+				<span class="px-4 py-1 rounded-2xl w-1/7 font-bold text-lg flex items-center justify-center bg-white/5 border-2 border-white/20 text-white">
+					Round {game.state.round}
+				</span>
 
-        <!-- Timer -->
-        <div class="absolute top-4 right-4">
-            <RingTimer size={72} stroke={4} duration={60000} />
-        </div>
+				<!-- Spacer -->
+				<span class="mx-auto"></span>
+				
+				<!-- Timer -->
+				<RingTimer size={72} stroke={4} duration={60000} />
+			</div>
 
-        <!-- TODO: response statuses -->
+			<LoadingSpinner size={150} stroke={7} minDegrees={1} maxDegrees={120} />
+			<br/>
+			<p class="text-white font-bold text-4xl text-center mb-4">Players are thinking...</p>
+			<p class="text-white/50 text-lg text-center">You'll get to vote in a moment!</p>
+		</div>
     {/if}
 </main>

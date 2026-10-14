@@ -4,6 +4,7 @@ import { push } from "svelte-spa-router";
 import * as jose from "jose";
 import { configureHandlers } from "./client";
 import { addToast } from "./toast.svelte";
+import xss from "xss";
 
 let hc: SignalR.HubConnection | null = null;
 export const connection = () => {
@@ -63,7 +64,7 @@ export const tryRestore = async () => {
 		await connect();
 	} catch(e) {
 		resetState();
-		addToast(`Failed to reconnect to the room: "${e}"`, 5000);
+		addToast(`Failed to reconnect to the room: ${e}`, 5000);
 		return;
 	}
 	const state: ServerGameState = await connection().invoke("RestoreCurrentState");
@@ -113,7 +114,7 @@ export const joinRoom = async (roomCode: string, memberName: string) => {
 		method: "POST",
 		body: JSON.stringify({
 			code: roomCode,
-			name: memberName
+			name: xss(memberName)
 		}),
 		headers: {
 			"Content-Type": "application/json"
@@ -123,7 +124,7 @@ export const joinRoom = async (roomCode: string, memberName: string) => {
 	//Alert the user on failure
 	if(!result.ok) {
 		resetState();
-		addToast(`Failed to join the room: "${await result.text()}"`, 5000);
+		addToast(`Failed to join the room: ${await result.text()}`, 5000);
 		return;
 	}
 
@@ -155,7 +156,7 @@ export const joinRoom = async (roomCode: string, memberName: string) => {
 		await connect();
 	} catch(e) {
 		resetState();
-		addToast(`Failed to connect to the room: "${e}"`, 5000);
+		addToast(`Failed to connect to the room: ${e}`, 5000);
 		return;
 	}
 

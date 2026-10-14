@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { ArrowRightOutline } from "flowbite-svelte-icons";
-
 	import Logo from "../components/Logo.svelte";
 	import NeonButton from "../components/NeonButton.svelte";
 	import TextField from "../components/TextField.svelte";
@@ -8,6 +7,7 @@
 	import { joinRoom, tryRestore } from "../lib/connection.svelte";
 	import { push } from "svelte-spa-router";
     import { addToast } from "../lib/toast.svelte";
+	import xss from "xss";
 
 	let { params = {} } = $props();
 	let memberName = $state("");
@@ -22,7 +22,7 @@
 	});
 
 	const join = async () => {
-		await joinRoom(roomCode, memberName);
+		await joinRoom(roomCode, xss(memberName));
 	};
 </script>
 

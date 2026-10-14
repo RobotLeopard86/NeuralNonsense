@@ -11,8 +11,8 @@ export const configureHandlers = () => {
     conn.onclose((e?: Error) => {
         //Present error if applicable
         if(e) {
-            addToast(`You have been unexpectedly disconnected from the room: "${e.message}"`, 5000);
-            console.error(`Full Error Stacktrace: "${e.stack ? e.stack : "Not Available"}"`);
+            addToast(`You have been unexpectedly disconnected from the room: ${e.message}`, 5000);
+            console.error(`Full Error Stacktrace: ${e.stack ? e.stack : "Not Available"}`);
         }
 
         //Go to homepage
@@ -28,7 +28,7 @@ export const configureHandlers = () => {
             //Return to homepage and present error
             push("/");
             window.removeEventListener("beforeunload", tabClosePreventHandler);
-            addToast(`You have been disconnected from the room: "${reason}"`, 5000);
+            addToast(`You have been disconnected from the room: ${reason}`, 5000);
         });
     });
 

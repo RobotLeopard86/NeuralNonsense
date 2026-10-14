@@ -7,7 +7,6 @@
 	import { joinRoom, tryRestore } from "../lib/connection.svelte";
 	import { onMount } from "svelte";
     import { addToast } from "../lib/toast.svelte";
-    import SmallNeonButton from "../components/SmallNeonButton.svelte";
 
 	type Phase = "Initial" | "Join" | "Create";
 	let phase: Phase = $state("Initial");
@@ -15,7 +14,7 @@
 	let memberName = $state("");
 	let roomCode = $state("");
 	$effect(() => {
-		roomCode = roomCode.toUpperCase();
+		roomCode = (roomCode.toUpperCase().match(/[A-Z]*/) || []).join("") || "";
 	});
 
 	let canJoin = $derived(memberName && roomCode && roomCode.length === 6);
@@ -66,7 +65,7 @@
 				maxlength="6"
 				placeholder="CODE"
 				bind:value={roomCode}
-				class="w-full max-w-md focus:outline-none px-8 py-4 rounded-2xl text-lg bg-white/5 border-2 border-white/10 text-white placeholder:text-white/30 font-bold text-center tracking-[1em] placeholder:tracking-normal placeholder:font-normal"
+				class="w-full max-w-md focus:outline-none px-8 py-4 rounded-2xl text-lg bg-white/5 border-2 border-white/10 text-white placeholder:text-white/30 font-bold text-center tracking-[1em] placeholder:font-normal"
 			/>
 			<br />
 			<NeonButton variant="Cyan" onclick={join} class="w-full max-w-md my-4" disabled={!canJoin}>Join Game <ArrowRightOutline size="xl" /></NeonButton>

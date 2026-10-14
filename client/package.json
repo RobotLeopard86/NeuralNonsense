@@ -21,7 +21,8 @@
     "svelte-check": "^4.7.3",
     "typescript": "~6.0.2",
     "vite": "^8.2.0",
-    "vite-plugin-mkcert": "^2.1.0"
+    "vite-plugin-mkcert": "^2.1.0",
+    "xss": "^1.0.15"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.3",

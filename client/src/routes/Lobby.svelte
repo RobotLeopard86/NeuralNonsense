@@ -14,8 +14,23 @@
 	onMount(ejectIfNoConnection);
 
 	let joinLink = $derived.by(() => "https://" + window.location.host + "/#/join/" + game.roomCode.toLowerCase());
-	let canStart = $derived(game.state.members.length >= 3);
+	let canStart = $derived(game.state.members.filter((m) => m.type == MemberType.Player	).length >= 3);
 	let started = $state(false);
+
+	let copiedLink = $state(false);
+	let copiedCode = $state(false);
+
+	const copyLink = async() => {
+		await navigator.clipboard.writeText("https://" + window.location.host);
+		copiedLink = true;
+		setTimeout(() => copiedLink = false, 3000);
+	}
+
+	const copyCode = async() => {
+		await navigator.clipboard.writeText(game.roomCode);
+		copiedCode = true;
+		setTimeout(() => copiedCode = false, 3000);
+	}
 </script>
 
 <Logo />
@@ -31,14 +46,21 @@
 		<div class="grid grid-rows-2 grid-cols-1 lg:grid-rows-1 lg:grid-cols-2 gap-5">
 			<div class="flex-row items-center">
 				<p class="text-left text-white font-bold text-md">Go to:</p>
-				<p class="text-left text-white text-4xl font-bold min-w-0 wrap-break-word">
-					{window.location.host}
-				</p>
+				<p class="text-left text-white text-4xl font-bold min-w-0 wrap-break-word">{window.location.host}</p>
+				{#if copiedLink}
+					<button class="text-left text-[#00E5FF] font-semibold text-sm">Copied to clipboard!</button>
+				{:else}
+					<button class="text-left text-white/50 underline text-sm cursor-pointer" onclick={copyLink}>Copy link</button>
+				{/if}
+				<br />
 				<br />
 				<p class="text-left text-white font-bold text-md">Use room code:</p>
-				<p class="text-left text-white text-4xl font-bold mb-8 tracking-[0.5em] lg:tracking-[0.9em] wrap-break-word">
-					{game.roomCode}
-				</p>
+				<p class="text-left text-white text-4xl font-bold tracking-[0.5em] lg:tracking-[0.9em] wrap-break-word">{game.roomCode}</p>
+				{#if copiedCode}
+					<button class="text-left text-[#00E5FF] font-semibold text-sm">Copied to clipboard!</button>
+				{:else}
+					<button class="text-left text-white/50 underline text-sm cursor-pointer" onclick={copyCode}>Copy game code</button>
+				{/if}
 			</div>
 			<div class="flex-row place-items-center">
 				<p class="text-left lg:text-center text-white font-bold text-md">Or, scan me:</p>
