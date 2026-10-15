@@ -46,7 +46,9 @@
 
 <main class="mb-auto w-full flex flex-col items-center px-4">
 	<!-- Leave button -->
-	<SmallNeonButton variant="Red" onclick={leaveRoom} class="absolute top-4 left-4"><OpenDoorOutline size="lg" />&nbsp;&nbsp;Leave Room</SmallNeonButton>
+	{#if game.self.type !== MemberType.Projector}
+		<SmallNeonButton variant="Red" onclick={leaveRoom} class="absolute top-4 left-4"><OpenDoorOutline size="lg" />&nbsp;&nbsp;Leave Room</SmallNeonButton>
+	{/if}
 
 	<!-- How to join -->
 	<Card class="w-full">
@@ -55,19 +57,23 @@
 			<div class="flex-row items-center">
 				<p class="text-left text-white font-bold text-md">Go to:</p>
 				<p class="text-left text-white text-4xl font-bold min-w-0 wrap-break-word">{window.location.host}</p>
-				{#if copiedLink}
-					<button class="text-left text-[#00E5FF] font-semibold text-sm">Copied to clipboard!</button>
-				{:else}
-					<button class="text-left text-white/50 underline text-sm cursor-pointer" onclick={copyLink}>Copy link</button>
+				{#if game.self.type !== MemberType.Projector}
+					{#if copiedLink}
+						<button class="text-left text-[#00E5FF] font-semibold text-sm">Copied to clipboard!</button>
+					{:else}
+						<button class="text-left text-white/50 underline text-sm cursor-pointer" onclick={copyLink}>Copy link</button>
+					{/if}
 				{/if}
 				<br />
 				<br />
 				<p class="text-left text-white font-bold text-md">Use room code:</p>
 				<p class="text-left text-white text-4xl font-bold tracking-[0.5em] lg:tracking-[0.9em] wrap-break-word">{game.roomCode}</p>
-				{#if copiedCode}
-					<button class="text-left text-[#00E5FF] font-semibold text-sm">Copied to clipboard!</button>
-				{:else}
-					<button class="text-left text-white/50 underline text-sm cursor-pointer" onclick={copyCode}>Copy game code</button>
+				{#if game.self.type !== MemberType.Projector}
+					{#if copiedCode}
+						<button class="text-left text-[#00E5FF] font-semibold text-sm">Copied to clipboard!</button>
+					{:else}
+						<button class="text-left text-white/50 underline text-sm cursor-pointer" onclick={copyCode}>Copy game code</button>
+					{/if}
 				{/if}
 			</div>
 			<div class="flex-row place-items-center">
@@ -82,8 +88,8 @@
 
 	<!-- Players list -->
 	<Card class="w-full flex flex-col items-center">
-		<p class="text-center text-white/50 text-md col-span-2 mb-2">{game.state.members.length}/8 PLAYERS</p>
-		{#each game.state.members as member}
+		<p class="text-center text-white/50 text-md col-span-2 mb-2">{game.state.members.filter(m => m.type === MemberType.Player).length}/8 PLAYERS</p>
+		{#each game.state.members.filter(m => m.type === MemberType.Player) as member}
 			<Card class="w-11/12 mx-auto mb-2 flex flex-row items-center">
 				<span class="text-left text-white font-bold"
 					>{member.name}
@@ -104,7 +110,7 @@
 				{/if}
 			</Card>
 		{/each}
-		{#if game.self.type == MemberType.Audience}
+		{#if game.self.type === MemberType.Audience}
 			<p class="text-center text-white text-md font-bold">You're in the audience!</p>
 		{/if}
 	</Card>

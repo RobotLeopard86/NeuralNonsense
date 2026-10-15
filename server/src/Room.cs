@@ -211,11 +211,14 @@ namespace NeuralNonsense {
 		}
 
 		public void RemoveMemberAndPromote(string uuid) {
+			//Projector decrement
+			if(members[uuid].type == Member.Type.Projector) numProjectorsConnected--;
+
 			//Remove them
 			members.Remove(uuid);
 
 			//Set room close flag if this was the last person
-			if(members.Count <= 0) {
+			if(members.Count - numProjectorsConnected <= 0) {
 				closeRoom = true;
 				return;
 			}

@@ -34,9 +34,11 @@
 
 <main class="w-full min-h-full flex flex-col items-center px-4">
 	<!-- Leave button -->
-	<SmallNeonButton variant="Red" onclick={leaveRoom} class="absolute top-4 left-4"><OpenDoorOutline size="lg" />&nbsp;&nbsp;Leave Room</SmallNeonButton>
+	{#if game.self.type !== MemberType.Projector}
+		<SmallNeonButton variant="Red" onclick={leaveRoom} class="absolute top-4 left-4"><OpenDoorOutline size="lg" />&nbsp;&nbsp;Leave Room</SmallNeonButton>
+	{/if}
 
-    {#if game.self.type == MemberType.Player}
+    {#if game.self.type === MemberType.Player}
 		<!-- Score indicator -->
 		<div class="absolute top-4 right-4 px-4 py-1 rounded-2xl font-bold text-sm flex items-center justify-center bg-white/5 border-2 border-white/20 text-white">
 			{game.self.score} Points
@@ -107,10 +109,15 @@
 				<RingTimer size={72} stroke={4} duration={60000} />
 			</div>
 
+			<!-- Status -->
 			<LoadingSpinner size={150} stroke={7} minDegrees={1} maxDegrees={120} />
 			<br/>
 			<p class="text-white font-bold text-4xl text-center mb-4">Players are thinking...</p>
-			<p class="text-white/50 text-lg text-center">You'll get to vote in a moment!</p>
+			{#if game.self.type === MemberType.Audience}
+				<p class="text-white/50 text-lg text-center">You'll get to vote in a moment!</p>
+			{:else}
+				<p class="text-white/50 text-lg text-center">Hang tight for a moment!</p>
+			{/if}
 		</div>
     {/if}
 </main>

@@ -60,7 +60,29 @@
             body2: "The game will begin momentarily..."
         }
     ];
-    const slides: Slide[] = game.self.type == MemberType.Player ? pslides : aslides;
+	const sslides: Slide[] = [
+        {
+            title: "Welcome to Neural Nonsense!",
+            body: "Players will receive a prompt and respond in a funny, clever, or absurd way.",
+            body2: "Everyone gets a different prompt, and they'll have 60 seconds to answer."
+        },
+        {
+            title: "The People Decide",
+            body: "Everybody's answer goes up against an AI's response to the same prompt.",
+            body2: "Players and audience members vote for their favorite answer."
+        },
+        {
+            title: "3 Rounds. One Winner.",
+            body: "Players earn points each round depending on how well their answer do.",
+            body2: "The player with the most points after all 3 rounds wins!"
+        },
+        {
+            title: "Hang Tight!",
+            body: "We're cooking up some fresh AI content, just for you!",
+            body2: "The game will begin momentarily..."
+        }
+    ];
+    const slides: Slide[] = game.self.type === MemberType.Player ? pslides : (game.self.type === MemberType.Audience ? aslides : sslides);
 
     let slideIndex = $state(0);
     let currentSlide: Slide = $derived(slides[slideIndex]);
@@ -78,7 +100,9 @@
 
 <main class="w-full min-h-full flex flex-col place-content-center px-4">
     <!-- Leave button -->
-	<SmallNeonButton variant="Red" onclick={leaveRoom} class="absolute top-4 left-4"><OpenDoorOutline size="lg" />&nbsp;&nbsp;Leave Room</SmallNeonButton>
+	{#if game.self.type !== MemberType.Projector}
+		<SmallNeonButton variant="Red" onclick={leaveRoom} class="absolute top-4 left-4"><OpenDoorOutline size="lg" />&nbsp;&nbsp;Leave Room</SmallNeonButton>
+	{/if}
 
     <!-- Spinner and slides -->
     <LoadingSpinner size={150} stroke={7} minDegrees={1} maxDegrees={120} />
