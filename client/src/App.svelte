@@ -25,7 +25,7 @@
 
 	{#if game.self.uuid && game.self.type === MemberType.Spectator}
 	<header class="h-10 bg-amber-300/50 border-b-2 border-amber-400 border-solid flex flex-col">
-		<p class="text-amber-300 text-md font-bold text-center mx-auto my-auto">You're Spectating</p>
+		<p class="text-amber-300 text-base font-bold text-center mx-auto my-auto">You're Spectating</p>
 	</header>
 	{/if}
 

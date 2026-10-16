@@ -13,6 +13,7 @@ export interface VotePhaseData {
 
 export interface ResultsPhaseData {
     prompt: string,
+	humanPlayer: string,
     humanAnswer: string,
     aiAnswer: string,
     humanPoints: number

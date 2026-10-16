@@ -1,7 +1,7 @@
 import type { HubConnection } from "@microsoft/signalr";
 import { connection, tabClosePreventHandler } from "./connection.svelte";
 import { push } from "svelte-spa-router";
-import { resetState, type ServerMember, game, deriveMember } from "./state.svelte";
+import { resetState, type ServerMember, game, deriveMember, MemberType } from "./state.svelte";
 import { addToast } from "./toast.svelte";
 
 export const configureHandlers = () => {
@@ -42,6 +42,24 @@ export const configureHandlers = () => {
         game.state.members = members.map(deriveMember);
     });
 
+	//Member type update
+	conn.on("UpdateType", (newType: string) => {
+		switch(newType) {
+			case "p":
+				game.self.type = MemberType.Player;
+				break;
+			case "a":
+				game.self.type = MemberType.Audience;
+				break;
+			case "d":
+				game.self.type = MemberType.Projector;
+				break;
+			case "s":
+				game.self.type = MemberType.Spectator;
+				break;
+		}
+	});
+
     //Host change
     conn.on("HostChanged", (newHost: string) => {
         game.state.hostID = newHost;
@@ -51,6 +69,11 @@ export const configureHandlers = () => {
     conn.on("NextRound", () => {
         game.state.round++;
     });
+
+	//Score update
+	conn.on("UpdateScore", (newScore: number) => {
+		game.self.score = newScore;
+	});
 }
 
 export const startGame = async () => {

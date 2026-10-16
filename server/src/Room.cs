@@ -22,6 +22,7 @@ namespace NeuralNonsense {
 			Answer,
 			Vote,
 			Results,
+			Interlude,
 			R3Vote,
 			R3Results,
 			End
@@ -147,10 +148,13 @@ namespace NeuralNonsense {
 					await ServiceContainer.instance.hubCtx.Clients.User(mccc.memberID).ViewTransition("answer");
 					break;
 				case Phase.Vote:
-					await ServiceContainer.instance.hubCtx.Clients.User(mccc.memberID).ViewTransition("voting");
+					await ServiceContainer.instance.hubCtx.Clients.User(mccc.memberID).ViewTransition("vote");
 					break;
 				case Phase.Results:
 					await ServiceContainer.instance.hubCtx.Clients.User(mccc.memberID).ViewTransition("results");
+					break;
+				case Phase.Interlude:
+					await ServiceContainer.instance.hubCtx.Clients.User(mccc.memberID).ViewTransition("interlude");
 					break;
 				case Phase.R3Vote:
 					await ServiceContainer.instance.hubCtx.Clients.User(mccc.memberID).ViewTransition("vote3");
@@ -299,6 +303,8 @@ namespace NeuralNonsense {
 					case Phase.Vote:
 						break;
 					case Phase.Results:
+						break;
+					case Phase.Interlude:
 						break;
 					case Phase.R3Vote:
 						break;

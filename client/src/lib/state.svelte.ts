@@ -103,6 +103,7 @@ export const resetTabState = () => {
 	game.self.type = MemberType.Spectator;
 	game.state.members = []
 	game.state.hostID = "";
+	game.state.round = 0;
 }
 
 export const resetState = () => {

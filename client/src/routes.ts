@@ -1,9 +1,12 @@
 import Home from "./routes/Home.svelte";
 import JoinLink from "./routes/JoinLink.svelte";
+import LaunchProjector from "./routes/LaunchProjector.svelte";
 import Lobby from "./routes/Lobby.svelte";
 import ContentGen from "./routes/ContentGen.svelte";
 import Answering from "./routes/Answering.svelte";
-import LaunchProjector from "./routes/LaunchProjector.svelte";
+import Voting from "./routes/Voting.svelte";
+import Results from "./routes/Results.svelte";
+import Interlude from "./routes/Interlude.svelte";
 
 export default {
 	"/": Home,
@@ -12,4 +15,7 @@ export default {
 	"/play/lobby": Lobby,
 	"/play/generation": ContentGen,
 	"/play/answer": Answering,
+	"/play/vote": Voting,
+	"/play/results": Results,
+	"/play/interlude": Interlude
 }

@@ -59,15 +59,15 @@
 						<span class="mx-auto"></span>
 						
 						<!-- Timer -->
-						<RingTimer size={72} stroke={4} duration={60000} />
+						<RingTimer size={72} stroke={4} duration={game.phase ? (game.phase as AnswerPhaseData).timer : 60000} />
 					</div>
 
 					<!-- Prompt -->
-					<p class="text-white/50 text-md text-left mb-2">YOUR PROMPT:</p>
+					<p class="text-white/50 text-base text-left mb-2">YOUR PROMPT:</p>
 					<p class="text-white font-black text-4xl text-left mb-4 pb-6">{((game.phase ? game.phase : {}) as AnswerPhaseData).prompt || "An amazing prompt"}</p>
 
 					<!-- Response area -->
-					<p class="text-white/50 text-md text-left mb-2">YOUR RESPONSE:</p>
+					<p class="text-white/50 text-base text-left mb-2">YOUR RESPONSE:</p>
 					<textarea name="Answer" placeholder="Respond to the prompt!" rows={3} maxlength={maxAnswerLength} bind:value={answer}
 						class="w-full bg-white/5 rounded-2xl p-4 text-white text-lg border-2 border-white/10 focus:border-[#FF2D78] focus:outline-none resize-none transition-colors">
 					</textarea>
@@ -106,7 +106,7 @@
 				<span class="mx-auto"></span>
 				
 				<!-- Timer -->
-				<RingTimer size={72} stroke={4} duration={60000} />
+				<RingTimer size={72} stroke={4} duration={game.phase ? (game.phase as AnswerPhaseData).timer : 60000} />
 			</div>
 
 			<!-- Status -->

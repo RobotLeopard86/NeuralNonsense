@@ -52,10 +52,10 @@
 
 	<!-- How to join -->
 	<Card class="w-full">
-		<p class="text-center text-white/50 text-md col-span-2">HOW TO JOIN</p>
+		<p class="text-center text-white/50 text-base col-span-2">HOW TO JOIN</p>
 		<div class="grid grid-rows-2 grid-cols-1 lg:grid-rows-1 lg:grid-cols-2 gap-5">
 			<div class="flex-row items-center">
-				<p class="text-left text-white font-bold text-md">Go to:</p>
+				<p class="text-left text-white font-bold text-base">Go to:</p>
 				<p class="text-left text-white text-4xl font-bold min-w-0 wrap-break-word">{window.location.host}</p>
 				{#if game.self.type !== MemberType.Projector}
 					{#if copiedLink}
@@ -66,7 +66,7 @@
 				{/if}
 				<br />
 				<br />
-				<p class="text-left text-white font-bold text-md">Use room code:</p>
+				<p class="text-left text-white font-bold text-base">Use room code:</p>
 				<p class="text-left text-white text-4xl font-bold tracking-[0.5em] lg:tracking-[0.9em] wrap-break-word">{game.roomCode}</p>
 				{#if game.self.type !== MemberType.Projector}
 					{#if copiedCode}
@@ -77,7 +77,7 @@
 				{/if}
 			</div>
 			<div class="flex-row place-items-center">
-				<p class="text-left lg:text-center text-white font-bold text-md">Or, scan me:</p>
+				<p class="text-left lg:text-center text-white font-bold text-base">Or, scan me:</p>
 				<div class="rounded-2xl w-1/2 bg-white border-black border-5">
 					<SVGQR data={joinLink} class="inset-3" />
 				</div>
@@ -88,7 +88,7 @@
 
 	<!-- Players list -->
 	<Card class="w-full flex flex-col items-center">
-		<p class="text-center text-white/50 text-md col-span-2 mb-2">{game.state.members.filter(m => m.type === MemberType.Player).length}/8 PLAYERS</p>
+		<p class="text-center text-white/50 text-base col-span-2 mb-2">{game.state.members.filter(m => m.type === MemberType.Player).length}/8 PLAYERS</p>
 		{#each game.state.members.filter(m => m.type === MemberType.Player) as member}
 			<Card class="w-11/12 mx-auto mb-2 flex flex-row items-center">
 				<span class="text-left text-white font-bold"
@@ -111,7 +111,7 @@
 			</Card>
 		{/each}
 		{#if game.self.type === MemberType.Audience}
-			<p class="text-center text-white text-md font-bold">You're in the audience!</p>
+			<p class="text-center text-white text-base font-bold">You're in the audience!</p>
 		{/if}
 	</Card>
 	<br />

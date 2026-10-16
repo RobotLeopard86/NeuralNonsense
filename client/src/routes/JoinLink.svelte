@@ -36,7 +36,7 @@
 			<p class="text-center text-white text-lg font-medium">Joining game {roomCode}</p>
 		</div>
 		<br />
-		<p class="text-left text-white/50 text-md mb-2">YOUR NAME</p>
+		<p class="text-left text-white/50 text-base mb-2">YOUR NAME</p>
 		<TextField placeholder="What will you call yourself?" bind:value={memberName} class="w-full max-w-md" maxLength={32} />
 		<br />
 		<NeonButton variant="Yellow" onclick={join} class="w-full max-w-md my-4" disabled={!memberName}>Join Game <ArrowRightOutline size="xl" /></NeonButton>

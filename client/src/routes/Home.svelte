@@ -56,10 +56,10 @@
 			<button class="text-left text-white/50 text-sm mb-8 flex flex-row hover:text-white/75 transition-colors" onclick={() => (phase = "Initial")}
 				><ArrowLeftOutline size="md" /> Back</button
 			>
-			<p class="text-left text-white/50 text-md mb-2">YOUR NAME</p>
+			<p class="text-left text-white/50 text-base mb-2">YOUR NAME</p>
 			<TextField placeholder="What will you call yourself?" bind:value={memberName} class="w-full max-w-md" maxLength={32} />
 			<br />
-			<p class="text-left text-white/50 text-md mb-2">ROOM CODE</p>
+			<p class="text-left text-white/50 text-base mb-2">ROOM CODE</p>
 			<input
 				type="text"
 				maxlength="6"
@@ -75,7 +75,7 @@
 			<button class="text-left text-white/50 text-sm mb-8 flex flex-row hover:text-white/75 transition-colors" onclick={() => (phase = "Initial")}
 				><ArrowLeftOutline size="md" /> Back</button
 			>
-			<p class="text-left text-white/50 text-md mb-2">YOUR NAME</p>
+			<p class="text-left text-white/50 text-base mb-2">YOUR NAME</p>
 			<TextField placeholder="What will you call yourself?" bind:value={memberName} class="w-full max-w-md" maxLength={32} />
 			<br />
 			<NeonButton variant="Red" onclick={create} class="w-full max-w-md my-4" disabled={!memberName}>Create <ArrowRightOutline size="xl" /></NeonButton>

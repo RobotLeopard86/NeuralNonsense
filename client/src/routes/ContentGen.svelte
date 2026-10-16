@@ -51,7 +51,7 @@
         },
         {
             title: "3 Rounds. One Winner.",
-            body: "Players earn points each round depending on how well their answer do.",
+            body: "Players earn points each round depending on how well their answers do.",
             body2: "The player with the most points after all 3 rounds wins!"
         },
         {
@@ -64,16 +64,16 @@
         {
             title: "Welcome to Neural Nonsense!",
             body: "Players will receive a prompt and respond in a funny, clever, or absurd way.",
-            body2: "Everyone gets a different prompt, and they'll have 60 seconds to answer."
+            body2: "Everyone gets a different prompt, and they'll have 60 seconds to respond."
         },
         {
             title: "The People Decide",
             body: "Everybody's answer goes up against an AI's response to the same prompt.",
-            body2: "Players and audience members vote for their favorite answer."
+            body2: "Players and audience members vote for their favorite."
         },
         {
             title: "3 Rounds. One Winner.",
-            body: "Players earn points each round depending on how well their answer do.",
+            body: "Players earn points each round depending on how well their answers do.",
             body2: "The player with the most points after all 3 rounds wins!"
         },
         {
