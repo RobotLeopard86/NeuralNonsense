@@ -6,6 +6,7 @@ namespace NeuralNonsense {
 		public static ServiceContainer instance { get => _instance == null ? throw new ServerCausedException("No service container has been configured!") : _instance; set => _instance = value; }
 
 		public required IHubContext<NNHub, INNClient> hubCtx;
+		public required GameManagerService gameManager;
 		public required IBadWordCheckerService badWordChecker;
 		public required TokenGeneratorService tokenGenerator;
 		public required IAIGeneratorService aiGenerator;

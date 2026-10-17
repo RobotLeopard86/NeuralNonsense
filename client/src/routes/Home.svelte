@@ -56,9 +56,6 @@
 			<button class="text-left text-white/50 text-sm mb-8 flex flex-row hover:text-white/75 transition-colors" onclick={() => (phase = "Initial")}
 				><ArrowLeftOutline size="md" /> Back</button
 			>
-			<p class="text-left text-white/50 text-base mb-2">YOUR NAME</p>
-			<TextField placeholder="What will you call yourself?" bind:value={memberName} class="w-full max-w-md" maxLength={32} />
-			<br />
 			<p class="text-left text-white/50 text-base mb-2">ROOM CODE</p>
 			<input
 				type="text"
@@ -67,6 +64,9 @@
 				bind:value={roomCode}
 				class="w-full max-w-md focus:outline-none px-8 py-4 rounded-2xl text-lg bg-white/5 border-2 border-white/10 text-white placeholder:text-white/30 font-bold text-center tracking-[1em] placeholder:font-normal"
 			/>
+			<br />
+			<p class="text-left text-white/50 text-base mb-2">YOUR NAME</p>
+			<TextField placeholder="What will you call yourself?" bind:value={memberName} class="w-full max-w-md" maxLength={32} />
 			<br />
 			<NeonButton variant="Cyan" onclick={join} class="w-full max-w-md my-4" disabled={!canJoin}>Join Game <ArrowRightOutline size="xl" /></NeonButton>
 		</div>

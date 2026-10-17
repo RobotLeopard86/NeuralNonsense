@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
-using NeuralNonsense.Commands;
 
 namespace NeuralNonsense {
 	public interface INNClient {
@@ -33,10 +32,10 @@ namespace NeuralNonsense {
 			//Validate room code
 			if(roomCode.Length != Constants.ROOM_CODE_LENGTH) { await Abort("Invalid room code!"); await base.OnConnectedAsync(); }
 			if(roomCode.Count((c) => !Constants.ROOM_CODE_ALPHABET.Contains(c)) > 0) { await Abort("Invalid room code!"); await base.OnConnectedAsync(); }
-			if(!GameManager.instance.rooms.ContainsKey(roomCode)) { await Abort("No such room!"); await base.OnConnectedAsync(); }
+			if(!ServiceContainer.instance.gameManager.rooms.ContainsKey(roomCode)) { await Abort("No such room!"); await base.OnConnectedAsync(); }
 
 			//Validate room membership
-			if(!GameManager.instance.rooms[roomCode].members.ContainsKey(memberID)) { await Abort("You are not part of this room!"); await base.OnConnectedAsync(); }
+			if(!ServiceContainer.instance.gameManager.rooms[roomCode].members.ContainsKey(memberID)) { await Abort("You are not part of this room!"); await base.OnConnectedAsync(); }
 		}
 
 		public override async Task OnConnectedAsync() {
@@ -45,14 +44,14 @@ namespace NeuralNonsense {
 
 			//Add to group
 			await Groups.AddToGroupAsync(Context.ConnectionId, roomCode);
-			await Clients.Group(roomCode).UpdateMemberList(GameManager.instance.rooms[roomCode].members.Values.Select(member => new ClientMember(member)).ToArray());
+			await Clients.Group(roomCode).UpdateMemberList(ServiceContainer.instance.gameManager.rooms[roomCode].members.Values.Select(member => new ClientMember(member)).ToArray());
 
 			//Send connection complete command
 			MemberConnectionCompleteCommand mccc = new MemberConnectionCompleteCommand() {
 				memberID = memberID,
 				connID = Context.ConnectionId
 			};
-			await GameManager.instance.rooms[roomCode].writer.WriteAsync(mccc);
+			await ServiceContainer.instance.gameManager.rooms[roomCode].writer.WriteAsync(mccc);
 			await mccc.task.Task;
 
 			//Base class logic
@@ -74,7 +73,7 @@ namespace NeuralNonsense {
 			await LoadUserAndVerify();
 
 			//Return the user
-			return new ClientMember(GameManager.instance.rooms[roomCode].members.Values.First(m => m.uuid == memberID));
+			return new ClientMember(ServiceContainer.instance.gameManager.rooms[roomCode].members.Values.First(m => m.uuid == memberID));
 		}
 
 		public async Task<ClientGameState> RestoreCurrentState() {
@@ -82,7 +81,7 @@ namespace NeuralNonsense {
 			await LoadUserAndVerify();
 
 			//Return the state
-			Room room = GameManager.instance.rooms[roomCode];
+			Room room = ServiceContainer.instance.gameManager.rooms[roomCode];
 			return new ClientGameState {
 				hostID = room.hostUUID,
 				members = room.members.Values.Select(member => new ClientMember(member)).ToArray(),
@@ -94,12 +93,13 @@ namespace NeuralNonsense {
 			//Verify
 			await LoadUserAndVerify();
 
-			//Remove from message group and room
-			GameManager.instance.rooms[roomCode].RemoveMemberAndPromote(memberID);
-			await Groups.RemoveFromGroupAsync(Context.ConnectionId, roomCode);
-
-			//Send member list update
-			await Clients.Group(roomCode).UpdateMemberList(GameManager.instance.rooms[roomCode].members.Values.Select(member => new ClientMember(member)).ToArray());
+			//Send leave command
+			RemoveMemberCommand rmc = new RemoveMemberCommand() {
+				targetMemberID = memberID,
+				reason = ""
+			};
+			await ServiceContainer.instance.gameManager.rooms[roomCode].writer.WriteAsync(rmc);
+			await rmc.task.Task;
 
 			//Abort connection
 			await Abort("Thanks for playing!");
@@ -110,17 +110,16 @@ namespace NeuralNonsense {
 			await LoadUserAndVerify();
 
 			//Check host permissions
-			Room room = GameManager.instance.rooms[roomCode];
+			Room room = ServiceContainer.instance.gameManager.rooms[roomCode];
 			if(memberID != room.hostUUID) throw new ClientCausedException("You cannot perform this action as you are not the host!");
 
-			//Kick the user
-			string conn = room.members[uuid].currentConnection;
-			GameManager.instance.rooms[roomCode].RemoveMemberAndPromote(uuid);
-			await Groups.RemoveFromGroupAsync(conn, roomCode);
-			await Clients.User(uuid).Disconnected("You have been kicked by the host.");
-
-			//Send member list update
-			await Clients.Group(roomCode).UpdateMemberList(GameManager.instance.rooms[roomCode].members.Values.Select(member => new ClientMember(member)).ToArray());
+			//Send leave command
+			RemoveMemberCommand rmc = new RemoveMemberCommand() {
+				targetMemberID = uuid,
+				reason = "You have been kicked by the host."
+			};
+			await ServiceContainer.instance.gameManager.rooms[roomCode].writer.WriteAsync(rmc);
+			await rmc.task.Task;
 		}
 
 		public async Task StartGame() {
@@ -128,7 +127,7 @@ namespace NeuralNonsense {
 			await LoadUserAndVerify();
 
 			//Check host permissions
-			Room room = GameManager.instance.rooms[roomCode];
+			Room room = ServiceContainer.instance.gameManager.rooms[roomCode];
 			if(memberID != room.hostUUID) throw new ClientCausedException("You cannot perform this action as you are not the host!");
 
 			//Validate player count to be sure
@@ -136,7 +135,7 @@ namespace NeuralNonsense {
 
 			//Send start command
 			StartCommand sc = new StartCommand();
-			await GameManager.instance.rooms[roomCode].writer.WriteAsync(sc);
+			await ServiceContainer.instance.gameManager.rooms[roomCode].writer.WriteAsync(sc);
 			await sc.task.Task;
 		}
 
@@ -145,12 +144,12 @@ namespace NeuralNonsense {
 			await LoadUserAndVerify();
 
 			//Check host permissions
-			Room room = GameManager.instance.rooms[roomCode];
+			Room room = ServiceContainer.instance.gameManager.rooms[roomCode];
 			if(memberID != room.hostUUID) throw new ClientCausedException("You cannot perform this action as you are not the host!");
 
 			//Send projector addition command
 			AddProjectorCommand apc = new AddProjectorCommand();
-			await GameManager.instance.rooms[roomCode].writer.WriteAsync(apc);
+			await ServiceContainer.instance.gameManager.rooms[roomCode].writer.WriteAsync(apc);
 			await apc.task.Task;
 
 			//Return projector token
@@ -165,7 +164,7 @@ namespace NeuralNonsense {
 			MarkReadyCommand mrc = new MarkReadyCommand() {
 				memberID = memberID
 			};
-			await GameManager.instance.rooms[roomCode].writer.WriteAsync(mrc);
+			await ServiceContainer.instance.gameManager.rooms[roomCode].writer.WriteAsync(mrc);
 			await mrc.task.Task;
 		}
 	}

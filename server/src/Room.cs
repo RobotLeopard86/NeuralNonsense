@@ -1,5 +1,4 @@
 using System.Threading.Channels;
-using NeuralNonsense.Commands;
 
 namespace NeuralNonsense {
 	public sealed class Room {
@@ -211,6 +210,18 @@ namespace NeuralNonsense {
 			mrc.task.SetResult();
 		}
 
+		private async Task HandleRemoveMember(RemoveMemberCommand rmc) {
+			//End connection
+			await ServiceContainer.instance.hubCtx.Groups.RemoveFromGroupAsync(members[rmc.targetMemberID].currentConnection, code);
+			await ServiceContainer.instance.hubCtx.Clients.Client(members[rmc.targetMemberID].currentConnection).Disconnected(rmc.reason);
+
+			//Handle actual removal
+			RemoveMemberAndPromote(rmc.targetMemberID);
+
+			//Set the result
+			rmc.task.SetResult();
+		}
+
 		private async Task HandleAddProjector(AddProjectorCommand apc) {
 			//Create projector member object
 			Member member = new Member() {
@@ -252,8 +263,10 @@ namespace NeuralNonsense {
 			if(phase == Phase.Lobby) {
 				//Promotion permitted in the lobby
 				members.Values.First(m => m.type == Member.Type.Audience).type = Member.Type.Player;
-				ServiceContainer.instance.hubCtx.Clients.Group(code).UpdateMemberList(members.Values.Select(member => new ClientMember(member)).ToArray());
 			}
+
+			//Update member list
+			ServiceContainer.instance.hubCtx.Clients.Group(code).UpdateMemberList(members.Values.Select(member => new ClientMember(member)).ToArray());
 
 			//Re-assign host role
 			if(hostUUID == uuid) {
@@ -279,6 +292,9 @@ namespace NeuralNonsense {
 							break;
 						case MarkReadyCommand mrc:
 							await HandleMarkReady(mrc);
+							break;
+						case RemoveMemberCommand rmc:
+							await HandleRemoveMember(rmc);
 							break;
 						case AddProjectorCommand apc:
 							await HandleAddProjector(apc);

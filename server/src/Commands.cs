@@ -1,4 +1,4 @@
-namespace NeuralNonsense.Commands {
+namespace NeuralNonsense {
 	public abstract class Command { }
 
 	public abstract class CommandWithoutValue : Command {
@@ -24,6 +24,11 @@ namespace NeuralNonsense.Commands {
 	public class MemberConnectionCompleteCommand : CommandWithoutValue {
 		public required string memberID;
 		public required string connID;
+	}
+
+	public class RemoveMemberCommand : CommandWithoutValue {
+		public required string targetMemberID;
+		public required string reason;
 	}
 
 	public class StartCommand : CommandWithoutValue { }

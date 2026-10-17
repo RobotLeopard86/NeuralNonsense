@@ -75,6 +75,7 @@ app.Use(async (ctx, next) => {
 	ServiceContainer.instance = new ServiceContainer {
 		hubCtx = ctx.RequestServices.GetRequiredService<IHubContext<NNHub, INNClient>>(),
 		badWordChecker = new FakeBadWordCheckerService(),
+		gameManager = new GameManagerService(),
 		tokenGenerator = new TokenGeneratorService(jwtSigningKey),
 		aiGenerator = new FakeAIGeneratorService()
 	};
@@ -86,7 +87,7 @@ app.MapHub<NNHub>("/portal/hub");
 app.MapPost("/portal/create", async () => {
 	try {
 		CreateRoomResponse res = new CreateRoomResponse {
-			code = await GameManager.instance.CreateRoom(app.Lifetime.ApplicationStopping)
+			code = await ServiceContainer.instance.gameManager.CreateRoom(app.Lifetime.ApplicationStopping)
 		};
 		return Results.Json(res, statusCode: StatusCodes.Status200OK);
 	} catch(ClientCausedException e) {
@@ -97,7 +98,7 @@ app.MapPost("/portal/create", async () => {
 });
 app.MapPost("/portal/join", async (JoinRoomRequest req) => {
 	try {
-		JoinRoomResponse res = await GameManager.instance.JoinRoom(req);
+		JoinRoomResponse res = await ServiceContainer.instance.gameManager.JoinRoom(req);
 		return Results.Json(res, statusCode: StatusCodes.Status200OK);
 	} catch(ClientCausedException e) {
 		return Results.BadRequest(e.Message);

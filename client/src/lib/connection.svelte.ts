@@ -65,6 +65,7 @@ export const tryRestore = async () => {
 	} catch(e) {
 		resetState();
 		addToast(`Failed to reconnect to the room: ${e}`, 5000);
+		push("/");
 		return;
 	}
 	const state: ServerGameState = await connection().invoke("RestoreCurrentState");

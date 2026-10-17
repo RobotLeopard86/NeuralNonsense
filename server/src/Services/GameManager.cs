@@ -1,17 +1,18 @@
 using System.Collections.Concurrent;
-using NeuralNonsense.Commands;
 
 namespace NeuralNonsense {
-	public sealed class GameManager {
-		public static GameManager instance = new GameManager();
+	public sealed class GameManagerService {
+		public ConcurrentDictionary<string, Room> rooms;
 
-		public ConcurrentDictionary<string, Room> rooms = new ConcurrentDictionary<string, Room>();
+		public GameManagerService() {
+			rooms = new ConcurrentDictionary<string, Room>();
+		}
 
 		public async Task<string> CreateRoom(CancellationToken shutdownToken) {
 			string code;
 			do {
 				code = Random.Shared.GetString(Constants.ROOM_CODE_ALPHABET, (int)Constants.ROOM_CODE_LENGTH);
-			} while(!ServiceContainer.instance.badWordChecker.IsOffensive(code) && !rooms.ContainsKey(code) && rooms.TryAdd(code, new Room()));
+			} while(ServiceContainer.instance.badWordChecker.IsOffensive(code) || rooms.ContainsKey(code) || !rooms.TryAdd(code, new Room()));
 			Room room = rooms[code];
 			room.code = code;
 			room.phase = Room.Phase.Lobby;
