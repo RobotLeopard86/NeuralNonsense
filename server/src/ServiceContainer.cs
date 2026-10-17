@@ -8,5 +8,6 @@ namespace NeuralNonsense {
 		public required IHubContext<NNHub, INNClient> hubCtx;
 		public required IBadWordCheckerService badWordChecker;
 		public required TokenGeneratorService tokenGenerator;
+		public required IAIGeneratorService aiGenerator;
 	}
 }

@@ -3,6 +3,7 @@ import { connection, tabClosePreventHandler } from "./connection.svelte";
 import { push } from "svelte-spa-router";
 import { resetState, type ServerMember, game, deriveMember, MemberType } from "./state.svelte";
 import { addToast } from "./toast.svelte";
+import type { AnswerPhaseData } from "./phase";
 
 export const configureHandlers = () => {
     let conn: HubConnection = connection();
@@ -66,13 +67,19 @@ export const configureHandlers = () => {
     });
 
     //Round update
-    conn.on("NextRound", () => {
-        game.state.round++;
+    conn.on("SetRound", (round: number) => {
+        game.state.round = round;
     });
 
 	//Score update
 	conn.on("UpdateScore", (newScore: number) => {
 		game.self.score = newScore;
+	});
+
+	//Phase data push
+	conn.on("PushAnswerPhaseData", (apd: AnswerPhaseData) => {
+		game.phase = apd;
+		game.phase.timer *= 1000;
 	});
 }
 

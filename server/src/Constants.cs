@@ -15,6 +15,7 @@ namespace NeuralNonsense {
 		public const uint ROOM_CODE_LENGTH = 6;
 		public const string ROOM_CODE_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 		public const uint MAX_NAME_LENGTH = 32;
+		public const uint MAX_ANSWER_LENGTH = 200;
 		public const bool MASTER_MODERATION_DISABLE = false;
 
 		//Timers (all in seconds)

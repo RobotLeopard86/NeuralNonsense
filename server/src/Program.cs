@@ -75,7 +75,8 @@ app.Use(async (ctx, next) => {
 	ServiceContainer.instance = new ServiceContainer {
 		hubCtx = ctx.RequestServices.GetRequiredService<IHubContext<NNHub, INNClient>>(),
 		badWordChecker = new FakeBadWordCheckerService(),
-		tokenGenerator = new TokenGeneratorService(jwtSigningKey)
+		tokenGenerator = new TokenGeneratorService(jwtSigningKey),
+		aiGenerator = new FakeAIGeneratorService()
 	};
 	if(next != null) await next.Invoke();
 });

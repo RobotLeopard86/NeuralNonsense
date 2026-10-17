@@ -11,7 +11,7 @@
     import { fly } from "svelte/transition";
 	import xss from "xss";
 
-    //onMount(ejectIfNoConnection);
+    onMount(ejectIfNoConnection);
 
     let maxAnswerLength = $derived(((game.phase ? game.phase : {}) as AnswerPhaseData).maxAnswerLength || 200);
     let answer = $state("");
@@ -30,6 +30,8 @@
 		//Mark received
 		received = true;	
 	}
+
+	$inspect(game.phase);
 </script>
 
 <main class="w-full min-h-full flex flex-col items-center px-4">
@@ -68,7 +70,7 @@
 
 					<!-- Response area -->
 					<p class="text-white/50 text-base text-left mb-2">YOUR RESPONSE:</p>
-					<textarea name="Answer" placeholder="Respond to the prompt!" rows={3} maxlength={maxAnswerLength} bind:value={answer}
+					<textarea name="Answer" placeholder="Respond to the prompt!" rows={3} maxlength={maxAnswerLength} bind:value={answer} disabled={submitted}
 						class="w-full bg-white/5 rounded-2xl p-4 text-white text-lg border-2 border-white/10 focus:border-[#FF2D78] focus:outline-none resize-none transition-colors">
 					</textarea>
 					<p class={`w-full text-right ${answer.length == maxAnswerLength ? "font-semibold text-[#FF2D78]" : "text-white/50"} text-sm mr-8`}>{answer.length}/{maxAnswerLength}</p>

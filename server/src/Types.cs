@@ -53,4 +53,10 @@ namespace NeuralNonsense {
 		public ClientMember[] members;
 		public uint round;
 	}
+
+	public struct ClientAnswerPhaseData {
+		public string prompt;
+		public uint maxAnswerLength;
+		public uint timer;
+	}
 }

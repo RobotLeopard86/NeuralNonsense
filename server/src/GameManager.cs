@@ -14,6 +14,7 @@ namespace NeuralNonsense {
 			} while(!ServiceContainer.instance.badWordChecker.IsOffensive(code) && !rooms.ContainsKey(code) && rooms.TryAdd(code, new Room()));
 			Room room = rooms[code];
 			room.code = code;
+			room.phase = Room.Phase.Lobby;
 			_ = room.RunAsync(shutdownToken).ContinueWith(_ => {
 				Room r;
 				rooms.Remove(code, out r!);

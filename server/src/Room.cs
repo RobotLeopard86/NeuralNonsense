@@ -30,7 +30,11 @@ namespace NeuralNonsense {
 
 		private struct Deadline {
 			public enum Kind {
-				JoinExpire
+				GeneralWake,
+				JoinExpire,
+				AnswersDue,
+				VotesDue,
+				ResultsDone
 			}
 
 			public Kind kind;
@@ -40,13 +44,23 @@ namespace NeuralNonsense {
 		}
 		private List<Deadline> deadlines = new List<Deadline>();
 
+		public struct AIContent {
+			public struct Pair {
+				public string prompt;
+				public string aiAnswer;
+			}
+			public Pair[] r1, r2;
+			public string r3Prompt;
+			public string[] r3AiAnswers;
+		}
+		private AIContent content;
+
 		public string code = "";
 		public Phase phase = Phase.Lobby;
 		public uint roundNumber {
 			get; private set {
-				if(value != field + 1) return;
 				field = value;
-				ServiceContainer.instance.hubCtx.Clients.Group(code).NextRound();
+				ServiceContainer.instance.hubCtx.Clients.Group(code).SetRound(value);
 			}
 		} = 0;
 		public Dictionary<string, Member> members = new Dictionary<string, Member>(); //UUID, member object
@@ -54,9 +68,15 @@ namespace NeuralNonsense {
 		public string hostUUID = "";
 		private uint numProjectorsConnected = 0;
 		private bool closeRoom = false;
+		private bool phaseChangeProcessed = true;
 
 		private Channel<Command> commandQueue;
 		public ChannelWriter<Command> writer;
+
+		private Dictionary<string, byte> idContentMappings = new Dictionary<string, byte>(); //UUID, index into AI content arrays
+		private Dictionary<string, string> answers = new Dictionary<string, string>(); //UUID, answer
+		private Dictionary<string, bool> votes = new Dictionary<string, bool>(); //UUID, AI or not
+		private Dictionary<string, byte[]> votesR3 = new Dictionary<string, byte[]>(); //UUID, answer IDs
 
 		public Room() {
 			commandQueue = Channel.CreateUnbounded<Command>(new UnboundedChannelOptions() {
@@ -173,6 +193,7 @@ namespace NeuralNonsense {
 
 		private async Task HandleStart(StartCommand sc) {
 			//Set phase
+			phaseChangeProcessed = false;
 			phase = Phase.ContentGen;
 
 			//View transition
@@ -292,13 +313,83 @@ namespace NeuralNonsense {
 					case Phase.Lobby:
 						break;
 					case Phase.ContentGen:
+						phaseChangeProcessed = true;
 						if(members.Values.Where(m => m.type == Member.Type.Player || m.type == Member.Type.Audience).Count(m => !m.ready) == 0) {
+							//Set phases and client state
+							phaseChangeProcessed = false;
 							phase = Phase.Answer;
 							foreach(Member m in members.Values) m.ready = false;
-							await ServiceContainer.instance.hubCtx.Clients.Group(code).ViewTransition("answer");
+
+							//Generate content
+							byte playerCount = (byte)members.Values.Count(m => m.type == Member.Type.Player);
+							content = new AIContent {
+								r1 = new AIContent.Pair[playerCount],
+								r2 = new AIContent.Pair[playerCount],
+								r3AiAnswers = new string[playerCount],
+								r3Prompt = ""
+							};
+							ServiceContainer.instance.aiGenerator.GenerateContent(ref content);
+
+							//Assign IDs
+							idContentMappings = new Dictionary<string, byte>();
+							byte[] possible = new byte[playerCount];
+							for(byte i = 0; i < playerCount; i++) possible[i] = i;
+							Random.Shared.Shuffle(possible);
+							foreach(Member m in members.Values.Where(m => m.type == Member.Type.Player)) {
+								idContentMappings[m.uuid] = possible.Last();
+								possible = possible.Take(possible.Length - 1).ToArray();
+							}
+							continue;
 						}
+
+						//Set wakeup deadline for re-check
+						Deadline wake = new Deadline() {
+							kind = Deadline.Kind.GeneralWake,
+							cancel = new CancellationTokenSource(),
+							dueBy = ComputeDeadline(1)
+						};
+						deadlines.Add(wake);
+
 						break;
 					case Phase.Answer:
+						if(!phaseChangeProcessed) {
+							//Advance round
+							roundNumber++;
+
+							//Send member phase data
+							foreach(Member m in members.Values.Where(m => m.type == Member.Type.Player)) {
+								ClientAnswerPhaseData capd = new ClientAnswerPhaseData {
+									maxAnswerLength = Constants.MAX_ANSWER_LENGTH,
+									timer = Constants.ANSWER_PERIOD
+								};
+								switch(roundNumber) {
+									case 1:
+										capd.prompt = content.r1[idContentMappings[m.uuid]].prompt;
+										break;
+									case 2:
+										capd.prompt = content.r2[idContentMappings[m.uuid]].prompt;
+										break;
+									case 3:
+										capd.prompt = content.r3Prompt;
+										break;
+								}
+								await ServiceContainer.instance.hubCtx.Clients.Client(m.currentConnection).PushAnswerPhaseData(capd);
+							}
+
+							//Set deadline
+							Deadline due = new Deadline() {
+								kind = Deadline.Kind.AnswersDue,
+								cancel = new CancellationTokenSource(),
+								dueBy = ComputeDeadline(Constants.ANSWER_PERIOD)
+							};
+							deadlines.Add(due);
+
+							//Send state transitions
+							await ServiceContainer.instance.hubCtx.Clients.Group(code).ViewTransition("answer");
+
+							//Mark processed
+							phaseChangeProcessed = true;
+						}
 						break;
 					case Phase.Vote:
 						break;
@@ -311,6 +402,7 @@ namespace NeuralNonsense {
 					case Phase.R3Results:
 						break;
 					case Phase.End:
+						roundNumber = 0;
 						break;
 				}
 

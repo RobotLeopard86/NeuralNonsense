@@ -8,7 +8,8 @@ namespace NeuralNonsense {
 		Task ViewTransition(string view);
 		Task UpdateMemberList(ClientMember[] members);
 		Task HostChanged(string newHost);
-		Task NextRound();
+		Task SetRound(uint round);
+		Task PushAnswerPhaseData(ClientAnswerPhaseData capd);
 	}
 
 	[Authorize]
