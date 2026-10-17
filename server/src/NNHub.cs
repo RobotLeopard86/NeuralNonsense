@@ -59,11 +59,19 @@ namespace NeuralNonsense {
 		}
 
 		public override async Task OnDisconnectedAsync(Exception? exception) {
-			//Verify
-			await LoadUserAndVerify();
+			try {
+				//Verify
+				await LoadUserAndVerify();
 
-			//Remove from group and send exception if needed
-			await Groups.RemoveFromGroupAsync(Context.ConnectionId, roomCode);
+				//Remove from group and send exception if needed
+				await Groups.RemoveFromGroupAsync(Context.ConnectionId, roomCode);
+
+			} catch {
+				//Exception means removal was already handled by a room routine, so we're good
+				//Hence we swallow it
+			}
+
+			//Report exception
 			if(exception != null) await Abort(exception!.Message);
 			await base.OnDisconnectedAsync(exception);
 		}

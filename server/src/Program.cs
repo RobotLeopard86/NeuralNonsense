@@ -71,16 +71,13 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 //Configure service container
-app.Use(async (ctx, next) => {
-	ServiceContainer.instance = new ServiceContainer {
-		hubCtx = ctx.RequestServices.GetRequiredService<IHubContext<NNHub, INNClient>>(),
-		badWordChecker = new FakeBadWordCheckerService(),
-		gameManager = new GameManagerService(),
-		tokenGenerator = new TokenGeneratorService(jwtSigningKey),
-		aiGenerator = new FakeAIGeneratorService()
-	};
-	if(next != null) await next.Invoke();
-});
+ServiceContainer.instance = new ServiceContainer {
+	hubCtx = app.Services.GetRequiredService<IHubContext<NNHub, INNClient>>(),
+	badWordChecker = new FakeBadWordCheckerService(),
+	gameManager = new GameManagerService(),
+	tokenGenerator = new TokenGeneratorService(jwtSigningKey),
+	aiGenerator = new FakeAIGeneratorService()
+};
 
 //Map routes
 app.MapHub<NNHub>("/portal/hub");

@@ -190,5 +190,6 @@ export const joinRoom = async (roomCode: string, memberName: string) => {
 export const leaveRoom = async () => {
 	await connection().off("Disconnected");
 	await connection().invoke("ExplicitLeave");
+	resetState();
 	push("/");
 }

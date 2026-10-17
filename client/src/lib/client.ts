@@ -64,6 +64,7 @@ export const configureHandlers = () => {
     //Host change
     conn.on("HostChanged", (newHost: string) => {
         game.state.hostID = newHost;
+		addToast(game.state.hostID === game.self.uuid ? "You are now the host!" : `${game.state.members.find((m) => m.uuid === game.state.hostID)!.name} is now the host!`, 5000);
     });
 
     //Round update

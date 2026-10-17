@@ -91,8 +91,14 @@ namespace NeuralNonsense {
 
 		private void HandleInitialJoin(InitialJoinCommand ijc) {
 			//Check member slot availability
-			if(members.Count > (32 + numProjectorsConnected)) throw new ServerCausedException("Too many people in this room!");
-			if(members.Values.Where(m => m.type != Member.Type.Projector).Count((m) => m.name == ijc.name) > 0) throw new ClientCausedException("Name is in use!");
+			if(members.Count > (32 + numProjectorsConnected)) {
+				ijc.task.SetException(new ServerCausedException("Too many people in this room!"));
+				return;
+			}
+			if(members.Values.Count((m) => m.type != Member.Type.Projector && m.name == ijc.name) > 0) {
+				ijc.task.SetException(new ClientCausedException("Name is in use!"));
+				return;
+			}
 
 			//Create member object
 			Member member = new Member() {
@@ -216,7 +222,7 @@ namespace NeuralNonsense {
 			await ServiceContainer.instance.hubCtx.Clients.Client(members[rmc.targetMemberID].currentConnection).Disconnected(rmc.reason);
 
 			//Handle actual removal
-			RemoveMemberAndPromote(rmc.targetMemberID);
+			await RemoveMemberAndPromote(rmc.targetMemberID);
 
 			//Set the result
 			rmc.task.SetResult();
@@ -246,7 +252,7 @@ namespace NeuralNonsense {
 			apc.task.SetResult(ServiceContainer.instance.tokenGenerator.GenToken(code, member));
 		}
 
-		public void RemoveMemberAndPromote(string uuid) {
+		public async Task RemoveMemberAndPromote(string uuid) {
 			//Projector decrement
 			if(members[uuid].type == Member.Type.Projector) numProjectorsConnected--;
 
@@ -262,16 +268,20 @@ namespace NeuralNonsense {
 			//Promotion check
 			if(phase == Phase.Lobby) {
 				//Promotion permitted in the lobby
-				members.Values.First(m => m.type == Member.Type.Audience).type = Member.Type.Player;
+				try {
+					members.Values.First(m => m.type == Member.Type.Audience).type = Member.Type.Player;
+				} catch {
+					//Exception means no audience members to promote, ok to swallow
+				}
 			}
 
 			//Update member list
-			ServiceContainer.instance.hubCtx.Clients.Group(code).UpdateMemberList(members.Values.Select(member => new ClientMember(member)).ToArray());
+			await ServiceContainer.instance.hubCtx.Clients.Group(code).UpdateMemberList(members.Values.Select(member => new ClientMember(member)).ToArray());
 
 			//Re-assign host role
 			if(hostUUID == uuid) {
-				hostUUID = members[members.Keys.ElementAt(0)].uuid;
-				ServiceContainer.instance.hubCtx.Clients.Group(code).HostChanged(hostUUID);
+				hostUUID = members.Keys.First();
+				await ServiceContainer.instance.hubCtx.Clients.Group(code).HostChanged(hostUUID);
 			}
 		}
 
@@ -315,7 +325,7 @@ namespace NeuralNonsense {
 						toRemove.Add(deadline);
 						switch(deadline.kind) {
 							case Deadline.Kind.JoinExpire:
-								RemoveMemberAndPromote(deadline.additionalData as string ?? throw new ServerCausedException("Unexpected deadline data format error!"));
+								await RemoveMemberAndPromote(deadline.additionalData as string ?? throw new ServerCausedException("Unexpected deadline data format error!"));
 								break;
 						}
 						continue;
