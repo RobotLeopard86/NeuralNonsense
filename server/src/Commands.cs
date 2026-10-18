@@ -38,4 +38,33 @@ namespace NeuralNonsense {
 	}
 
 	public class AddProjectorCommand : CommandWithValue<string> { }
+
+	public class SubmitAnswerCommand : CommandWithoutValue {
+		public required string memberID;
+		public required string answer;
+	}
+
+	public class VoteCommand : CommandWithoutValue {
+		public required string memberID;
+		public required bool choseAnswerA;
+	}
+
+	public class R3AddVoteCommand : CommandWithoutValue {
+		public required string memberID;
+		public required byte answerID;
+	}
+
+	public class R3RemoveVoteCommand : CommandWithoutValue {
+		public required string memberID;
+		public required byte answerID;
+	}
+
+	public class CurrentPhaseDataCommand<T> : CommandWithValue<CurrentPhaseDataCommand<T>.Result> {
+		public struct Result {
+			public T data;
+			public uint timeRemaining;
+		}
+
+		public required string memberID;
+	}
 }

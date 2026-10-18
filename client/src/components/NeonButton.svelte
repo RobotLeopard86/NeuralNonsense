@@ -1,10 +1,10 @@
 <script lang="ts">
 	interface Props {
-		variant: "Red" | "Cyan" | "Yellow" | "Translucent";
-		onclick: () => void;
-		disabled?: boolean;
-		children: () => any;
-		class?: string;
+		variant: "Red" | "Cyan" | "Yellow" | "Translucent",
+		onclick: () => void,
+		disabled?: boolean,
+		children: () => any,
+		class?: string
 	}
 
 	let props: Props = $props();

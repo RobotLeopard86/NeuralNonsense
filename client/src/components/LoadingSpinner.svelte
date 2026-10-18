@@ -1,9 +1,9 @@
 <script lang="ts">
 	interface Props {
-		size: number;
-		stroke: number;
-		minDegrees: number;
-		maxDegrees: number;
+		size: number,
+		stroke: number,
+		minDegrees: number,
+		maxDegrees: number
 	}
 
 	let props: Props = $props();

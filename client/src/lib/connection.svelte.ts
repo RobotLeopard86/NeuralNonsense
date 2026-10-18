@@ -16,7 +16,7 @@ export const tabClosePreventHandler = (e: BeforeUnloadEvent) => e.preventDefault
 
 export const connect = async () => {
 	//Build hub connection
-	hc = new SignalR.HubConnectionBuilder()
+	let _hc: SignalR.HubConnection = new SignalR.HubConnectionBuilder()
 		.withUrl("/portal/hub", {
 			accessTokenFactory: () => game.token
 		})
@@ -25,10 +25,11 @@ export const connect = async () => {
 		.build();
 
 	//Register client methods
-	configureHandlers();
+	configureHandlers(_hc);
 
 	//Connect to hub
-	await hc.start();
+	await _hc.start();
+	hc = _hc;
 }
 
 export interface JWTPayload {

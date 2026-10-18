@@ -19,9 +19,9 @@ namespace NeuralNonsense {
 		public const bool MASTER_MODERATION_DISABLE = false;
 
 		//Timers (all in seconds)
-		public const uint ANSWER_PERIOD = 60;
-		public const uint VOTING_PERIOD = 30;
-		public const uint RESULTS_DISPLAY_PERIOD = 5;
-		public const uint R3_RESULTS_DISPLAY_PERIOD = 15;
+		public const uint ANSWER_PERIOD = 60000;
+		public const uint VOTING_PERIOD = 30000;
+		public const uint RESULTS_DISPLAY_PERIOD = 5000;
+		public const uint R3_RESULTS_DISPLAY_PERIOD = 15000;
 	}
 }

@@ -16,14 +16,12 @@
 		const interval = setInterval(() => {
 			timeRemaining -= 10;
 			if(timeRemaining <= 0) {
-				done = true;
+				setTimeout(() => done = true, 1000); //Allows animation to play
 				clearInterval(interval);
 			}
 		}, 10);
 		return () => clearInterval(interval);
 	});
-
-	let progress: number = $derived(Math.min(1, Math.max(0, timeRemaining / props.duration)));
 </script>
 
 {#if timeRemaining > 0}

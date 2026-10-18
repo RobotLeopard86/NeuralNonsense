@@ -43,15 +43,16 @@ namespace NeuralNonsense {
 			await LoadUserAndVerify();
 
 			//Add to group
+			Room room = ServiceContainer.instance.gameManager.rooms[roomCode];
 			await Groups.AddToGroupAsync(Context.ConnectionId, roomCode);
-			await Clients.Group(roomCode).UpdateMemberList(ServiceContainer.instance.gameManager.rooms[roomCode].members.Values.Select(member => new ClientMember(member)).ToArray());
+			await Clients.Group(roomCode).UpdateMemberList(room.members.Values.Select(member => new ClientMember(member)).ToArray());
 
 			//Send connection complete command
 			MemberConnectionCompleteCommand mccc = new MemberConnectionCompleteCommand() {
 				memberID = memberID,
 				connID = Context.ConnectionId
 			};
-			await ServiceContainer.instance.gameManager.rooms[roomCode].writer.WriteAsync(mccc);
+			await room.writer.WriteAsync(mccc);
 			await mccc.task.Task;
 
 			//Base class logic
@@ -126,7 +127,7 @@ namespace NeuralNonsense {
 				targetMemberID = uuid,
 				reason = "You have been kicked by the host."
 			};
-			await ServiceContainer.instance.gameManager.rooms[roomCode].writer.WriteAsync(rmc);
+			await room.writer.WriteAsync(rmc);
 			await rmc.task.Task;
 		}
 
@@ -143,7 +144,7 @@ namespace NeuralNonsense {
 
 			//Send start command
 			StartCommand sc = new StartCommand();
-			await ServiceContainer.instance.gameManager.rooms[roomCode].writer.WriteAsync(sc);
+			await room.writer.WriteAsync(sc);
 			await sc.task.Task;
 		}
 
@@ -157,7 +158,7 @@ namespace NeuralNonsense {
 
 			//Send projector addition command
 			AddProjectorCommand apc = new AddProjectorCommand();
-			await ServiceContainer.instance.gameManager.rooms[roomCode].writer.WriteAsync(apc);
+			await room.writer.WriteAsync(apc);
 			await apc.task.Task;
 
 			//Return projector token
@@ -174,6 +175,73 @@ namespace NeuralNonsense {
 			};
 			await ServiceContainer.instance.gameManager.rooms[roomCode].writer.WriteAsync(mrc);
 			await mrc.task.Task;
+		}
+
+		public async Task SubmitAnswer(string answer) {
+			//Verify
+			await LoadUserAndVerify();
+
+			//Send submission command
+			SubmitAnswerCommand sac = new SubmitAnswerCommand() {
+				memberID = memberID,
+				answer = ServiceContainer.instance.badWordChecker.Censor(answer)
+			};
+			await ServiceContainer.instance.gameManager.rooms[roomCode].writer.WriteAsync(sac);
+			await sac.task.Task;
+		}
+
+		public async Task Vote(bool choseAnswerA) {
+			//Verify
+			await LoadUserAndVerify();
+
+			//Send voting command
+			VoteCommand vc = new VoteCommand() {
+				memberID = memberID,
+				choseAnswerA = choseAnswerA
+			};
+			await ServiceContainer.instance.gameManager.rooms[roomCode].writer.WriteAsync(vc);
+			await vc.task.Task;
+		}
+
+		public async Task AddVoteR3(byte answerID) {
+			//Verify
+			await LoadUserAndVerify();
+
+			//Send vote addition command
+			R3AddVoteCommand avc = new R3AddVoteCommand() {
+				memberID = memberID,
+				answerID = answerID
+			};
+			await ServiceContainer.instance.gameManager.rooms[roomCode].writer.WriteAsync(avc);
+			await avc.task.Task;
+		}
+
+		public async Task RmVoteR3(byte answerID) {
+			//Verify
+			await LoadUserAndVerify();
+
+			//Send vote addition command
+			R3RemoveVoteCommand rvc = new R3RemoveVoteCommand() {
+				memberID = memberID,
+				answerID = answerID
+			};
+			await ServiceContainer.instance.gameManager.rooms[roomCode].writer.WriteAsync(rvc);
+			await rvc.task.Task;
+		}
+
+		public async Task<CurrentPhaseDataCommand<ClientAnswerPhaseData>.Result> RefreshAnswerPhaseData() {
+			//Verify
+			await LoadUserAndVerify();
+
+			//Send data request command
+			CurrentPhaseDataCommand<ClientAnswerPhaseData> cpdc = new CurrentPhaseDataCommand<ClientAnswerPhaseData>() {
+				memberID = memberID
+			};
+			await ServiceContainer.instance.gameManager.rooms[roomCode].writer.WriteAsync(cpdc);
+			await cpdc.task.Task;
+
+			//Return
+			return cpdc.task.Task.Result;
 		}
 	}
 }

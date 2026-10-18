@@ -1,15 +1,16 @@
 <script lang="ts">
 	interface Props {
-		duration: number;
-		size: number;
-		stroke: number;
+		duration: number,
+		size: number,
+		stroke: number,
+		initialTimeRemaining?: number
 	}
 
 	let props: Props = $props();
 
 	let timeRemaining = $state(0);
 	$effect(() => {
-		timeRemaining = props.duration;
+		timeRemaining = props.initialTimeRemaining ? props.initialTimeRemaining : props.duration;
 		const interval = setInterval(() => {
 			timeRemaining -= 1000;
 			if(timeRemaining <= 0) clearInterval(interval);

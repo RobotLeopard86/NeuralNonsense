@@ -13,6 +13,19 @@
 
     onMount(ejectIfNoConnection);
 
+	let initialTimeRemaining: number = $derived(((game.phase ? game.phase : {}) as AnswerPhaseData).timer || 60000);
+	onMount(async() => {
+		while(true) {
+			try {
+				connection();
+				break;
+			} catch {}
+		}
+		let { data, timeRemaining }: { data: AnswerPhaseData, timeRemaining: number } = await connection().invoke("RefreshAnswerPhaseData");
+		game.phase = data;
+		initialTimeRemaining = timeRemaining;
+	});
+
     let maxAnswerLength = $derived(((game.phase ? game.phase : {}) as AnswerPhaseData).maxAnswerLength || 200);
     let answer = $state("");
 
@@ -30,8 +43,6 @@
 		//Mark received
 		received = true;	
 	}
-
-	$inspect(game.phase);
 </script>
 
 <main class="w-full min-h-full flex flex-col items-center px-4">
@@ -61,7 +72,7 @@
 						<span class="mx-auto"></span>
 						
 						<!-- Timer -->
-						<RingTimer size={72} stroke={4} duration={game.phase ? (game.phase as AnswerPhaseData).timer : 60000} />
+						<RingTimer size={72} stroke={4} duration={game.phase ? (game.phase as AnswerPhaseData).timer : 60000} {initialTimeRemaining} />
 					</div>
 
 					<!-- Prompt -->
@@ -108,7 +119,7 @@
 				<span class="mx-auto"></span>
 				
 				<!-- Timer -->
-				<RingTimer size={72} stroke={4} duration={game.phase ? (game.phase as AnswerPhaseData).timer : 60000} />
+				<RingTimer size={72} stroke={4} duration={game.phase ? (game.phase as AnswerPhaseData).timer : 60000} {initialTimeRemaining} />
 			</div>
 
 			<!-- Status -->

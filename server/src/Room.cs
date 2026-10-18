@@ -89,6 +89,29 @@ namespace NeuralNonsense {
 			return TimeProvider.System.GetTimestamp() + (TimeProvider.System.TimestampFrequency * seconds);
 		}
 
+		private uint ComputeTimeUntilDeadline(long deadline) {
+			return (uint)((deadline - TimeProvider.System.GetTimestamp()) / TimeProvider.System.TimestampFrequency);
+		}
+
+		private ClientAnswerPhaseData GetAnswerPhaseData(string memberID) {
+			ClientAnswerPhaseData capd = new ClientAnswerPhaseData {
+				maxAnswerLength = Constants.MAX_ANSWER_LENGTH,
+				timer = Constants.ANSWER_PERIOD
+			};
+			switch(roundNumber) {
+				case 1:
+					capd.prompt = content.r1[idContentMappings[memberID]].prompt;
+					break;
+				case 2:
+					capd.prompt = content.r2[idContentMappings[memberID]].prompt;
+					break;
+				case 3:
+					capd.prompt = content.r3Prompt;
+					break;
+			}
+			return capd;
+		}
+
 		private void HandleInitialJoin(InitialJoinCommand ijc) {
 			//Check member slot availability
 			if(members.Count > (32 + numProjectorsConnected)) {
@@ -252,6 +275,21 @@ namespace NeuralNonsense {
 			apc.task.SetResult(ServiceContainer.instance.tokenGenerator.GenToken(code, member));
 		}
 
+		private async Task HandleCurrentAnswerPhase(CurrentPhaseDataCommand<ClientAnswerPhaseData> cpdc) {
+			//Get data portion
+			CurrentPhaseDataCommand<ClientAnswerPhaseData>.Result res = new CurrentPhaseDataCommand<ClientAnswerPhaseData>.Result {
+				data = GetAnswerPhaseData(cpdc.memberID)
+			};
+
+			//Compute remaining time
+			Deadline? deadline = deadlines.First(d => d.kind == Deadline.Kind.AnswersDue);
+			if(deadline.HasValue) res.timeRemaining = ComputeTimeUntilDeadline(deadline.Value.dueBy) * 1000;
+			else res.timeRemaining = Constants.ANSWER_PERIOD * 1000;
+
+			//Set value
+			cpdc.task.SetResult(res);
+		}
+
 		public async Task RemoveMemberAndPromote(string uuid) {
 			//Projector decrement
 			if(members[uuid].type == Member.Type.Projector) numProjectorsConnected--;
@@ -308,6 +346,9 @@ namespace NeuralNonsense {
 							break;
 						case AddProjectorCommand apc:
 							await HandleAddProjector(apc);
+							break;
+						case CurrentPhaseDataCommand<ClientAnswerPhaseData> cpdc:
+							await HandleCurrentAnswerPhase(cpdc);
 							break;
 					}
 				}
@@ -384,21 +425,7 @@ namespace NeuralNonsense {
 
 							//Send member phase data
 							foreach(Member m in members.Values.Where(m => m.type == Member.Type.Player)) {
-								ClientAnswerPhaseData capd = new ClientAnswerPhaseData {
-									maxAnswerLength = Constants.MAX_ANSWER_LENGTH,
-									timer = Constants.ANSWER_PERIOD
-								};
-								switch(roundNumber) {
-									case 1:
-										capd.prompt = content.r1[idContentMappings[m.uuid]].prompt;
-										break;
-									case 2:
-										capd.prompt = content.r2[idContentMappings[m.uuid]].prompt;
-										break;
-									case 3:
-										capd.prompt = content.r3Prompt;
-										break;
-								}
+								ClientAnswerPhaseData capd = GetAnswerPhaseData(m.uuid);
 								await ServiceContainer.instance.hubCtx.Clients.Client(m.currentConnection).PushAnswerPhaseData(capd);
 							}
 
@@ -406,7 +433,7 @@ namespace NeuralNonsense {
 							Deadline due = new Deadline() {
 								kind = Deadline.Kind.AnswersDue,
 								cancel = new CancellationTokenSource(),
-								dueBy = ComputeDeadline(Constants.ANSWER_PERIOD)
+								dueBy = ComputeDeadline(Constants.ANSWER_PERIOD / 1000)
 							};
 							deadlines.Add(due);
 

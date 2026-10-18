@@ -5,11 +5,9 @@ import { resetState, type ServerMember, game, deriveMember, MemberType } from ".
 import { addToast } from "./toast.svelte";
 import type { AnswerPhaseData } from "./phase";
 
-export const configureHandlers = () => {
-    let conn: HubConnection = connection();
-
+export const configureHandlers = (hc: HubConnection) => {
     //Disconnection
-    conn.onclose((e?: Error) => {
+    hc.onclose((e?: Error) => {
         //Present error if applicable
         if(e) {
             addToast(`You have been unexpectedly disconnected from the room: ${e.message}`, 5000);
@@ -20,9 +18,9 @@ export const configureHandlers = () => {
         window.removeEventListener("beforeunload", tabClosePreventHandler);
         push("/");
     });
-    conn.on("Disconnected", (reason: string) => {
+    hc.on("Disconnected", (reason: string) => {
         //Obediently disconnect like the good website we are
-        conn.stop().finally(() => {
+        hc.stop().finally(() => {
             //Reset game state
             resetState();
 
@@ -34,17 +32,17 @@ export const configureHandlers = () => {
     });
 
     //View transition
-    conn.on("ViewTransition", (view: string) => {
+    hc.on("ViewTransition", (view: string) => {
         push(`/play/${view}`);
     });
 
     //Player list update
-    conn.on("UpdateMemberList", (members: ServerMember[]) => {
+    hc.on("UpdateMemberList", (members: ServerMember[]) => {
         game.state.members = members.map(deriveMember);
     });
 
 	//Member type update
-	conn.on("UpdateType", (newType: string) => {
+	hc.on("UpdateType", (newType: string) => {
 		switch(newType) {
 			case "p":
 				game.self.type = MemberType.Player;
@@ -62,25 +60,24 @@ export const configureHandlers = () => {
 	});
 
     //Host change
-    conn.on("HostChanged", (newHost: string) => {
+    hc.on("HostChanged", (newHost: string) => {
         game.state.hostID = newHost;
 		addToast(game.state.hostID === game.self.uuid ? "You are now the host!" : `${game.state.members.find((m) => m.uuid === game.state.hostID)!.name} is now the host!`, 5000);
     });
 
     //Round update
-    conn.on("SetRound", (round: number) => {
+    hc.on("SetRound", (round: number) => {
         game.state.round = round;
     });
 
 	//Score update
-	conn.on("UpdateScore", (newScore: number) => {
+	hc.on("UpdateScore", (newScore: number) => {
 		game.self.score = newScore;
 	});
 
 	//Phase data push
-	conn.on("PushAnswerPhaseData", (apd: AnswerPhaseData) => {
+	hc.on("PushAnswerPhaseData", (apd: AnswerPhaseData) => {
 		game.phase = apd;
-		game.phase.timer *= 1000;
 	});
 }
 

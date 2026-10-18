@@ -1,9 +1,9 @@
 <script lang="ts">
 	interface Props {
-		value: string;
-		placeholder: string;
-		class?: string;
-		maxLength?: number;
+		value: string,
+		placeholder: string,
+		class?: string,
+		maxLength?: number
 	}
 
 	let { value = $bindable(), ...props }: Props = $props();
