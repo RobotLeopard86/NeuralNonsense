@@ -7,6 +7,7 @@
 	import { joinRoom, tryRestore } from "../lib/connection.svelte";
 	import { onMount } from "svelte";
     import { addToast } from "../lib/toast.svelte";
+    import LoadingSpinner from "../components/LoadingSpinner.svelte";
 
 	type Phase = "Initial" | "Join" | "Create";
 	let phase: Phase = $state("Initial");
@@ -18,15 +19,18 @@
 	});
 
 	let canJoin = $derived(memberName && roomCode && roomCode.length === 6);
+	let working = $state(false);
 
 	onMount(tryRestore);
 
 	const join = async () => {
+		working = true;
 		await joinRoom(roomCode, memberName);
 	};
 
 	const create = async () => {
 		//Call room creation endpoint
+		working = true;
 		const result = await fetch("/portal/create", {
 			method: "POST",
 		});
@@ -68,7 +72,15 @@
 			<p class="text-left text-white/50 text-base mb-2">YOUR NAME</p>
 			<TextField placeholder="What will you call yourself?" bind:value={memberName} class="w-full max-w-md" maxLength={32} />
 			<br />
-			<NeonButton variant="Cyan" onclick={join} class="w-full max-w-md my-4" disabled={!canJoin}>Join Game <ArrowRightOutline size="xl" /></NeonButton>
+			<NeonButton variant="Cyan" onclick={join} class="w-full max-w-md my-4" disabled={!canJoin || working}>
+				{#if working}
+					<LoadingSpinner size={25} stroke={2} minDegrees={1} maxDegrees={120} />
+					<span>&nbsp;&nbsp;&nbsp;&nbsp;</span>
+					<p class="text-center text-lg">Joining...</p>
+				{:else}
+					Join Game <ArrowRightOutline size="xl" />
+				{/if}
+			</NeonButton>
 		</div>
 	{:else if phase == "Create"}
 		<div class="flex flex-col max-w-md w-full">
@@ -78,7 +90,15 @@
 			<p class="text-left text-white/50 text-base mb-2">YOUR NAME</p>
 			<TextField placeholder="What will you call yourself?" bind:value={memberName} class="w-full max-w-md" maxLength={32} />
 			<br />
-			<NeonButton variant="Red" onclick={create} class="w-full max-w-md my-4" disabled={!memberName}>Create <ArrowRightOutline size="xl" /></NeonButton>
+			<NeonButton variant="Red" onclick={create} class="w-full max-w-md my-4" disabled={!memberName || working}>
+				{#if working}
+					<LoadingSpinner size={25} stroke={2} minDegrees={1} maxDegrees={120} />
+					<span>&nbsp;&nbsp;&nbsp;&nbsp;</span>
+					<p class="text-center text-lg">Creating...</p>
+				{:else}
+					Create <ArrowRightOutline size="xl" />
+				{/if}
+			</NeonButton>
 		</div>
 	{/if}
 </main>

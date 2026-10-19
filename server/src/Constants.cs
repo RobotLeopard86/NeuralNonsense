@@ -21,7 +21,7 @@ namespace NeuralNonsense {
 		//Timers (all in seconds)
 		public const uint ANSWER_PERIOD = 60000;
 		public const uint VOTING_PERIOD = 30000;
-		public const uint RESULTS_DISPLAY_PERIOD = 5000;
-		public const uint R3_RESULTS_DISPLAY_PERIOD = 15000;
+		public const uint RESULTS_DISPLAY_PERIOD = 10000;
+		public const uint R3_RESULTS_DISPLAY_PERIOD = 20000;
 	}
 }

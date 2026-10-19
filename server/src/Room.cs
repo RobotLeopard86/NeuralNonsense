@@ -156,7 +156,7 @@ namespace NeuralNonsense {
 
 		private ClientVotePhaseData GetVotePhaseData() {
 			ClientVotePhaseData cvpd = new ClientVotePhaseData {
-				timer = Constants.ANSWER_PERIOD,
+				timer = Constants.VOTING_PERIOD,
 				humanAnswer = answers[votingOrder[currentAnswerToVoteOn]]
 			};
 			switch(roundNumber) {
@@ -367,7 +367,7 @@ namespace NeuralNonsense {
 			};
 
 			//Compute remaining time
-			Deadline? deadline = deadlines.First(d => d.kind == Deadline.Kind.AnswersDue);
+			Deadline? deadline = deadlines.First(d => d.kind == Deadline.Kind.VotesDue);
 			if(deadline.HasValue) res.timeRemaining = ComputeTimeUntilDeadline(deadline.Value.dueBy) * 1000;
 			else res.timeRemaining = Constants.ANSWER_PERIOD * 1000;
 
@@ -423,7 +423,7 @@ namespace NeuralNonsense {
 					p = content.r1[idContentMappings[votingOrder[currentAnswerToVoteOn]]];
 					break;
 				case 2:
-					p = content.r1[idContentMappings[votingOrder[currentAnswerToVoteOn]]];
+					p = content.r2[idContentMappings[votingOrder[currentAnswerToVoteOn]]];
 					break;
 				default: return;
 			}
@@ -437,6 +437,7 @@ namespace NeuralNonsense {
 				humanPoints = (uint)Math.Ceiling((double)votes.Values.Count(v => v) / votes.Count * roundNumber * 1000),
 				unanimity = votes.Values.Count(v => v) == votes.Count
 			};
+			if(currentResults.unanimity) currentResults.humanPoints += 500;
 
 			//Apply scoring
 			Member m = members[currentResults.humanID];
@@ -453,43 +454,47 @@ namespace NeuralNonsense {
 				//Process commands
 				Command? cmd;
 				while(commandQueue.Reader.TryRead(out cmd)) {
-					switch(cmd) {
-						case InitialJoinCommand ijc:
-							HandleInitialJoin(ijc);
-							break;
-						case MemberConnectionCompleteCommand mccc:
-							await HandleMemberConnectionComplete(mccc);
-							break;
-						case NotifyDisconnectedCommand ndc:
-							await HandleNotifyDisconnected(ndc);
-							break;
-						case StartCommand sc:
-							await HandleStart(sc);
-							break;
-						case MarkReadyCommand mrc:
-							await HandleMarkReady(mrc);
-							break;
-						case RemoveMemberCommand rmc:
-							await HandleRemoveMember(rmc);
-							break;
-						case AddProjectorCommand apc:
-							await HandleAddProjector(apc);
-							break;
-						case CurrentPhaseDataCommand<ClientAnswerPhaseData> cpdc:
-							await HandleCurrentAnswerPhase(cpdc);
-							break;
-						case CurrentPhaseDataCommand<ClientVotePhaseData> cpdc:
-							await HandleCurrentVotePhase(cpdc);
-							break;
-						case CurrentPhaseDataCommand<ClientResultsPhaseData> cpdc:
-							await HandleCurrentResultsPhase(cpdc);
-							break;
-						case SubmitAnswerCommand sac:
-							await HandleSubmitAnswer(sac);
-							break;
-						case VoteCommand vc:
-							await HandleVote(vc);
-							break;
+					try {
+						switch(cmd) {
+							case InitialJoinCommand ijc:
+								HandleInitialJoin(ijc);
+								break;
+							case MemberConnectionCompleteCommand mccc:
+								await HandleMemberConnectionComplete(mccc);
+								break;
+							case NotifyDisconnectedCommand ndc:
+								await HandleNotifyDisconnected(ndc);
+								break;
+							case StartCommand sc:
+								await HandleStart(sc);
+								break;
+							case MarkReadyCommand mrc:
+								await HandleMarkReady(mrc);
+								break;
+							case RemoveMemberCommand rmc:
+								await HandleRemoveMember(rmc);
+								break;
+							case AddProjectorCommand apc:
+								await HandleAddProjector(apc);
+								break;
+							case CurrentPhaseDataCommand<ClientAnswerPhaseData> cpdc:
+								await HandleCurrentAnswerPhase(cpdc);
+								break;
+							case CurrentPhaseDataCommand<ClientVotePhaseData> cpdc:
+								await HandleCurrentVotePhase(cpdc);
+								break;
+							case CurrentPhaseDataCommand<ClientResultsPhaseData> cpdc:
+								await HandleCurrentResultsPhase(cpdc);
+								break;
+							case SubmitAnswerCommand sac:
+								await HandleSubmitAnswer(sac);
+								break;
+							case VoteCommand vc:
+								await HandleVote(vc);
+								break;
+						}
+					} catch(Exception e) {
+						Console.Error.WriteLine("Exception thrown in command processing: " + e.Message + (!string.IsNullOrEmpty(e.StackTrace) ? "\n" + e.StackTrace : ""));
 					}
 				}
 
@@ -504,231 +509,238 @@ namespace NeuralNonsense {
 					}
 					if(deadline.dueBy <= now) {
 						toRemove.Add(deadline);
-						switch(deadline.kind) {
-							case Deadline.Kind.JoinExpire:
-								await RemoveMemberAndPromote(deadline.additionalData as string ?? throw new ServerCausedException("Unexpected deadline data format error!"));
-								break;
-							case Deadline.Kind.AnswersDue:
-								//Get any missing answers
-								if(answers.Count != members.Count(m => !string.IsNullOrEmpty(m.Value.currentConnection) && m.Value.type == Member.Type.Player)) {
-									foreach(Member m in members.Values.Where(m => !string.IsNullOrEmpty(m.currentConnection) && m.type == Member.Type.Player)) {
-										answers[m.uuid] = await ServiceContainer.instance.hubCtx.Clients.Client(m.currentConnection).RequestMissingAnswer();
+						try {
+							switch(deadline.kind) {
+								case Deadline.Kind.JoinExpire:
+									await RemoveMemberAndPromote(deadline.additionalData as string ?? throw new ServerCausedException("Unexpected deadline data format error!"));
+									break;
+								case Deadline.Kind.AnswersDue:
+									//Get any missing answers
+									if(answers.Count != members.Count(m => !string.IsNullOrEmpty(m.Value.currentConnection) && m.Value.type == Member.Type.Player)) {
+										foreach(Member m in members.Values.Where(m => !string.IsNullOrEmpty(m.currentConnection) && m.type == Member.Type.Player)) {
+											answers[m.uuid] = await ServiceContainer.instance.hubCtx.Clients.Client(m.currentConnection).RequestMissingAnswer();
+										}
 									}
-								}
 
-								//Advance to voting
-								votingOrder = answers.Keys.ToArray();
-								currentAnswerToVoteOn = 0;
-								Random.Shared.Shuffle(votingOrder);
-								phaseChangeProcessed = false;
-								phase = Phase.Vote;
-								break;
-							case Deadline.Kind.VotesDue:
-								await EndVoting();
-								break;
-							case Deadline.Kind.ResultsDone:
-								if(roundNumber >= 3) {
-									//Game's done!
-									phase = Phase.End;
+									//Advance to voting
+									votingOrder = answers.Keys.ToArray();
+									currentAnswerToVoteOn = 0;
+									Random.Shared.Shuffle(votingOrder);
 									phaseChangeProcessed = false;
-								} else if(currentAnswerToVoteOn >= votingOrder.Length) {
-									//Voting for the round done, advance to interlude
-									phase = Phase.Interlude;
-									phaseChangeProcessed = false;
-								} else {
-									//Next vote
 									phase = Phase.Vote;
-									phaseChangeProcessed = false;
-									currentAnswerToVoteOn++;
-								}
-								break;
-							default: break;
+									break;
+								case Deadline.Kind.VotesDue:
+									await EndVoting();
+									break;
+								case Deadline.Kind.ResultsDone:
+									if(roundNumber >= 3) {
+										//Game's done!
+										phase = Phase.End;
+										phaseChangeProcessed = false;
+									} else if(++currentAnswerToVoteOn >= votingOrder.Length) {
+										//Voting for the round done, advance to interlude
+										phase = Phase.Interlude;
+										phaseChangeProcessed = false;
+									} else {
+										//Next vote
+										phase = Phase.Vote;
+										phaseChangeProcessed = false;
+									}
+									break;
+								default: break;
+							}
+							continue;
+						} catch(Exception e) {
+							Console.Error.WriteLine("Exception thrown in deadline processing: " + e.Message + (!string.IsNullOrEmpty(e.StackTrace) ? "\n" + e.StackTrace : ""));
 						}
-						continue;
 					}
 					untilNext = Math.Min(untilNext, deadline.dueBy - now);
 				}
 				deadlines.RemoveAll(toRemove.Contains);
 
 				//Game state machine
-				switch(phase) {
-					case Phase.Lobby:
-						break;
-					case Phase.ContentGen:
-						phaseChangeProcessed = true;
-						if(members.Values.Where(m => m.type == Member.Type.Player || m.type == Member.Type.Audience).Count(m => !m.ready) == 0) {
-							//Set phases and client state
-							phaseChangeProcessed = false;
-							phase = Phase.Answer;
-							foreach(Member m in members.Values) m.ready = false;
+				try {
+					switch(phase) {
+						case Phase.Lobby:
+							break;
+						case Phase.ContentGen:
+							phaseChangeProcessed = true;
+							if(members.Values.Where(m => m.type == Member.Type.Player || m.type == Member.Type.Audience).Count(m => !m.ready) == 0) {
+								//Set phases and client state
+								phaseChangeProcessed = false;
+								phase = Phase.Answer;
+								foreach(Member m in members.Values) m.ready = false;
 
-							//Generate content
-							byte playerCount = (byte)members.Values.Count(m => m.type == Member.Type.Player);
-							content = new AIContent {
-								r1 = new AIContent.Pair[playerCount],
-								r2 = new AIContent.Pair[playerCount],
-								r3AiAnswers = new string[playerCount],
-								r3Prompt = ""
-							};
-							ServiceContainer.instance.aiGenerator.GenerateContent(ref content);
+								//Generate content
+								byte playerCount = (byte)members.Values.Count(m => m.type == Member.Type.Player);
+								content = new AIContent {
+									r1 = new AIContent.Pair[playerCount],
+									r2 = new AIContent.Pair[playerCount],
+									r3AiAnswers = new string[playerCount],
+									r3Prompt = ""
+								};
+								ServiceContainer.instance.aiGenerator.GenerateContent(ref content);
 
-							//Assign IDs
-							idContentMappings = new Dictionary<string, byte>();
-							byte[] possible = new byte[playerCount];
-							for(byte i = 0; i < playerCount; i++) possible[i] = i;
-							Random.Shared.Shuffle(possible);
-							foreach(Member m in members.Values.Where(m => m.type == Member.Type.Player)) {
-								idContentMappings[m.uuid] = possible.Last();
-								possible = possible.Take(possible.Length - 1).ToArray();
-							}
-							roundNumber = 1;
-							continue;
-						}
-
-						//Set wakeup deadline for re-check
-						{
-							Deadline wake = new Deadline() {
-								kind = Deadline.Kind.GeneralWake,
-								cancel = new CancellationTokenSource(),
-								dueBy = ComputeDeadline(1)
-							};
-							deadlines.Add(wake);
-						}
-
-						break;
-					case Phase.Answer:
-						if(!phaseChangeProcessed) {
-							//Clear data
-							answers.Clear();
-							votesR3.Clear();
-
-							//Send member phase data
-							foreach(Member m in members.Values.Where(m => !string.IsNullOrEmpty(m.currentConnection))) {
-								ClientAnswerPhaseData capd = GetAnswerPhaseData(m.uuid);
-								await ServiceContainer.instance.hubCtx.Clients.Client(m.currentConnection).PushAnswerPhaseData(capd);
+								//Assign IDs
+								idContentMappings = new Dictionary<string, byte>();
+								byte[] possible = new byte[playerCount];
+								for(byte i = 0; i < playerCount; i++) possible[i] = i;
+								Random.Shared.Shuffle(possible);
+								foreach(Member m in members.Values.Where(m => m.type == Member.Type.Player)) {
+									idContentMappings[m.uuid] = possible.Last();
+									possible = possible.Take(possible.Length - 1).ToArray();
+								}
+								roundNumber = 1;
+								continue;
 							}
 
-							//Set deadline
-							Deadline due = new Deadline() {
-								kind = Deadline.Kind.AnswersDue,
-								cancel = new CancellationTokenSource(),
-								dueBy = ComputeDeadline(Constants.ANSWER_PERIOD / 1000)
-							};
-							deadlines.Add(due);
+							//Set wakeup deadline for re-check
+							{
+								Deadline wake = new Deadline() {
+									kind = Deadline.Kind.GeneralWake,
+									cancel = new CancellationTokenSource(),
+									dueBy = ComputeDeadline(1)
+								};
+								deadlines.Add(wake);
+							}
 
-							//Send state transitions
-							await ServiceContainer.instance.hubCtx.Clients.Group(code).ViewTransition("answer");
+							break;
+						case Phase.Answer:
+							if(!phaseChangeProcessed) {
+								//Clear data
+								answers.Clear();
+								votesR3.Clear();
 
-							//Mark processed
+								//Send member phase data
+								foreach(Member m in members.Values.Where(m => !string.IsNullOrEmpty(m.currentConnection))) {
+									ClientAnswerPhaseData capd = GetAnswerPhaseData(m.uuid);
+									await ServiceContainer.instance.hubCtx.Clients.Client(m.currentConnection).PushAnswerPhaseData(capd);
+								}
+
+								//Set deadline
+								Deadline due = new Deadline() {
+									kind = Deadline.Kind.AnswersDue,
+									cancel = new CancellationTokenSource(),
+									dueBy = ComputeDeadline(Constants.ANSWER_PERIOD / 1000)
+								};
+								deadlines.Add(due);
+
+								//Send state transitions
+								await ServiceContainer.instance.hubCtx.Clients.Group(code).ViewTransition("answer");
+
+								//Mark processed
+								phaseChangeProcessed = true;
+								break;
+							}
+
+							//Early proceed
+							if(answers.Count == members.Count(m => !string.IsNullOrEmpty(m.Value.currentConnection) && m.Value.type == Member.Type.Player)) {
+								//Advance to voting
+								votingOrder = answers.Keys.ToArray();
+								currentAnswerToVoteOn = 0;
+								Random.Shared.Shuffle(votingOrder);
+								phaseChangeProcessed = false;
+								phase = Phase.Vote;
+								deadlines.First(d => d.kind == Deadline.Kind.AnswersDue).cancel.Cancel();
+								continue;
+							}
+
+							//Set wakeup deadline for re-check
+							{
+								Deadline wake = new Deadline() {
+									kind = Deadline.Kind.GeneralWake,
+									cancel = new CancellationTokenSource(),
+									dueBy = ComputeDeadline(1)
+								};
+								deadlines.Add(wake);
+							}
+
+							break;
+						case Phase.Vote:
+							if(!phaseChangeProcessed) {
+								//Clear data
+								votes.Clear();
+
+								//Send phase data
+								await ServiceContainer.instance.hubCtx.Clients.Group(code).PushVotePhaseData(GetVotePhaseData());
+
+								//Set deadline
+								Deadline due = new Deadline() {
+									kind = Deadline.Kind.VotesDue,
+									cancel = new CancellationTokenSource(),
+									dueBy = ComputeDeadline(Constants.VOTING_PERIOD / 1000)
+								};
+								deadlines.Add(due);
+
+								//Send state transitions
+								await ServiceContainer.instance.hubCtx.Clients.Group(code).ViewTransition("vote");
+
+								//Mark processed
+								phaseChangeProcessed = true;
+							}
+
+							//Early proceed
+							if(votes.Count == members.Values.Count(m => !string.IsNullOrEmpty(m.currentConnection) && (m.type == Member.Type.Player || m.type == Member.Type.Audience))) {
+								//Advance to results
+								await EndVoting();
+								deadlines.First(d => d.kind == Deadline.Kind.VotesDue).cancel.Cancel();
+								continue;
+							}
+
+							//Set wakeup deadline for re-check
+							{
+								Deadline wake = new Deadline() {
+									kind = Deadline.Kind.GeneralWake,
+									cancel = new CancellationTokenSource(),
+									dueBy = ComputeDeadline(1)
+								};
+								deadlines.Add(wake);
+							}
+							break;
+						case Phase.Results:
+							if(!phaseChangeProcessed) {
+								//Send phase data
+								await ServiceContainer.instance.hubCtx.Clients.Group(code).PushResultsPhaseData(currentResults);
+
+								//Set deadline
+								Deadline due = new Deadline() {
+									kind = Deadline.Kind.ResultsDone,
+									cancel = new CancellationTokenSource(),
+									dueBy = ComputeDeadline(Constants.RESULTS_DISPLAY_PERIOD / 1000)
+								};
+								deadlines.Add(due);
+
+								//Send state transitions
+								await ServiceContainer.instance.hubCtx.Clients.Group(code).ViewTransition("results");
+
+								//Mark processed
+								phaseChangeProcessed = true;
+							}
+							break;
+						case Phase.Interlude:
+							if(!phaseChangeProcessed) {
+								//Advance round
+								roundNumber++;
+
+								//Send state transitions
+								await ServiceContainer.instance.hubCtx.Clients.Group(code).ViewTransition("interlude");
+
+								//Mark processed
+								phaseChangeProcessed = true;
+							}
+							break;
+						case Phase.R3Vote:
+							break;
+						case Phase.R3Results:
+							break;
+						case Phase.End:
+							roundNumber = 0;
+							await ServiceContainer.instance.hubCtx.Clients.Group(code).ViewTransition("end");
 							phaseChangeProcessed = true;
 							break;
-						}
-
-						//Early proceed
-						if(answers.Count == members.Count(m => !string.IsNullOrEmpty(m.Value.currentConnection) && m.Value.type == Member.Type.Player)) {
-							//Advance to voting
-							votingOrder = answers.Keys.ToArray();
-							currentAnswerToVoteOn = 0;
-							Random.Shared.Shuffle(votingOrder);
-							phaseChangeProcessed = false;
-							phase = Phase.Vote;
-							deadlines.First(d => d.kind == Deadline.Kind.AnswersDue).cancel.Cancel();
-							continue;
-						}
-
-						//Set wakeup deadline for re-check
-						{
-							Deadline wake = new Deadline() {
-								kind = Deadline.Kind.GeneralWake,
-								cancel = new CancellationTokenSource(),
-								dueBy = ComputeDeadline(1)
-							};
-							deadlines.Add(wake);
-						}
-
-						break;
-					case Phase.Vote:
-						if(!phaseChangeProcessed) {
-							//Clear data
-							votes.Clear();
-
-							//Send phase data
-							await ServiceContainer.instance.hubCtx.Clients.Group(code).PushVotePhaseData(GetVotePhaseData());
-
-							//Set deadline
-							Deadline due = new Deadline() {
-								kind = Deadline.Kind.VotesDue,
-								cancel = new CancellationTokenSource(),
-								dueBy = ComputeDeadline(Constants.VOTING_PERIOD / 1000)
-							};
-							deadlines.Add(due);
-
-							//Send state transitions
-							await ServiceContainer.instance.hubCtx.Clients.Group(code).ViewTransition("vote");
-
-							//Mark processed
-							phaseChangeProcessed = true;
-						}
-
-						//Early proceed
-						if(votes.Count == members.Values.Count(m => !string.IsNullOrEmpty(m.currentConnection) && (m.type == Member.Type.Player || m.type == Member.Type.Audience))) {
-							//Advance to results
-							await EndVoting();
-							deadlines.First(d => d.kind == Deadline.Kind.AnswersDue).cancel.Cancel();
-							continue;
-						}
-
-						//Set wakeup deadline for re-check
-						{
-							Deadline wake = new Deadline() {
-								kind = Deadline.Kind.GeneralWake,
-								cancel = new CancellationTokenSource(),
-								dueBy = ComputeDeadline(1)
-							};
-							deadlines.Add(wake);
-						}
-						break;
-					case Phase.Results:
-						if(!phaseChangeProcessed) {
-							//Send phase data
-							await ServiceContainer.instance.hubCtx.Clients.Group(code).PushResultsPhaseData(currentResults);
-
-							//Set deadline
-							Deadline due = new Deadline() {
-								kind = Deadline.Kind.ResultsDone,
-								cancel = new CancellationTokenSource(),
-								dueBy = ComputeDeadline(Constants.RESULTS_DISPLAY_PERIOD / 1000)
-							};
-							deadlines.Add(due);
-
-							//Send state transitions
-							await ServiceContainer.instance.hubCtx.Clients.Group(code).ViewTransition("results");
-
-							//Mark processed
-							phaseChangeProcessed = true;
-						}
-						break;
-					case Phase.Interlude:
-						if(!phaseChangeProcessed) {
-							//Advance round
-							roundNumber++;
-
-							//Send state transitions
-							await ServiceContainer.instance.hubCtx.Clients.Group(code).ViewTransition("interlude");
-
-							//Mark processed
-							phaseChangeProcessed = true;
-						}
-						break;
-					case Phase.R3Vote:
-						break;
-					case Phase.R3Results:
-						break;
-					case Phase.End:
-						roundNumber = 0;
-						await ServiceContainer.instance.hubCtx.Clients.Group(code).ViewTransition("end");
-						phaseChangeProcessed = true;
-						break;
+					}
+				} catch(Exception e) {
+					Console.Error.WriteLine("Exception thrown in the game state machine: " + e.Message + (!string.IsNullOrEmpty(e.StackTrace) ? "\n" + e.StackTrace : ""));
 				}
 
 				//Wait until we get a new command or until the next deadline
@@ -737,6 +749,10 @@ namespace NeuralNonsense {
 				} else {
 					await Task.WhenAny(commandQueue.Reader.WaitToReadAsync(token).AsTask(), Task.Delay(TimeSpan.FromSeconds((double)untilNext / TimeProvider.System.TimestampFrequency), token));
 				}
+			}
+
+			if(token.IsCancellationRequested) {
+				await ServiceContainer.instance.hubCtx.Clients.Group(code).Disconnected("The server is shutting down!");
 			}
 		}
 	}
