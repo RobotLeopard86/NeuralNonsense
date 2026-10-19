@@ -8,8 +8,10 @@ namespace NeuralNonsense {
 		Task UpdateMemberList(ClientMember[] members);
 		Task HostChanged(string newHost);
 		Task SetRound(uint round);
+		Task UpdateScore(uint newScore);
 		Task PushAnswerPhaseData(ClientAnswerPhaseData capd);
 		Task PushVotePhaseData(ClientVotePhaseData cvpd);
+		Task PushResultsPhaseData(ClientResultsPhaseData crpd);
 		Task<string> RequestMissingAnswer();
 	}
 
@@ -259,6 +261,36 @@ namespace NeuralNonsense {
 
 			//Send data request command
 			CurrentPhaseDataCommand<ClientAnswerPhaseData> cpdc = new CurrentPhaseDataCommand<ClientAnswerPhaseData>() {
+				memberID = memberID
+			};
+			await ServiceContainer.instance.gameManager.rooms[roomCode].writer.WriteAsync(cpdc);
+			await cpdc.task.Task;
+
+			//Return
+			return cpdc.task.Task.Result;
+		}
+
+		public async Task<CurrentPhaseDataCommand<ClientVotePhaseData>.Result> RefreshVotePhaseData() {
+			//Verify
+			await LoadUserAndVerify();
+
+			//Send data request command
+			CurrentPhaseDataCommand<ClientVotePhaseData> cpdc = new CurrentPhaseDataCommand<ClientVotePhaseData>() {
+				memberID = memberID
+			};
+			await ServiceContainer.instance.gameManager.rooms[roomCode].writer.WriteAsync(cpdc);
+			await cpdc.task.Task;
+
+			//Return
+			return cpdc.task.Task.Result;
+		}
+
+		public async Task<CurrentPhaseDataCommand<ClientResultsPhaseData>.Result> RefreshResultsPhaseData() {
+			//Verify
+			await LoadUserAndVerify();
+
+			//Send data request command
+			CurrentPhaseDataCommand<ClientResultsPhaseData> cpdc = new CurrentPhaseDataCommand<ClientResultsPhaseData>() {
 				memberID = memberID
 			};
 			await ServiceContainer.instance.gameManager.rooms[roomCode].writer.WriteAsync(cpdc);

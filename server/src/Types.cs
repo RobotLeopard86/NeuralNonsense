@@ -63,6 +63,7 @@ namespace NeuralNonsense {
 	public struct ClientVotePhaseData {
 		public string prompt;
 		public uint timer;
+		public string humanID;
 		public string humanAnswer;
 		public string aiAnswer;
 	}
@@ -79,8 +80,8 @@ namespace NeuralNonsense {
 	public struct ClientR3VotePhaseData {
 		public string prompt;
 		public uint timer;
-		public string humanAnswer;
-		public string aiAnswer;
+		public string[] answers;
+		public uint selectCount;
 	}
 
 	public struct ClientR3ResultsPhaseData {

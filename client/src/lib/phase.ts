@@ -7,6 +7,7 @@ export interface AnswerPhaseData {
 export interface VotePhaseData {
     prompt: string,
     timer: number,
+	humanID: string,
     humanAnswer: string,
     aiAnswer: string
 }
@@ -24,7 +25,6 @@ export interface R3VotePhaseData {
     prompt: string,
     timer: number,
     answers: string[],
-    answerIndexMapping: number[], //[0] = 2 -> answers[0] = server-side answers[2]
     selectCount: number
 }
 

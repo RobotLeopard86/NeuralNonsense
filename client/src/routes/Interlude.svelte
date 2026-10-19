@@ -1,6 +1,6 @@
 <script lang="ts">
     import { onMount } from "svelte";
-    import { ejectIfNoConnection, leaveRoom } from "../lib/connection.svelte";
+    import { connection, ejectIfNoConnection, leaveRoom } from "../lib/connection.svelte";
     import { game, MemberType } from "../lib/state.svelte";
     import { fade } from "svelte/transition";
     import { OpenDoorOutline } from "flowbite-svelte-icons";
@@ -39,6 +39,9 @@
 				};
 				break;
 		}
+		setTimeout(async() => {
+            await connection().invoke("SignalReady");
+        }, 5000);
 	});
 </script>
 

@@ -55,7 +55,9 @@
 		<div class="absolute top-4 right-4 px-4 py-1 rounded-2xl font-bold text-sm flex items-center justify-center bg-white/5 border-2 border-white/20 text-white">
 			{game.self.score} Points
 		</div>
+	{/if}
 
+	{#if ((game.phase ? game.phase : {}) as VotePhaseData).humanID !== game.self.uuid && (game.self.type === MemberType.Player || game.self.type === MemberType.Audience)}
         <!-- Body zone-->
 		<div class="w-3/4 min-h-[85dvh] flex flex-col place-content-center px-4">
 			{#if !received}
@@ -203,6 +205,13 @@
 					{((game.phase ? game.phase : {}) as VotePhaseData).humanAnswer || "Answer A"}
 				</div>
 			{/if}
+
+			<!-- Spinner -->
+			<div class="flex flex-row items-center">
+				<LoadingSpinner size={25} stroke={2} minDegrees={1} maxDegrees={120} />
+				<span>&nbsp;&nbsp;&nbsp;&nbsp;</span>
+				<p class="text-center text-white/50 text-sm">Waiting for votes...</p>
+			</div>
 		</div>
     {/if}
 </main>

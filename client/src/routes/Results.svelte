@@ -1,12 +1,16 @@
 <script lang="ts">
     import { onMount } from "svelte";
-    import { ejectIfNoConnection, leaveRoom } from "../lib/connection.svelte";
+    import { connection, ejectIfNoConnection, leaveRoom } from "../lib/connection.svelte";
     import { game, MemberType } from "../lib/state.svelte";
     import SmallNeonButton from "../components/SmallNeonButton.svelte";
     import { OpenDoorOutline, UserOutline } from "flowbite-svelte-icons";
     import type { ResultsPhaseData } from "../lib/phase";
 
-    onMount(ejectIfNoConnection);
+    onMount(async() => {
+		await ejectIfNoConnection();
+		let { data }: { data: ResultsPhaseData, timeRemaining: number, finished: boolean } = await connection().invoke("RefreshResultsPhaseData");
+		game.phase = data;
+	});
 </script>
 
 <main class="w-full min-h-full flex flex-col items-center px-4">

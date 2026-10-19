@@ -76,8 +76,11 @@ namespace NeuralNonsense {
 		private Dictionary<string, string> answers = new Dictionary<string, string>(); //UUID, answer
 		private Dictionary<string, bool> votes = new Dictionary<string, bool>(); //UUID, selected human answer or not
 		public byte currentAnswerToVoteOn { get; private set; } = 0;
-		private string[] votingOrder = { };
+		private string[] votingOrder = { }; //Order of member UUIDs to vote in
 		private Dictionary<string, byte[]> votesR3 = new Dictionary<string, byte[]>(); //UUID, answer IDs
+
+		private ClientResultsPhaseData currentResults = new ClientResultsPhaseData();
+		private ClientR3ResultsPhaseData currentR3Results = new ClientR3ResultsPhaseData();
 
 		public Room() {
 			commandQueue = Channel.CreateUnbounded<Command>(new UnboundedChannelOptions() {
@@ -149,6 +152,24 @@ namespace NeuralNonsense {
 					break;
 			}
 			return capd;
+		}
+
+		private ClientVotePhaseData GetVotePhaseData() {
+			ClientVotePhaseData cvpd = new ClientVotePhaseData {
+				timer = Constants.ANSWER_PERIOD,
+				humanAnswer = answers[votingOrder[currentAnswerToVoteOn]]
+			};
+			switch(roundNumber) {
+				case 1:
+					cvpd.prompt = content.r1[idContentMappings[votingOrder[currentAnswerToVoteOn]]].prompt;
+					cvpd.aiAnswer = content.r1[idContentMappings[votingOrder[currentAnswerToVoteOn]]].aiAnswer;
+					break;
+				case 2:
+					cvpd.prompt = content.r2[idContentMappings[votingOrder[currentAnswerToVoteOn]]].prompt;
+					cvpd.aiAnswer = content.r2[idContentMappings[votingOrder[currentAnswerToVoteOn]]].aiAnswer;
+					break;
+			}
+			return cvpd;
 		}
 
 		private void HandleInitialJoin(InitialJoinCommand ijc) {
@@ -338,6 +359,34 @@ namespace NeuralNonsense {
 			cpdc.task.SetResult(res);
 		}
 
+		private async Task HandleCurrentVotePhase(CurrentPhaseDataCommand<ClientVotePhaseData> cpdc) {
+			//Get data portion
+			CurrentPhaseDataCommand<ClientVotePhaseData>.Result res = new CurrentPhaseDataCommand<ClientVotePhaseData>.Result {
+				data = GetVotePhaseData(),
+				finished = votes.ContainsKey(cpdc.memberID)
+			};
+
+			//Compute remaining time
+			Deadline? deadline = deadlines.First(d => d.kind == Deadline.Kind.AnswersDue);
+			if(deadline.HasValue) res.timeRemaining = ComputeTimeUntilDeadline(deadline.Value.dueBy) * 1000;
+			else res.timeRemaining = Constants.ANSWER_PERIOD * 1000;
+
+			//Set value
+			cpdc.task.SetResult(res);
+		}
+
+		private async Task HandleCurrentResultsPhase(CurrentPhaseDataCommand<ClientResultsPhaseData> cpdc) {
+			//Get data portion
+			CurrentPhaseDataCommand<ClientResultsPhaseData>.Result res = new CurrentPhaseDataCommand<ClientResultsPhaseData>.Result {
+				data = currentResults,
+				timeRemaining = 0,
+				finished = false
+			};
+
+			//Set value
+			cpdc.task.SetResult(res);
+		}
+
 		private async Task HandleSubmitAnswer(SubmitAnswerCommand sac) {
 			//Check if answer is done already
 			if(answers.ContainsKey(sac.memberID)) {
@@ -364,6 +413,39 @@ namespace NeuralNonsense {
 
 			//Set the result
 			vc.task.SetResult();
+		}
+
+		private async Task EndVoting() {
+			//Get content pair
+			AIContent.Pair p;
+			switch(roundNumber) {
+				case 1:
+					p = content.r1[idContentMappings[votingOrder[currentAnswerToVoteOn]]];
+					break;
+				case 2:
+					p = content.r1[idContentMappings[votingOrder[currentAnswerToVoteOn]]];
+					break;
+				default: return;
+			}
+
+			//Set up results object
+			currentResults = new ClientResultsPhaseData {
+				prompt = p.prompt,
+				humanID = votingOrder[currentAnswerToVoteOn],
+				humanAnswer = answers[votingOrder[currentAnswerToVoteOn]],
+				aiAnswer = p.aiAnswer,
+				humanPoints = (uint)Math.Ceiling((double)votes.Values.Count(v => v) / votes.Count * roundNumber * 1000),
+				unanimity = votes.Values.Count(v => v) == votes.Count
+			};
+
+			//Apply scoring
+			Member m = members[currentResults.humanID];
+			m.score += currentResults.humanPoints;
+			await ServiceContainer.instance.hubCtx.Clients.Client(m.currentConnection).UpdateScore(m.score);
+
+			//Advance phase
+			phaseChangeProcessed = false;
+			phase = Phase.Results;
 		}
 
 		public async Task RunAsync(CancellationToken token) {
@@ -395,6 +477,12 @@ namespace NeuralNonsense {
 							break;
 						case CurrentPhaseDataCommand<ClientAnswerPhaseData> cpdc:
 							await HandleCurrentAnswerPhase(cpdc);
+							break;
+						case CurrentPhaseDataCommand<ClientVotePhaseData> cpdc:
+							await HandleCurrentVotePhase(cpdc);
+							break;
+						case CurrentPhaseDataCommand<ClientResultsPhaseData> cpdc:
+							await HandleCurrentResultsPhase(cpdc);
 							break;
 						case SubmitAnswerCommand sac:
 							await HandleSubmitAnswer(sac);
@@ -436,6 +524,23 @@ namespace NeuralNonsense {
 								phase = Phase.Vote;
 								break;
 							case Deadline.Kind.VotesDue:
+								await EndVoting();
+								break;
+							case Deadline.Kind.ResultsDone:
+								if(roundNumber >= 3) {
+									//Game's done!
+									phase = Phase.End;
+									phaseChangeProcessed = false;
+								} else if(currentAnswerToVoteOn >= votingOrder.Length) {
+									//Voting for the round done, advance to interlude
+									phase = Phase.Interlude;
+									phaseChangeProcessed = false;
+								} else {
+									//Next vote
+									phase = Phase.Vote;
+									phaseChangeProcessed = false;
+									currentAnswerToVoteOn++;
+								}
 								break;
 							default: break;
 						}
@@ -476,26 +581,25 @@ namespace NeuralNonsense {
 								idContentMappings[m.uuid] = possible.Last();
 								possible = possible.Take(possible.Length - 1).ToArray();
 							}
+							roundNumber = 1;
 							continue;
 						}
 
 						//Set wakeup deadline for re-check
-						Deadline wake = new Deadline() {
-							kind = Deadline.Kind.GeneralWake,
-							cancel = new CancellationTokenSource(),
-							dueBy = ComputeDeadline(1)
-						};
-						deadlines.Add(wake);
+						{
+							Deadline wake = new Deadline() {
+								kind = Deadline.Kind.GeneralWake,
+								cancel = new CancellationTokenSource(),
+								dueBy = ComputeDeadline(1)
+							};
+							deadlines.Add(wake);
+						}
 
 						break;
 					case Phase.Answer:
 						if(!phaseChangeProcessed) {
-							//Advance round
-							roundNumber++;
-
 							//Clear data
 							answers.Clear();
-							votes.Clear();
 							votesR3.Clear();
 
 							//Send member phase data
@@ -517,7 +621,10 @@ namespace NeuralNonsense {
 
 							//Mark processed
 							phaseChangeProcessed = true;
+							break;
 						}
+
+						//Early proceed
 						if(answers.Count == members.Count(m => !string.IsNullOrEmpty(m.Value.currentConnection) && m.Value.type == Member.Type.Player)) {
 							//Advance to voting
 							votingOrder = answers.Keys.ToArray();
@@ -528,20 +635,25 @@ namespace NeuralNonsense {
 							deadlines.First(d => d.kind == Deadline.Kind.AnswersDue).cancel.Cancel();
 							continue;
 						}
+
+						//Set wakeup deadline for re-check
+						{
+							Deadline wake = new Deadline() {
+								kind = Deadline.Kind.GeneralWake,
+								cancel = new CancellationTokenSource(),
+								dueBy = ComputeDeadline(1)
+							};
+							deadlines.Add(wake);
+						}
+
 						break;
 					case Phase.Vote:
 						if(!phaseChangeProcessed) {
-							//Send member phase data
-							foreach(Member m in members.Values.Where(m => !string.IsNullOrEmpty(m.currentConnection))) {
-								AIContent.Pair[] pair = roundNumber == 1 ? content.r1 : content.r2;
-								ClientVotePhaseData cvpd = new ClientVotePhaseData {
-									prompt = pair[idContentMappings[votingOrder[currentAnswerToVoteOn]]].prompt,
-									timer = Constants.VOTING_PERIOD,
-									humanAnswer = answers[votingOrder[currentAnswerToVoteOn]],
-									aiAnswer = pair[idContentMappings[votingOrder[currentAnswerToVoteOn]]].aiAnswer,
-								};
-								await ServiceContainer.instance.hubCtx.Clients.Client(m.currentConnection).PushVotePhaseData(cvpd);
-							}
+							//Clear data
+							votes.Clear();
+
+							//Send phase data
+							await ServiceContainer.instance.hubCtx.Clients.Group(code).PushVotePhaseData(GetVotePhaseData());
 
 							//Set deadline
 							Deadline due = new Deadline() {
@@ -557,10 +669,56 @@ namespace NeuralNonsense {
 							//Mark processed
 							phaseChangeProcessed = true;
 						}
+
+						//Early proceed
+						if(votes.Count == members.Values.Count(m => !string.IsNullOrEmpty(m.currentConnection) && (m.type == Member.Type.Player || m.type == Member.Type.Audience))) {
+							//Advance to results
+							await EndVoting();
+							deadlines.First(d => d.kind == Deadline.Kind.AnswersDue).cancel.Cancel();
+							continue;
+						}
+
+						//Set wakeup deadline for re-check
+						{
+							Deadline wake = new Deadline() {
+								kind = Deadline.Kind.GeneralWake,
+								cancel = new CancellationTokenSource(),
+								dueBy = ComputeDeadline(1)
+							};
+							deadlines.Add(wake);
+						}
 						break;
 					case Phase.Results:
+						if(!phaseChangeProcessed) {
+							//Send phase data
+							await ServiceContainer.instance.hubCtx.Clients.Group(code).PushResultsPhaseData(currentResults);
+
+							//Set deadline
+							Deadline due = new Deadline() {
+								kind = Deadline.Kind.ResultsDone,
+								cancel = new CancellationTokenSource(),
+								dueBy = ComputeDeadline(Constants.RESULTS_DISPLAY_PERIOD / 1000)
+							};
+							deadlines.Add(due);
+
+							//Send state transitions
+							await ServiceContainer.instance.hubCtx.Clients.Group(code).ViewTransition("results");
+
+							//Mark processed
+							phaseChangeProcessed = true;
+						}
 						break;
 					case Phase.Interlude:
+						if(!phaseChangeProcessed) {
+							//Advance round
+							roundNumber++;
+
+							//Send state transitions
+							await ServiceContainer.instance.hubCtx.Clients.Group(code).ViewTransition("interlude");
+
+							//Mark processed
+							phaseChangeProcessed = true;
+						}
 						break;
 					case Phase.R3Vote:
 						break;
@@ -568,6 +726,8 @@ namespace NeuralNonsense {
 						break;
 					case Phase.End:
 						roundNumber = 0;
+						await ServiceContainer.instance.hubCtx.Clients.Group(code).ViewTransition("end");
+						phaseChangeProcessed = true;
 						break;
 				}
 
