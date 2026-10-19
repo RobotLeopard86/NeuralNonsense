@@ -527,7 +527,7 @@ namespace NeuralNonsense {
 									currentAnswerToVoteOn = 0;
 									Random.Shared.Shuffle(votingOrder);
 									phaseChangeProcessed = false;
-									phase = Phase.Vote;
+									phase = roundNumber < 3 ? Phase.Vote : Phase.R3Vote;
 									break;
 								case Deadline.Kind.VotesDue:
 									await EndVoting();
@@ -640,7 +640,7 @@ namespace NeuralNonsense {
 								currentAnswerToVoteOn = 0;
 								Random.Shared.Shuffle(votingOrder);
 								phaseChangeProcessed = false;
-								phase = Phase.Vote;
+								phase = roundNumber < 3 ? Phase.Vote : Phase.R3Vote;
 								deadlines.First(d => d.kind == Deadline.Kind.AnswersDue).cancel.Cancel();
 								continue;
 							}
@@ -727,6 +727,13 @@ namespace NeuralNonsense {
 
 								//Mark processed
 								phaseChangeProcessed = true;
+							}
+							if(members.Values.Where(m => m.type == Member.Type.Player || m.type == Member.Type.Audience).Count(m => !m.ready) == 0) {
+								//Set phases and client state
+								phaseChangeProcessed = false;
+								phase = Phase.Answer;
+								foreach(Member m in members.Values) m.ready = false;
+								continue;
 							}
 							break;
 						case Phase.R3Vote:
