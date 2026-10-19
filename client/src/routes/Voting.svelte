@@ -9,28 +9,33 @@
     import type { VotePhaseData } from "../lib/phase";
     import NeonButton from "../components/NeonButton.svelte";
     import { fly } from "svelte/transition";
+    import { addToast } from "../lib/toast.svelte";
 
-    //onMount(ejectIfNoConnection);
+    onMount(ejectIfNoConnection);
 
 	let voted = $state(false);
 	let received = $state(false);
-	let choseA = $state(false);
+	let choseHuman = $state(false);
 
-	const submit = async(choseAnswerA: boolean) => {
+	const submit = async(choseHuman: boolean) => {
 		//Mark vote complete
 		voted = true;
-		choseA = choseAnswerA;
+		choseHuman = choseHuman;
 		
 		//Send to server
-		await connection().invoke("Vote", choseAnswerA);
+		try {
+			await connection().invoke("Vote", choseHuman);
+		} catch(e) {
+			addToast(`Failed to submit your answer: ${e}`, 5000);
+		}
 
 		//Mark received
 		received = true;	
 	}
 
-	let showAnswerAFirst = $state(false);
+	let showHumanFirst = $state(false);
 	onMount(() => {
-		showAnswerAFirst = Math.random() >= 0.5;
+		showHumanFirst = Math.random() >= 0.5;
 	})
 </script>
 
@@ -69,9 +74,9 @@
 					<p class="text-white font-black text-4xl text-left mb-4 pb-6">{((game.phase ? game.phase : {}) as VotePhaseData).prompt || "An amazing prompt"}</p>
 
 					<!-- Voting zone -->
-					{#if showAnswerAFirst}
+					{#if showHumanFirst}
 						<NeonButton variant="Translucent" onclick={() => submit(true)} disabled={voted} class="flex flex-row mb-8 justify-start items-center w-full">
-							{#if voted && choseA}
+							{#if voted && choseHuman}
 								<LoadingSpinner size={30} stroke={4} minDegrees={1} maxDegrees={120} />
 							{:else}
 								<svg width="40" height="40">
@@ -80,10 +85,10 @@
 								</svg>
 							{/if}
 							&nbsp;&nbsp;&nbsp;
-							<span class="font-normal">{((game.phase ? game.phase : {}) as VotePhaseData).answerA || "Answer A"}</span>
+							<span class="font-normal">{((game.phase ? game.phase : {}) as VotePhaseData).humanAnswer || "Answer A"}</span>
 						</NeonButton>
 						<NeonButton variant="Translucent" onclick={() => submit(false)} disabled={voted} class="flex flex-row mb-8 justify-start items-center w-full">
-							{#if voted && !choseA}
+							{#if voted && !choseHuman}
 								<LoadingSpinner size={30} stroke={4} minDegrees={1} maxDegrees={120} />
 							{:else}
 								<svg width="40" height="40">
@@ -92,11 +97,11 @@
 								</svg>
 							{/if}
 							&nbsp;&nbsp;&nbsp;
-							<span class="font-normal">{((game.phase ? game.phase : {}) as VotePhaseData).answerB || "Answer B"}</span>
+							<span class="font-normal">{((game.phase ? game.phase : {}) as VotePhaseData).aiAnswer || "Answer B"}</span>
 						</NeonButton>
 					{:else}
 						<NeonButton variant="Translucent" onclick={() => submit(false)} disabled={voted} class="flex flex-row mb-8 justify-start items-center w-full">
-							{#if voted && !choseA}
+							{#if voted && !choseHuman}
 								<LoadingSpinner size={30} stroke={4} minDegrees={1} maxDegrees={120} />
 							{:else}
 								<svg width="40" height="40">
@@ -105,10 +110,10 @@
 								</svg>
 							{/if}
 							&nbsp;&nbsp;&nbsp;
-							<span class="font-normal">{((game.phase ? game.phase : {}) as VotePhaseData).answerB || "Answer B"}</span>
+							<span class="font-normal">{((game.phase ? game.phase : {}) as VotePhaseData).aiAnswer || "Answer B"}</span>
 						</NeonButton>
 						<NeonButton variant="Translucent" onclick={() => submit(true)} disabled={voted} class="flex flex-row mb-8 justify-start items-center w-full">
-							{#if voted && choseA}
+							{#if voted && choseHuman}
 								<LoadingSpinner size={30} stroke={4} minDegrees={1} maxDegrees={120} />
 							{:else}
 								<svg width="40" height="40">
@@ -117,7 +122,7 @@
 								</svg>
 							{/if}
 							&nbsp;&nbsp;&nbsp;
-							<span class="font-normal">{((game.phase ? game.phase : {}) as VotePhaseData).answerA || "Answer A"}</span>
+							<span class="font-normal">{((game.phase ? game.phase : {}) as VotePhaseData).humanAnswer || "Answer A"}</span>
 						</NeonButton>
 					{/if}
 				</div>
@@ -151,14 +156,14 @@
 			<p class="text-white font-black text-4xl text-left mb-4 pb-6">{((game.phase ? game.phase : {}) as VotePhaseData).prompt || "An amazing prompt"}</p>
 
 			<!-- Answers -->
-			{#if showAnswerAFirst}
+			{#if showHumanFirst}
 				<div class="px-8 py-4 rounded-2xl font-normal text-lg bg-white/5 border-2 border-white/20 text-white flex flex-row mb-8 justify-start items-center w-full">
 					<svg width="40" height="40">
 						<circle cx="20" cy="20" r="15" fill="#FF2D78" style="filter: drop-shadow(0 0 2px #FF2D78);" />
 						<text x="14" y="26" style="fill: white;">1</text>
 					</svg>
 					&nbsp;&nbsp;&nbsp;
-					{((game.phase ? game.phase : {}) as VotePhaseData).answerA || "Answer A"}
+					{((game.phase ? game.phase : {}) as VotePhaseData).humanAnswer || "Answer A"}
 				</div>
 				<div class="px-8 py-4 rounded-2xl font-normal text-lg bg-white/5 border-2 border-white/20 text-white flex flex-row mb-8 justify-start items-center w-full">
 					<svg width="40" height="40">
@@ -166,7 +171,7 @@
 						<text x="15" y="26" style="fill: #1A1035;">2</text>
 					</svg>
 					&nbsp;&nbsp;&nbsp;
-					{((game.phase ? game.phase : {}) as VotePhaseData).answerB || "Answer B"}
+					{((game.phase ? game.phase : {}) as VotePhaseData).aiAnswer || "Answer B"}
 				</div>
 			{:else}
 				<div class="px-8 py-4 rounded-2xl font-normal text-lg bg-white/5 border-2 border-white/20 text-white flex flex-row mb-8 justify-start items-center w-full">
@@ -175,7 +180,7 @@
 						<text x="14" y="26" style="fill: white;">1</text>
 					</svg>
 					&nbsp;&nbsp;&nbsp;
-					{((game.phase ? game.phase : {}) as VotePhaseData).answerB || "Answer B"}
+					{((game.phase ? game.phase : {}) as VotePhaseData).aiAnswer || "Answer B"}
 				</div>
 				<div class="px-8 py-4 rounded-2xl font-normal text-lg bg-white/5 border-2 border-white/20 text-white flex flex-row mb-8 justify-start items-center w-full">
 					<svg width="40" height="40">
@@ -183,7 +188,7 @@
 						<text x="15" y="26" style="fill: #1A1035;">2</text>
 					</svg>
 					&nbsp;&nbsp;&nbsp;
-					{((game.phase ? game.phase : {}) as VotePhaseData).answerA || "Answer A"}
+					{((game.phase ? game.phase : {}) as VotePhaseData).humanAnswer || "Answer A"}
 				</div>
 			{/if}
 		</div>

@@ -26,6 +26,10 @@ namespace NeuralNonsense {
 		public required string connID;
 	}
 
+	public class NotifyDisconnectedCommand : CommandWithoutValue {
+		public required string memberID;
+	}
+
 	public class RemoveMemberCommand : CommandWithoutValue {
 		public required string targetMemberID;
 		public required string reason;
@@ -46,7 +50,7 @@ namespace NeuralNonsense {
 
 	public class VoteCommand : CommandWithoutValue {
 		public required string memberID;
-		public required bool choseAnswerA;
+		public required bool choseHuman;
 	}
 
 	public class R3AddVoteCommand : CommandWithoutValue {
@@ -63,6 +67,7 @@ namespace NeuralNonsense {
 		public struct Result {
 			public T data;
 			public uint timeRemaining;
+			public bool finished;
 		}
 
 		public required string memberID;

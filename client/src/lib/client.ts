@@ -3,7 +3,7 @@ import { connection, tabClosePreventHandler } from "./connection.svelte";
 import { push } from "svelte-spa-router";
 import { resetState, type ServerMember, game, deriveMember, MemberType } from "./state.svelte";
 import { addToast } from "./toast.svelte";
-import type { AnswerPhaseData } from "./phase";
+import type { AnswerPhaseData, VotePhaseData } from "./phase";
 
 export const configureHandlers = (hc: HubConnection) => {
     //Disconnection
@@ -78,6 +78,9 @@ export const configureHandlers = (hc: HubConnection) => {
 	//Phase data push
 	hc.on("PushAnswerPhaseData", (apd: AnswerPhaseData) => {
 		game.phase = apd;
+	});
+	hc.on("PushVotePhaseData", (vpd: VotePhaseData) => {
+		game.phase = vpd;
 	});
 }
 

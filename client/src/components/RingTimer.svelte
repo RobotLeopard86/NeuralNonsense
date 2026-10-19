@@ -3,7 +3,8 @@
 		duration: number,
 		size: number,
 		stroke: number,
-		initialTimeRemaining?: number
+		initialTimeRemaining?: number,
+		onExpire?: () => void
 	}
 
 	let props: Props = $props();
@@ -13,7 +14,10 @@
 		timeRemaining = props.initialTimeRemaining ? props.initialTimeRemaining : props.duration;
 		const interval = setInterval(() => {
 			timeRemaining -= 1000;
-			if(timeRemaining <= 0) clearInterval(interval);
+			if(timeRemaining <= 0) {
+				clearInterval(interval);
+				if(props.onExpire) props.onExpire();
+			}
 		}, 1000);
 		return () => clearInterval(interval);
 	});

@@ -6,7 +6,7 @@
     import { OpenDoorOutline } from "flowbite-svelte-icons";
     import SmallNeonButton from "../components/SmallNeonButton.svelte";
 
-    //onMount(ejectIfNoConnection);
+    onMount(ejectIfNoConnection);
 
 	interface Slide {
         title: string,

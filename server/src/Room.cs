@@ -74,7 +74,9 @@ namespace NeuralNonsense {
 
 		private Dictionary<string, byte> idContentMappings = new Dictionary<string, byte>(); //UUID, index into AI content arrays
 		private Dictionary<string, string> answers = new Dictionary<string, string>(); //UUID, answer
-		private Dictionary<string, bool> votes = new Dictionary<string, bool>(); //UUID, AI or not
+		private Dictionary<string, bool> votes = new Dictionary<string, bool>(); //UUID, selected human answer or not
+		public byte currentAnswerToVoteOn { get; private set; } = 0;
+		private string[] votingOrder;
 		private Dictionary<string, byte[]> votesR3 = new Dictionary<string, byte[]>(); //UUID, answer IDs
 
 		public Room() {
@@ -93,11 +95,48 @@ namespace NeuralNonsense {
 			return (uint)((deadline - TimeProvider.System.GetTimestamp()) / TimeProvider.System.TimestampFrequency);
 		}
 
+		private async Task RemoveMemberAndPromote(string uuid) {
+			//Projector decrement
+			if(members[uuid].type == Member.Type.Projector) numProjectorsConnected--;
+
+			//Remove them
+			members.Remove(uuid);
+
+			//Set room close flag if this was the last person
+			if(members.Count - numProjectorsConnected <= 0) {
+				closeRoom = true;
+				return;
+			}
+
+			//Promotion check
+			if(phase == Phase.Lobby) {
+				//Promotion permitted in the lobby
+				try {
+					members.Values.First(m => m.type == Member.Type.Audience).type = Member.Type.Player;
+				} catch {
+					//Exception means no audience members to promote, ok to swallow
+				}
+			}
+
+			//Update member list
+			await ServiceContainer.instance.hubCtx.Clients.Group(code).UpdateMemberList(members.Values.Select(member => new ClientMember(member)).ToArray());
+
+			//Re-assign host role
+			if(hostUUID == uuid) {
+				hostUUID = members.Keys.First();
+				await ServiceContainer.instance.hubCtx.Clients.Group(code).HostChanged(hostUUID);
+			}
+		}
+
 		private ClientAnswerPhaseData GetAnswerPhaseData(string memberID) {
 			ClientAnswerPhaseData capd = new ClientAnswerPhaseData {
 				maxAnswerLength = Constants.MAX_ANSWER_LENGTH,
 				timer = Constants.ANSWER_PERIOD
 			};
+			if(members[memberID].type != Member.Type.Player) {
+				capd.prompt = "";
+				return capd;
+			}
 			switch(roundNumber) {
 				case 1:
 					capd.prompt = content.r1[idContentMappings[memberID]].prompt;
@@ -219,6 +258,14 @@ namespace NeuralNonsense {
 			mccc.task.SetResult();
 		}
 
+		private async Task HandleNotifyDisconnected(NotifyDisconnectedCommand ndc) {
+			//Get rid of connection ID
+			members[ndc.memberID].currentConnection = "";
+
+			//Set the result
+			ndc.task.SetResult();
+		}
+
 		private async Task HandleStart(StartCommand sc) {
 			//Set phase
 			phaseChangeProcessed = false;
@@ -278,7 +325,8 @@ namespace NeuralNonsense {
 		private async Task HandleCurrentAnswerPhase(CurrentPhaseDataCommand<ClientAnswerPhaseData> cpdc) {
 			//Get data portion
 			CurrentPhaseDataCommand<ClientAnswerPhaseData>.Result res = new CurrentPhaseDataCommand<ClientAnswerPhaseData>.Result {
-				data = GetAnswerPhaseData(cpdc.memberID)
+				data = GetAnswerPhaseData(cpdc.memberID),
+				finished = answers.ContainsKey(cpdc.memberID)
 			};
 
 			//Compute remaining time
@@ -290,37 +338,32 @@ namespace NeuralNonsense {
 			cpdc.task.SetResult(res);
 		}
 
-		public async Task RemoveMemberAndPromote(string uuid) {
-			//Projector decrement
-			if(members[uuid].type == Member.Type.Projector) numProjectorsConnected--;
-
-			//Remove them
-			members.Remove(uuid);
-
-			//Set room close flag if this was the last person
-			if(members.Count - numProjectorsConnected <= 0) {
-				closeRoom = true;
+		private async Task HandleSubmitAnswer(SubmitAnswerCommand sac) {
+			//Check if answer is done already
+			if(answers.ContainsKey(sac.memberID)) {
+				sac.task.SetException(new ClientCausedException("You have already submitted your answer!"));
 				return;
 			}
 
-			//Promotion check
-			if(phase == Phase.Lobby) {
-				//Promotion permitted in the lobby
-				try {
-					members.Values.First(m => m.type == Member.Type.Audience).type = Member.Type.Player;
-				} catch {
-					//Exception means no audience members to promote, ok to swallow
-				}
+			//Set answer
+			answers[sac.memberID] = sac.answer;
+
+			//Set the result
+			sac.task.SetResult();
+		}
+
+		private async Task HandleVote(VoteCommand vc) {
+			//Check if user has already voted
+			if(votes.ContainsKey(vc.memberID)) {
+				vc.task.SetException(new ClientCausedException("You have already voted!"));
+				return;
 			}
 
-			//Update member list
-			await ServiceContainer.instance.hubCtx.Clients.Group(code).UpdateMemberList(members.Values.Select(member => new ClientMember(member)).ToArray());
+			//Lodge vote
+			votes[vc.memberID] = vc.choseHuman;
 
-			//Re-assign host role
-			if(hostUUID == uuid) {
-				hostUUID = members.Keys.First();
-				await ServiceContainer.instance.hubCtx.Clients.Group(code).HostChanged(hostUUID);
-			}
+			//Set the result
+			vc.task.SetResult();
 		}
 
 		public async Task RunAsync(CancellationToken token) {
@@ -334,6 +377,9 @@ namespace NeuralNonsense {
 							break;
 						case MemberConnectionCompleteCommand mccc:
 							await HandleMemberConnectionComplete(mccc);
+							break;
+						case NotifyDisconnectedCommand ndc:
+							await HandleNotifyDisconnected(ndc);
 							break;
 						case StartCommand sc:
 							await HandleStart(sc);
@@ -349,6 +395,12 @@ namespace NeuralNonsense {
 							break;
 						case CurrentPhaseDataCommand<ClientAnswerPhaseData> cpdc:
 							await HandleCurrentAnswerPhase(cpdc);
+							break;
+						case SubmitAnswerCommand sac:
+							await HandleSubmitAnswer(sac);
+							break;
+						case VoteCommand vc:
+							await HandleVote(vc);
 							break;
 					}
 				}
@@ -368,6 +420,22 @@ namespace NeuralNonsense {
 							case Deadline.Kind.JoinExpire:
 								await RemoveMemberAndPromote(deadline.additionalData as string ?? throw new ServerCausedException("Unexpected deadline data format error!"));
 								break;
+							case Deadline.Kind.AnswersDue:
+								//Get any missing answers
+								if(answers.Count != members.Count(m => !string.IsNullOrEmpty(m.Value.currentConnection) && m.Value.type == Member.Type.Player)) {
+									foreach(Member m in members.Values.Where(m => !string.IsNullOrEmpty(m.currentConnection) && m.type == Member.Type.Player)) {
+										answers[m.uuid] = await ServiceContainer.instance.hubCtx.Clients.Client(m.currentConnection).RequestMissingAnswer();
+									}
+								}
+
+								//Advance to voting
+								votingOrder = answers.Keys.ToArray();
+								currentAnswerToVoteOn = 0;
+								Random.Shared.Shuffle(votingOrder);
+								phaseChangeProcessed = false;
+								phase = Phase.Vote;
+								break;
+							default: break;
 						}
 						continue;
 					}
@@ -423,8 +491,13 @@ namespace NeuralNonsense {
 							//Advance round
 							roundNumber++;
 
+							//Clear data
+							answers.Clear();
+							votes.Clear();
+							votesR3.Clear();
+
 							//Send member phase data
-							foreach(Member m in members.Values.Where(m => m.type == Member.Type.Player)) {
+							foreach(Member m in members.Values.Where(m => !string.IsNullOrEmpty(m.currentConnection))) {
 								ClientAnswerPhaseData capd = GetAnswerPhaseData(m.uuid);
 								await ServiceContainer.instance.hubCtx.Clients.Client(m.currentConnection).PushAnswerPhaseData(capd);
 							}
@@ -445,6 +518,33 @@ namespace NeuralNonsense {
 						}
 						break;
 					case Phase.Vote:
+						if(!phaseChangeProcessed) {
+							//Send member phase data
+							foreach(Member m in members.Values.Where(m => !string.IsNullOrEmpty(m.currentConnection))) {
+								AIContent.Pair[] pair = roundNumber == 1 ? content.r1 : content.r2;
+								ClientVotePhaseData cvpd = new ClientVotePhaseData {
+									prompt = pair[idContentMappings[votingOrder[currentAnswerToVoteOn]]].prompt,
+									timer = Constants.VOTING_PERIOD,
+									humanAnswer = answers[votingOrder[currentAnswerToVoteOn]],
+									aiAnswer = pair[idContentMappings[votingOrder[currentAnswerToVoteOn]]].aiAnswer,
+								};
+								await ServiceContainer.instance.hubCtx.Clients.Client(m.currentConnection).PushVotePhaseData(cvpd);
+							}
+
+							//Set deadline
+							Deadline due = new Deadline() {
+								kind = Deadline.Kind.VotesDue,
+								cancel = new CancellationTokenSource(),
+								dueBy = ComputeDeadline(Constants.VOTING_PERIOD / 1000)
+							};
+							deadlines.Add(due);
+
+							//Send state transitions
+							await ServiceContainer.instance.hubCtx.Clients.Group(code).ViewTransition("vote");
+
+							//Mark processed
+							phaseChangeProcessed = true;
+						}
 						break;
 					case Phase.Results:
 						break;

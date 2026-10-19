@@ -59,4 +59,33 @@ namespace NeuralNonsense {
 		public uint maxAnswerLength;
 		public uint timer;
 	}
+
+	public struct ClientVotePhaseData {
+		public string prompt;
+		public uint timer;
+		public string humanAnswer;
+		public string aiAnswer;
+	}
+
+	public struct ClientResultsPhaseData {
+		public string prompt;
+		public string humanPlayer;
+		public string humanAnswer;
+		public string aiAnswer;
+		public uint humanPoints;
+	}
+
+	public struct ClientR3VotePhaseData {
+		public string prompt;
+		public uint timer;
+		public string humanAnswer;
+		public string aiAnswer;
+	}
+
+	public struct ClientR3ResultsPhaseData {
+		public string prompt;
+		public string[] humanAnswers;
+		public uint[] humanPoints;
+		public string[] aiAnswers;
+	}
 }

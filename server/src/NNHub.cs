@@ -9,6 +9,8 @@ namespace NeuralNonsense {
 		Task HostChanged(string newHost);
 		Task SetRound(uint round);
 		Task PushAnswerPhaseData(ClientAnswerPhaseData capd);
+		Task PushVotePhaseData(ClientVotePhaseData cvpd);
+		Task<string> RequestMissingAnswer();
 	}
 
 	[Authorize]
@@ -64,9 +66,15 @@ namespace NeuralNonsense {
 				//Verify
 				await LoadUserAndVerify();
 
-				//Remove from group and send exception if needed
-				await Groups.RemoveFromGroupAsync(Context.ConnectionId, roomCode);
+				//Invalidate connection to mark disconnected
+				NotifyDisconnectedCommand ndc = new NotifyDisconnectedCommand() {
+					memberID = memberID
+				};
+				await ServiceContainer.instance.gameManager.rooms[roomCode].writer.WriteAsync(ndc);
+				await ndc.task.Task;
 
+				//Remove from group
+				await Groups.RemoveFromGroupAsync(Context.ConnectionId, roomCode);
 			} catch {
 				//Exception means removal was already handled by a room routine, so we're good
 				//Hence we swallow it
@@ -140,7 +148,7 @@ namespace NeuralNonsense {
 			if(memberID != room.hostUUID) throw new ClientCausedException("You cannot perform this action as you are not the host!");
 
 			//Validate player count to be sure
-			if(room.members.Count < 3) throw new ClientCausedException("3+ players required to start the game!");
+			//if(room.members.Count < 3) throw new ClientCausedException("3+ players required to start the game!");
 
 			//Send start command
 			StartCommand sc = new StartCommand();
@@ -181,31 +189,43 @@ namespace NeuralNonsense {
 			//Verify
 			await LoadUserAndVerify();
 
+			//Check permissions
+			Room room = ServiceContainer.instance.gameManager.rooms[roomCode];
+			if(room.members[memberID].type != Room.Member.Type.Player) throw new ClientCausedException("You may not peform this action!");
+
 			//Send submission command
 			SubmitAnswerCommand sac = new SubmitAnswerCommand() {
 				memberID = memberID,
 				answer = ServiceContainer.instance.badWordChecker.Censor(answer)
 			};
-			await ServiceContainer.instance.gameManager.rooms[roomCode].writer.WriteAsync(sac);
+			await room.writer.WriteAsync(sac);
 			await sac.task.Task;
 		}
 
-		public async Task Vote(bool choseAnswerA) {
+		public async Task Vote(bool choseHuman) {
 			//Verify
 			await LoadUserAndVerify();
+
+			//Check permissions
+			Room room = ServiceContainer.instance.gameManager.rooms[roomCode];
+			if(room.members[memberID].type != Room.Member.Type.Player && room.members[memberID].type != Room.Member.Type.Audience) throw new ClientCausedException("You may not peform this action!");
 
 			//Send voting command
 			VoteCommand vc = new VoteCommand() {
 				memberID = memberID,
-				choseAnswerA = choseAnswerA
+				choseHuman = choseHuman
 			};
-			await ServiceContainer.instance.gameManager.rooms[roomCode].writer.WriteAsync(vc);
+			await room.writer.WriteAsync(vc);
 			await vc.task.Task;
 		}
 
 		public async Task AddVoteR3(byte answerID) {
 			//Verify
 			await LoadUserAndVerify();
+
+			//Check permissions
+			Room room = ServiceContainer.instance.gameManager.rooms[roomCode];
+			if(room.members[memberID].type != Room.Member.Type.Player && room.members[memberID].type != Room.Member.Type.Audience) throw new ClientCausedException("You may not peform this action!");
 
 			//Send vote addition command
 			R3AddVoteCommand avc = new R3AddVoteCommand() {
@@ -219,6 +239,10 @@ namespace NeuralNonsense {
 		public async Task RmVoteR3(byte answerID) {
 			//Verify
 			await LoadUserAndVerify();
+
+			//Check permissions
+			Room room = ServiceContainer.instance.gameManager.rooms[roomCode];
+			if(room.members[memberID].type != Room.Member.Type.Player && room.members[memberID].type != Room.Member.Type.Audience) throw new ClientCausedException("You may not peform this action!");
 
 			//Send vote addition command
 			R3RemoveVoteCommand rvc = new R3RemoveVoteCommand() {

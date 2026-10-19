@@ -10,21 +10,7 @@
     import NeonButton from "../components/NeonButton.svelte";
     import { fly } from "svelte/transition";
 	import xss from "xss";
-
-    onMount(ejectIfNoConnection);
-
-	let initialTimeRemaining: number = $derived(((game.phase ? game.phase : {}) as AnswerPhaseData).timer || 60000);
-	onMount(async() => {
-		while(true) {
-			try {
-				connection();
-				break;
-			} catch {}
-		}
-		let { data, timeRemaining }: { data: AnswerPhaseData, timeRemaining: number } = await connection().invoke("RefreshAnswerPhaseData");
-		game.phase = data;
-		initialTimeRemaining = timeRemaining;
-	});
+    import { addToast } from "../lib/toast.svelte";
 
     let maxAnswerLength = $derived(((game.phase ? game.phase : {}) as AnswerPhaseData).maxAnswerLength || 200);
     let answer = $state("");
@@ -32,17 +18,36 @@
 	let canSubmit = $derived(answer ? true : false);
 	let submitted = $state(false);
 	let received = $state(false);
+	let timeUp = $state(false);
 
 	const submit = async() => {
 		//Mark submitted
 		submitted = true;
 		
 		//Send to server
-		await connection().invoke("SubmitAnswer", xss(answer));
+		try {
+			await connection().invoke("SubmitAnswer", xss(answer));
+		} catch(e) {
+			addToast(`Failed to submit your answer: ${e}`, 5000);
+		}
 
 		//Mark received
 		received = true;	
+		connection().off("RequestMissingAnswer");
 	}
+
+	let initialTimeRemaining: number = $derived(((game.phase ? game.phase : {}) as AnswerPhaseData).timer || 60000);
+	onMount(async() => {
+		await ejectIfNoConnection();
+		connection().on("RequestMissingAnswer", () => answer ? answer : "(didn't submit in time!)");
+		let { data, timeRemaining, finished }: { data: AnswerPhaseData, timeRemaining: number, finished: boolean } = await connection().invoke("RefreshAnswerPhaseData");
+		game.phase = data;
+		initialTimeRemaining = timeRemaining;
+		received = finished;
+	});
+	onMount(() => {
+		return () => connection().off("RequestMissingAnswer");
+	});
 </script>
 
 <main class="w-full min-h-full flex flex-col items-center px-4">
@@ -59,7 +64,7 @@
 
         <!-- Body zone-->
 		<div class="w-3/4 min-h-[85dvh] flex flex-col place-content-center px-4">
-			{#if !received}
+			{#if !received && !timeUp}
 				<div out:fly={{ duration: 500, x: 0, y: 100 }}>
 					<!-- Header -->
 					<div class="w-full flex flex-row items-center mb-8">
@@ -72,7 +77,7 @@
 						<span class="mx-auto"></span>
 						
 						<!-- Timer -->
-						<RingTimer size={72} stroke={4} duration={game.phase ? (game.phase as AnswerPhaseData).timer : 60000} {initialTimeRemaining} />
+						<RingTimer size={72} stroke={4} duration={game.phase ? (game.phase as AnswerPhaseData).timer : 60000} {initialTimeRemaining} onExpire={() => timeUp = true} />
 					</div>
 
 					<!-- Prompt -->
@@ -97,12 +102,19 @@
 						{/if}
 					</NeonButton>
 				</div>
-			{:else}
+			{:else if received}
 				<div in:fly={{ delay: 500, duration: 500, x: 0, y: -100 }}>
 					<LoadingSpinner size={150} stroke={7} minDegrees={1} maxDegrees={120} />
 					<br/>
 					<p class="text-white font-bold text-4xl text-center mb-4">Response received!</p>
 					<p class="text-white/50 text-lg text-center">Waiting for other players...</p>
+				</div>
+			{:else}
+				<div in:fly={{ delay: 500, duration: 500, x: 0, y: -100 }}>
+					<LoadingSpinner size={150} stroke={7} minDegrees={1} maxDegrees={120} />
+					<br/>
+					<p class="text-white font-bold text-4xl text-center mb-4">Time's up!</p>
+					<p class="text-white/50 text-lg text-center">Voting will begin soon...</p>
 				</div>
 			{/if}
 		</div>

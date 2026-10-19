@@ -1,12 +1,12 @@
 <script lang="ts">
     import { onMount } from "svelte";
-    import { connection, ejectIfNoConnection, leaveRoom } from "../lib/connection.svelte";
+    import { ejectIfNoConnection, leaveRoom } from "../lib/connection.svelte";
     import { game, MemberType } from "../lib/state.svelte";
     import SmallNeonButton from "../components/SmallNeonButton.svelte";
     import { OpenDoorOutline, UserOutline } from "flowbite-svelte-icons";
     import type { ResultsPhaseData } from "../lib/phase";
 
-    //onMount(ejectIfNoConnection);
+    onMount(ejectIfNoConnection);
 </script>
 
 <main class="w-full min-h-full flex flex-col items-center px-4">

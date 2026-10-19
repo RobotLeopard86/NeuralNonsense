@@ -7,8 +7,8 @@ export interface AnswerPhaseData {
 export interface VotePhaseData {
     prompt: string,
     timer: number,
-    answerA: string,
-    answerB: string
+    humanAnswer: string,
+    aiAnswer: string
 }
 
 export interface ResultsPhaseData {
