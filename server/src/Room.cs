@@ -76,7 +76,7 @@ namespace NeuralNonsense {
 		private Dictionary<string, string> answers = new Dictionary<string, string>(); //UUID, answer
 		private Dictionary<string, bool> votes = new Dictionary<string, bool>(); //UUID, selected human answer or not
 		public byte currentAnswerToVoteOn { get; private set; } = 0;
-		private string[] votingOrder;
+		private string[] votingOrder = { };
 		private Dictionary<string, byte[]> votesR3 = new Dictionary<string, byte[]>(); //UUID, answer IDs
 
 		public Room() {
@@ -435,6 +435,8 @@ namespace NeuralNonsense {
 								phaseChangeProcessed = false;
 								phase = Phase.Vote;
 								break;
+							case Deadline.Kind.VotesDue:
+								break;
 							default: break;
 						}
 						continue;
@@ -515,6 +517,16 @@ namespace NeuralNonsense {
 
 							//Mark processed
 							phaseChangeProcessed = true;
+						}
+						if(answers.Count == members.Count(m => !string.IsNullOrEmpty(m.Value.currentConnection) && m.Value.type == Member.Type.Player)) {
+							//Advance to voting
+							votingOrder = answers.Keys.ToArray();
+							currentAnswerToVoteOn = 0;
+							Random.Shared.Shuffle(votingOrder);
+							phaseChangeProcessed = false;
+							phase = Phase.Vote;
+							deadlines.First(d => d.kind == Deadline.Kind.AnswersDue).cancel.Cancel();
+							continue;
 						}
 						break;
 					case Phase.Vote:

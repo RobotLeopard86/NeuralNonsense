@@ -13,10 +13,11 @@ export interface VotePhaseData {
 
 export interface ResultsPhaseData {
     prompt: string,
-	humanPlayer: string,
+	humanID: string,
     humanAnswer: string,
     aiAnswer: string,
-    humanPoints: number
+    humanPoints: number,
+	unanimity: boolean
 }
 
 export interface R3VotePhaseData {
@@ -31,5 +32,6 @@ export interface R3ResultsPhaseData {
     prompt: string,
     humanAnswers: string[], //Indices shared <-| (use game.r3AnswerIndexMapping for consistent ordering)
     humanPoints: number[], //Indices shared <--|
+	unanimity: boolean[], //Indices shared <---|
     aiAnswers: string[]
 }

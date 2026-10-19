@@ -11,11 +11,11 @@
     import { fly } from "svelte/transition";
     import { addToast } from "../lib/toast.svelte";
 
-    onMount(ejectIfNoConnection);
-
 	let voted = $state(false);
 	let received = $state(false);
 	let choseHuman = $state(false);
+	let showHumanFirst = $state(false);
+	let timeUp = $state(false);
 
 	const submit = async(choseHuman: boolean) => {
 		//Mark vote complete
@@ -33,10 +33,15 @@
 		received = true;	
 	}
 
-	let showHumanFirst = $state(false);
-	onMount(() => {
+	let initialTimeRemaining: number = $derived(((game.phase ? game.phase : {}) as VotePhaseData).timer || 30000);
+	onMount(async() => {
+		await ejectIfNoConnection();
+		let { data, timeRemaining, finished }: { data: VotePhaseData, timeRemaining: number, finished: boolean } = await connection().invoke("RefreshVotePhaseData");
+		game.phase = data;
+		initialTimeRemaining = timeRemaining;
+		received = finished;
 		showHumanFirst = Math.random() >= 0.5;
-	})
+	});
 </script>
 
 <main class="w-full min-h-full flex flex-col items-center px-4">
@@ -66,7 +71,7 @@
 						<span class="mx-auto"></span>
 						
 						<!-- Timer -->
-						<RingTimer size={72} stroke={4} duration={game.phase ? (game.phase as VotePhaseData).timer : 30000} />
+						<RingTimer size={72} stroke={4} duration={game.phase ? (game.phase as VotePhaseData).timer : 30000} {initialTimeRemaining} onExpire={() => timeUp = true} />
 					</div>
 
 					<!-- Prompt -->
@@ -126,12 +131,19 @@
 						</NeonButton>
 					{/if}
 				</div>
+			{:else if received}
+				<div in:fly={{ delay: 500, duration: 500, x: 0, y: -100 }}>
+					<LoadingSpinner size={150} stroke={7} minDegrees={1} maxDegrees={120} />
+					<br/>
+					<p class="text-white font-bold text-4xl text-center mb-4">Vote submitted!</p>
+					<p class="text-white/50 text-lg text-center">Waiting for everyone else to vote...</p>
+				</div>
 			{:else}
 				<div in:fly={{ delay: 500, duration: 500, x: 0, y: -100 }}>
 					<LoadingSpinner size={150} stroke={7} minDegrees={1} maxDegrees={120} />
 					<br/>
-					<p class="text-white font-bold text-4xl text-center mb-4">Vote submitted received!</p>
-					<p class="text-white/50 text-lg text-center">Waiting for everyone else to vote...</p>
+					<p class="text-white font-bold text-4xl text-center mb-4">Time's up!</p>
+					<p class="text-white/50 text-lg text-center">Results are on their way...</p>
 				</div>
 			{/if}
 		</div>
@@ -148,7 +160,7 @@
 				<span class="mx-auto"></span>
 				
 				<!-- Timer -->
-				<RingTimer size={72} stroke={4} duration={game.phase ? (game.phase as VotePhaseData).timer : 30000} />
+				<RingTimer size={72} stroke={4} duration={game.phase ? (game.phase as VotePhaseData).timer : 30000} {initialTimeRemaining} />
 			</div>
 
 			<!-- Prompt -->

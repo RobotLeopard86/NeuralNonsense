@@ -41,7 +41,11 @@
 			<div class="flex flex-row justify-start items-center w-full mb-4 text-white/50 text-sm">
 				<span class="bg-[#FF2D78] text-white font-bold text-sm px-3 py-1 rounded-full flex flex-row items-center"><UserOutline size="md" />&nbsp;HUMAN</span>
 				&nbsp;&nbsp;&nbsp;
-				{((game.phase ? game.phase : {}) as ResultsPhaseData).humanPlayer || "Someone"}
+				{(() => {
+					let id = ((game.phase ? game.phase : {}) as ResultsPhaseData).humanID || undefined;
+					if(id == undefined) return "Someone";
+					else return game.state.members.find((m) => m.uuid === id)!.name;
+				})()}
 			</div>
 			{((game.phase ? game.phase : {}) as ResultsPhaseData).humanAnswer || "What an incredible human answer!"}
 			<div class="flex flex-row justify-start items-center w-full">
