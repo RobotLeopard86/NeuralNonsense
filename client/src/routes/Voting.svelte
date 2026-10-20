@@ -41,6 +41,7 @@
 		initialTimeRemaining = timeRemaining;
 		received = finished;
 		showHumanFirst = Math.random() >= 0.5;
+		timeUp = initialTimeRemaining <= 0;
 	});
 </script>
 

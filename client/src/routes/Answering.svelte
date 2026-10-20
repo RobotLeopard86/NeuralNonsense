@@ -44,6 +44,7 @@
 		game.phase = data;
 		initialTimeRemaining = timeRemaining;
 		received = finished;
+		timeUp = initialTimeRemaining <= 0;
 	});
 	onMount(() => {
 		return () => connection().off("RequestMissingAnswer");

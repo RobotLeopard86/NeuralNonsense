@@ -81,6 +81,7 @@ namespace NeuralNonsense {
 		public string prompt;
 		public uint timer;
 		public string[] answers;
+		public byte yourAnswerIndex;
 		public uint selectCount;
 	}
 

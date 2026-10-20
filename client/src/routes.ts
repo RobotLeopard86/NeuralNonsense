@@ -7,6 +7,7 @@ import Answering from "./routes/Answering.svelte";
 import Voting from "./routes/Voting.svelte";
 import Results from "./routes/Results.svelte";
 import Interlude from "./routes/Interlude.svelte";
+import R3Voting from "./routes/R3Voting.svelte";
 
 export default {
 	"/": Home,
@@ -17,5 +18,6 @@ export default {
 	"/play/answer": Answering,
 	"/play/vote": Voting,
 	"/play/results": Results,
-	"/play/interlude": Interlude
+	"/play/interlude": Interlude,
+	"/play/vote3": R3Voting
 }
