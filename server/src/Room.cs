@@ -33,7 +33,9 @@ namespace NeuralNonsense {
 				JoinExpire,
 				AnswersDue,
 				VotesDue,
-				ResultsDone
+				R3VotesDue,
+				ResultsDone,
+				R3ResultsDone
 			}
 
 			public Kind kind;
@@ -170,6 +172,22 @@ namespace NeuralNonsense {
 					break;
 			}
 			return cvpd;
+		}
+
+		private ClientR3VotePhaseData GetR3VotePhaseData(string memberID) {
+			ClientR3VotePhaseData cr3vpd = new ClientR3VotePhaseData {
+				prompt = content.r3Prompt,
+				timer = Constants.VOTING_PERIOD,
+				answers = new string[answers.Count + content.r3AiAnswers.Length],
+				selectCount = (byte)members.Values.Count(m => m.type == Member.Type.Player)
+			};
+			int answerIndex = (byte)answers.Keys.ToArray().IndexOf(memberID);
+			if(answerIndex != -1) cr3vpd.yourAnswerIndex = (byte)answerIndex;
+			else cr3vpd.yourAnswerIndex = byte.MaxValue;
+			byte i;
+			for(i = 0; i < content.r3AiAnswers.Length; i++) cr3vpd.answers[i] = content.r3AiAnswers[i];
+			for(; i < content.r3AiAnswers.Length + answers.Count; i++) cr3vpd.answers[i] = answers.Values.ElementAt(i - content.r3AiAnswers.Length);
+			return cr3vpd;
 		}
 
 		private void HandleInitialJoin(InitialJoinCommand ijc) {
@@ -387,6 +405,34 @@ namespace NeuralNonsense {
 			cpdc.task.SetResult(res);
 		}
 
+		private async Task HandleCurrentR3VotePhase(CurrentPhaseDataCommand<ClientR3VotePhaseData> cpdc) {
+			//Get data portion
+			CurrentPhaseDataCommand<ClientR3VotePhaseData>.Result res = new CurrentPhaseDataCommand<ClientR3VotePhaseData>.Result {
+				data = GetR3VotePhaseData(cpdc.memberID),
+				finished = false
+			};
+
+			//Compute remaining time
+			Deadline? deadline = deadlines.First(d => d.kind == Deadline.Kind.VotesDue);
+			if(deadline.HasValue) res.timeRemaining = ComputeTimeUntilDeadline(deadline.Value.dueBy) * 1000;
+			else res.timeRemaining = Constants.ANSWER_PERIOD * 1000;
+
+			//Set value
+			cpdc.task.SetResult(res);
+		}
+
+		private async Task HandleCurrentR3ResultsPhase(CurrentPhaseDataCommand<ClientR3ResultsPhaseData> cpdc) {
+			//Get data portion
+			CurrentPhaseDataCommand<ClientR3ResultsPhaseData>.Result res = new CurrentPhaseDataCommand<ClientR3ResultsPhaseData>.Result {
+				data = currentR3Results,
+				timeRemaining = 0,
+				finished = false
+			};
+
+			//Set value
+			cpdc.task.SetResult(res);
+		}
+
 		private async Task HandleSubmitAnswer(SubmitAnswerCommand sac) {
 			//Check if answer is done already
 			if(answers.ContainsKey(sac.memberID)) {
@@ -486,6 +532,12 @@ namespace NeuralNonsense {
 							case CurrentPhaseDataCommand<ClientResultsPhaseData> cpdc:
 								await HandleCurrentResultsPhase(cpdc);
 								break;
+							case CurrentPhaseDataCommand<ClientR3VotePhaseData> cpdc:
+								await HandleCurrentR3VotePhase(cpdc);
+								break;
+							case CurrentPhaseDataCommand<ClientR3ResultsPhaseData> cpdc:
+								await HandleCurrentR3ResultsPhase(cpdc);
+								break;
 							case SubmitAnswerCommand sac:
 								await HandleSubmitAnswer(sac);
 								break;
@@ -564,13 +616,7 @@ namespace NeuralNonsense {
 						case Phase.Lobby:
 							break;
 						case Phase.ContentGen:
-							phaseChangeProcessed = true;
-							if(members.Values.Where(m => m.type == Member.Type.Player || m.type == Member.Type.Audience).Count(m => !m.ready) == 0) {
-								//Set phases and client state
-								phaseChangeProcessed = false;
-								phase = Phase.Answer;
-								foreach(Member m in members.Values) m.ready = false;
-
+							if(!phaseChangeProcessed) {
 								//Generate content
 								byte playerCount = (byte)members.Values.Count(m => m.type == Member.Type.Player);
 								content = new AIContent {
@@ -590,6 +636,16 @@ namespace NeuralNonsense {
 									idContentMappings[m.uuid] = possible.Last();
 									possible = possible.Take(possible.Length - 1).ToArray();
 								}
+
+								phaseChangeProcessed = true;
+							}
+
+							//Readiness check
+							if(members.Values.Where(m => m.type == Member.Type.Player || m.type == Member.Type.Audience).Count(m => !m.ready) == 0) {
+								//Set phases and client state
+								phaseChangeProcessed = false;
+								phase = Phase.Answer;
+								foreach(Member m in members.Values) m.ready = false;
 								roundNumber = 1;
 								continue;
 							}
@@ -609,7 +665,6 @@ namespace NeuralNonsense {
 							if(!phaseChangeProcessed) {
 								//Clear data
 								answers.Clear();
-								votesR3.Clear();
 
 								//Send member phase data
 								foreach(Member m in members.Values.Where(m => !string.IsNullOrEmpty(m.currentConnection))) {
@@ -728,6 +783,8 @@ namespace NeuralNonsense {
 								//Mark processed
 								phaseChangeProcessed = true;
 							}
+
+							//Readiness check
 							if(members.Values.Where(m => m.type == Member.Type.Player || m.type == Member.Type.Audience).Count(m => !m.ready) == 0) {
 								//Set phases and client state
 								phaseChangeProcessed = false;
@@ -737,13 +794,58 @@ namespace NeuralNonsense {
 							}
 							break;
 						case Phase.R3Vote:
+							if(!phaseChangeProcessed) {
+								//Clear data
+								votesR3.Clear();
+
+								//Send member phase data
+								foreach(Member m in members.Values.Where(m => !string.IsNullOrEmpty(m.currentConnection))) {
+									ClientR3VotePhaseData capd = GetR3VotePhaseData(m.uuid);
+									await ServiceContainer.instance.hubCtx.Clients.Client(m.currentConnection).PushR3VotePhaseData(capd);
+								}
+
+								//Set deadline
+								Deadline due = new Deadline() {
+									kind = Deadline.Kind.R3VotesDue,
+									cancel = new CancellationTokenSource(),
+									dueBy = ComputeDeadline(Constants.R3_VOTING_PERIOD / 1000)
+								};
+								deadlines.Add(due);
+
+								//Send state transitions
+								await ServiceContainer.instance.hubCtx.Clients.Group(code).ViewTransition("vote3");
+
+								//Mark processed
+								phaseChangeProcessed = true;
+							}
 							break;
 						case Phase.R3Results:
+							if(!phaseChangeProcessed) {
+								//Send phase data
+								await ServiceContainer.instance.hubCtx.Clients.Group(code).PushR3ResultsPhaseData(currentR3Results);
+
+								//Set deadline
+								Deadline due = new Deadline() {
+									kind = Deadline.Kind.R3ResultsDone,
+									cancel = new CancellationTokenSource(),
+									dueBy = ComputeDeadline(Constants.R3_RESULTS_DISPLAY_PERIOD / 1000)
+								};
+								deadlines.Add(due);
+
+								//Send state transitions
+								await ServiceContainer.instance.hubCtx.Clients.Group(code).ViewTransition("results3");
+
+								//Mark processed
+								phaseChangeProcessed = true;
+							}
 							break;
 						case Phase.End:
-							roundNumber = 0;
-							await ServiceContainer.instance.hubCtx.Clients.Group(code).ViewTransition("end");
-							phaseChangeProcessed = true;
+							if(!phaseChangeProcessed) {
+								await ServiceContainer.instance.hubCtx.Clients.Group(code).UpdateMemberList(members.Values.Select(member => new ClientMember(member)).ToArray());
+								await ServiceContainer.instance.hubCtx.Clients.Group(code).ViewTransition("end");
+								roundNumber = 0;
+								phaseChangeProcessed = true;
+							}
 							break;
 					}
 				} catch(Exception e) {

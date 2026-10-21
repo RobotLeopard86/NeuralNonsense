@@ -12,6 +12,8 @@ namespace NeuralNonsense {
 		Task PushAnswerPhaseData(ClientAnswerPhaseData capd);
 		Task PushVotePhaseData(ClientVotePhaseData cvpd);
 		Task PushResultsPhaseData(ClientResultsPhaseData crpd);
+		Task PushR3VotePhaseData(ClientR3VotePhaseData cr3vpd);
+		Task PushR3ResultsPhaseData(ClientR3ResultsPhaseData cr3rpd);
 		Task<string> RequestMissingAnswer();
 	}
 
@@ -298,6 +300,51 @@ namespace NeuralNonsense {
 
 			//Return
 			return cpdc.task.Task.Result;
+		}
+
+		public async Task<CurrentPhaseDataCommand<ClientR3VotePhaseData>.Result> RefreshR3VotePhaseData() {
+			//Verify
+			await LoadUserAndVerify();
+
+			//Send data request command
+			CurrentPhaseDataCommand<ClientR3VotePhaseData> cpdc = new CurrentPhaseDataCommand<ClientR3VotePhaseData>() {
+				memberID = memberID
+			};
+			await ServiceContainer.instance.gameManager.rooms[roomCode].writer.WriteAsync(cpdc);
+			await cpdc.task.Task;
+
+			//Return
+			return cpdc.task.Task.Result;
+		}
+
+		public async Task<CurrentPhaseDataCommand<ClientR3ResultsPhaseData>.Result> RefreshR3ResultsPhaseData() {
+			//Verify
+			await LoadUserAndVerify();
+
+			//Send data request command
+			CurrentPhaseDataCommand<ClientR3ResultsPhaseData> cpdc = new CurrentPhaseDataCommand<ClientR3ResultsPhaseData>() {
+				memberID = memberID
+			};
+			await ServiceContainer.instance.gameManager.rooms[roomCode].writer.WriteAsync(cpdc);
+			await cpdc.task.Task;
+
+			//Return
+			return cpdc.task.Task.Result;
+		}
+
+		public async Task<bool[]> RefreshR3Votes() {
+			//Verify
+			await LoadUserAndVerify();
+
+			//Send data request command
+			R3GetVotesCommand gvc = new R3GetVotesCommand() {
+				memberID = memberID
+			};
+			await ServiceContainer.instance.gameManager.rooms[roomCode].writer.WriteAsync(gvc);
+			await gvc.task.Task;
+
+			//Return
+			return gvc.task.Task.Result;
 		}
 	}
 }

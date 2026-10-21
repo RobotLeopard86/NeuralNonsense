@@ -82,14 +82,14 @@ namespace NeuralNonsense {
 		public uint timer;
 		public string[] answers;
 		public byte yourAnswerIndex;
-		public uint selectCount;
+		public byte selectCount;
 	}
 
 	public struct ClientR3ResultsPhaseData {
 		public string prompt;
-		public string[] humanAnswers;
+		public string[] answers;
+		public bool[] wasHuman;
 		public uint[] humanPoints;
 		public bool[] unanimity;
-		public string[] aiAnswers;
 	}
 }

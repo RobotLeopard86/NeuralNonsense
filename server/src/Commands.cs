@@ -63,6 +63,10 @@ namespace NeuralNonsense {
 		public required byte answerID;
 	}
 
+	public class R3GetVotesCommand : CommandWithValue<bool[]> {
+		public required string memberID;
+	}
+
 	public class CurrentPhaseDataCommand<T> : CommandWithValue<CurrentPhaseDataCommand<T>.Result> {
 		public struct Result {
 			public T data;
