@@ -128,17 +128,17 @@
 		<NeonButton variant="Yellow" onclick={() => {
 			startGame();
 			started = true;
-		}} disabled={/*!canStart || */started} class="w-full my-4">
+		}} disabled={!canStart || started} class="w-full my-4">
 			{#if started}
 				<LoadingSpinner size={25} stroke={2} minDegrees={1} maxDegrees={120} />
 				<span>&nbsp;&nbsp;&nbsp;&nbsp;</span>
 				<p class="text-center text-lg">Starting...</p>
 			{:else}
-				<!-- {#if game.state.members.length < 3}
+				{#if game.state.members.length < 3}
 					Need 3 Players to Start
-				{:else} -->
+				{:else}
 					Start Game <ArrowRightOutline size="xl" />
-				<!-- {/if} -->
+				{/if}
 			{/if}
 		</NeonButton>
 	{:else}
