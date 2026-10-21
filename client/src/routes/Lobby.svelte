@@ -91,8 +91,8 @@
 		<p class="text-center text-white/50 text-base col-span-2 mb-2">{game.state.members.filter(m => m.type === MemberType.Player).length}/8 PLAYERS</p>
 		{#each game.state.members.filter(m => m.type === MemberType.Player) as member}
 			<Card class="w-11/12 mx-auto mb-2 flex flex-row items-center">
-				<span class="text-left text-white font-bold"
-					>{member.name}
+				<span class="text-left text-white font-bold">
+					{member.name}
 					{#if member.uuid == game.self.uuid}
 						<span class="text-[#00E5FF] rounded-4xl bg-[#00E5FF]/25 px-4 py-1 mx-4">YOU</span>
 						{#if member.uuid == game.state.hostID}

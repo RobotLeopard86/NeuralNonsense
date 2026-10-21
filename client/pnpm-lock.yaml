@@ -18,6 +18,9 @@ importers:
         specifier: ^4.3.3
         version: 4.3.3
     devDependencies:
+      '@lucide/svelte':
+        specifier: ^1.60.0
+        version: 1.60.0(svelte@5.56.9)
       '@microsoft/signalr':
         specifier: ^10.0.11
         version: 10.0.11
@@ -45,6 +48,9 @@ importers:
       svelte-check:
         specifier: ^4.7.3
         version: 4.7.6(picomatch@4.0.5)(svelte@5.56.9)(typescript@6.0.3)
+      svelte-confetti:
+        specifier: ^2.3.2
+        version: 2.3.2(svelte@5.56.9)
       typescript:
         specifier: ~6.0.2
         version: 6.0.3
@@ -75,6 +81,11 @@ packages:
 
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
+
+  '@lucide/svelte@1.60.0':
+    resolution: {integrity: sha512-Q4lkuuBLrhxjBK8yuJ6GjeHZDOzrxlRH5GOzCzI7HJBeCE+Rj1kwi4KsD81XM50bjnfwhPhSFrh/j+D4vn8jUg==}
+    peerDependencies:
+      svelte: ^5
 
   '@microsoft/signalr@10.0.11':
     resolution: {integrity: sha512-FulOJ2EEtKvLQcswe/U7v8pzyXyk7Jua5xgWJPPwyQU/2Z9ORvKcVjyO75VvLsem+CJ1ORRexJ+7Bz1FCei2aw==}
@@ -656,6 +667,11 @@ packages:
       svelte: ^4.0.0 || ^5.0.0-next.0
       typescript: ^5.0.0 || ^6.0.0
 
+  svelte-confetti@2.3.2:
+    resolution: {integrity: sha512-cfIwoGqMPYWRYDUz2g7mG1uHYWy7VBepelQdzCC3j/M42UrAqaBYmIi9xaoQfow4fbINHO9WuARnTyK2bjjGQg==}
+    peerDependencies:
+      svelte: '>=5.0.0'
+
   svelte-spa-router@5.1.1:
     resolution: {integrity: sha512-/9PiiyS2jQIXlP+NlKRcPl/Bgwm6WTCTmJq8TZw5IShEbozwcfpX2V3YEL4lAVgJJ2Ni+ipAH7aYVEupeNwtHA==}
     peerDependencies:
@@ -808,6 +824,10 @@ snapshots:
     dependencies:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
+
+  '@lucide/svelte@1.60.0(svelte@5.56.9)':
+    dependencies:
+      svelte: 5.56.9
 
   '@microsoft/signalr@10.0.11':
     dependencies:
@@ -1228,6 +1248,10 @@ snapshots:
       typescript: 6.0.3
     transitivePeerDependencies:
       - picomatch
+
+  svelte-confetti@2.3.2(svelte@5.56.9):
+    dependencies:
+      svelte: 5.56.9
 
   svelte-spa-router@5.1.1(svelte@5.56.9):
     dependencies:

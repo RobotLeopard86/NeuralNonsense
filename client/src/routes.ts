@@ -9,6 +9,7 @@ import Results from "./routes/Results.svelte";
 import Interlude from "./routes/Interlude.svelte";
 import R3Voting from "./routes/R3Voting.svelte";
 import R3Results from "./routes/R3Results.svelte";
+import End from "./routes/End.svelte";
 
 export default {
 	"/": Home,
@@ -21,5 +22,6 @@ export default {
 	"/play/results": Results,
 	"/play/interlude": Interlude,
 	"/play/vote3": R3Voting,
-	"/play/results3": R3Results
+	"/play/results3": R3Results,
+	"/play/end": End,
 }
