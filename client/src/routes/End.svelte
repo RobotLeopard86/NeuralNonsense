@@ -1,10 +1,12 @@
 <script lang="ts">
     import Card from "../components/Card.svelte";
-    import { ejectIfNoConnection } from "../lib/connection.svelte";
+    import { connection, ejectIfNoConnection, leaveRoom } from "../lib/connection.svelte";
     import { game, MemberType, type Member } from "../lib/state.svelte";
     import { onMount } from "svelte";
     import { Confetti } from "svelte-confetti";
     import { Trophy } from "@lucide/svelte";
+    import NeonButton from "../components/NeonButton.svelte";
+    import { HomeOutline, RefreshOutline } from "flowbite-svelte-icons";
 
     //onMount(ejectIfNoConnection);
 
@@ -25,6 +27,10 @@
             };
         });
     });
+
+    const playAgain = async() => {
+        await connection().invoke("PlayAgain");
+    }
 </script>
 
 <main class="mb-auto w-full flex flex-col items-center px-4">
@@ -70,4 +76,14 @@
             <p class="text-center text-white text-base font-bold">You were in the audience!</p>
         {/if}
     </Card>
+    <br />
+    <br />
+
+    <!-- Post-game options -->
+    <NeonButton variant="Yellow" onclick={playAgain} class="w-full mb-4">
+        <RefreshOutline size="xl" />&nbsp;&nbsp;Play Again
+    </NeonButton>
+    <NeonButton variant="Translucent" onclick={leaveRoom} class="w-full mb-4">
+        <HomeOutline size="xl" />&nbsp;&nbsp;Leave Room
+    </NeonButton>
 </main>
