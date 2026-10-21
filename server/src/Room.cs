@@ -34,8 +34,7 @@ namespace NeuralNonsense {
 				AnswersDue,
 				VotesDue,
 				R3VotesDue,
-				ResultsDone,
-				R3ResultsDone
+				ResultsDone
 			}
 
 			public Kind kind;
@@ -495,6 +494,103 @@ namespace NeuralNonsense {
 			phase = Phase.Results;
 		}
 
+		private async Task EndVotingR3() {
+			//Reset results object
+			currentR3Results = new ClientR3ResultsPhaseData {
+				prompt = content.r3Prompt,
+				answers = new string[answers.Count + content.r3AiAnswers.Length],
+				wasHuman = new bool[answers.Count + content.r3AiAnswers.Length],
+				humanPoints = new uint[answers.Count + content.r3AiAnswers.Length],
+				unanimity = new bool[answers.Count + content.r3AiAnswers.Length],
+				creators = new string[answers.Count + content.r3AiAnswers.Length],
+			};
+
+			//Precompute ballot sizes and the largest ballot across all submitted ballots.
+			int maxBallotSize = 0;
+			foreach(byte[] ballot in votesR3.Values) {
+				if(ballot.Length > maxBallotSize) maxBallotSize = ballot.Length;
+			}
+
+			//Unanimity check function
+			bool IsUnanimous(byte answerID, string excludedVoterID) {
+				//Setup
+				int qualifyingBallots = 0;
+				int qualifyingPicks = 0;
+
+				//Go through all the votes :)
+				foreach(var (voterID, ballot) in votesR3) {
+					//Skip excluded voter (used in human calculations to exclude author)
+					if(voterID == excludedVoterID) continue;
+
+					//Skip empty ballots
+					int k = ballot.Length;
+					if(k == 0) continue;
+
+					//Qualifying ballots are those where their sizes are greater than the largest ballot size times the unanimity qualifier threshold
+					if((long)k * Constants.UNANIMITY_QUALIFIER_DENOMINATOR < (long)Constants.UNANIMITY_QUALIFIER_NUMERATOR * maxBallotSize) continue;
+
+					//Update data
+					qualifyingBallots++;
+					if(Array.IndexOf(ballot, answerID) >= 0) qualifyingPicks++;
+				}
+
+				//At last, the magic
+				return qualifyingBallots >= 1 && qualifyingPicks == qualifyingBallots;
+			}
+
+			//Process AI answers
+			byte i;
+			for(i = 0; i < content.r3AiAnswers.Length; i++) {
+				currentR3Results.answers[i] = content.r3AiAnswers[i];
+				currentR3Results.wasHuman[i] = false;
+				currentR3Results.humanPoints[i] = 0;
+				currentR3Results.unanimity[i] = IsUnanimous(i, "");
+				currentR3Results.creators[i] = "";
+			}
+
+			//Process human answers
+			for(; i < content.r3AiAnswers.Length + answers.Count; i++) {
+				//Round constants
+				byte j = (byte)(i - content.r3AiAnswers.Length);
+				string authorID = answers.Keys.ElementAt(j);
+
+				//Partial ballot weighting data
+				uint weightedPicks = 0; //Sum of ballot sizes over all non-empty ballots that picked this answer
+				uint totalWeight = 0;   //Sum of ballot sizes over all non-empty ballots in general
+
+				//Calculate partial ballot weighting for scoring
+				//Basically, we don't want partial ballots to unfairly influence scoring, so we weight the data accordingly
+				foreach(var (voterID, ballot) in votesR3) {
+					//Exclude author
+					if(voterID == authorID) continue;
+
+					//Skip empty ballots
+					uint k = (uint)ballot.Length;
+					if(k == 0) continue;
+
+					//Add to weighting
+					totalWeight += k;
+					if(Array.IndexOf(ballot, i) >= 0) weightedPicks += k;
+				}
+
+				//Set fields
+				currentR3Results.answers[i] = answers.Values.ElementAt(j);
+				currentR3Results.wasHuman[i] = true;
+				currentR3Results.humanPoints[i] = totalWeight > 0 ? ((1000 * weightedPicks + totalWeight - 1) / totalWeight) : 0; //This is just integer ceiling division
+				currentR3Results.unanimity[i] = IsUnanimous(i, authorID);
+				currentR3Results.creators[i] = answers.Keys.ElementAt(j);
+
+				//Apply member scoring
+				Member m = members[currentR3Results.creators[i]];
+				m.score += currentR3Results.humanPoints[i];
+				await ServiceContainer.instance.hubCtx.Clients.Client(m.currentConnection).UpdateScore(m.score);
+			}
+
+			//Advance phase
+			phaseChangeProcessed = false;
+			phase = Phase.R3Results;
+		}
+
 		public async Task RunAsync(CancellationToken token) {
 			while(!closeRoom && !token.IsCancellationRequested) {
 				//Process commands
@@ -598,6 +694,9 @@ namespace NeuralNonsense {
 										phase = Phase.Vote;
 										phaseChangeProcessed = false;
 									}
+									break;
+								case Deadline.Kind.R3VotesDue:
+									await EndVotingR3();
 									break;
 								default: break;
 							}
@@ -826,7 +925,7 @@ namespace NeuralNonsense {
 
 								//Set deadline
 								Deadline due = new Deadline() {
-									kind = Deadline.Kind.R3ResultsDone,
+									kind = Deadline.Kind.ResultsDone,
 									cancel = new CancellationTokenSource(),
 									dueBy = ComputeDeadline(Constants.R3_RESULTS_DISPLAY_PERIOD / 1000)
 								};

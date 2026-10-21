@@ -91,5 +91,6 @@ namespace NeuralNonsense {
 		public bool[] wasHuman;
 		public uint[] humanPoints;
 		public bool[] unanimity;
+		public string[] creators;
 	}
 }

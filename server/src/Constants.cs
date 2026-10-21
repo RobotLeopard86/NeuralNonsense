@@ -17,6 +17,8 @@ namespace NeuralNonsense {
 		public const uint MAX_NAME_LENGTH = 32;
 		public const uint MAX_ANSWER_LENGTH = 200;
 		public const bool MASTER_MODERATION_DISABLE = false;
+		public const byte UNANIMITY_QUALIFIER_NUMERATOR = 1;
+		public const byte UNANIMITY_QUALIFIER_DENOMINATOR = 2;
 
 		//Timers (all in seconds)
 		public const uint ANSWER_PERIOD = 60000;
