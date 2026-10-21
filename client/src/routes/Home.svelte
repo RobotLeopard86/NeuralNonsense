@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { ArrowLeftOutline, ArrowRightOutline } from "flowbite-svelte-icons";
-
 	import Logo from "../components/Logo.svelte";
 	import NeonButton from "../components/NeonButton.svelte";
 	import TextField from "../components/TextField.svelte";

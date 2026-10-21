@@ -26,5 +26,6 @@ namespace NeuralNonsense {
 		public const uint RESULTS_DISPLAY_PERIOD = 10000;
 		public const uint R3_VOTING_PERIOD = 120000;
 		public const uint R3_RESULTS_DISPLAY_PERIOD = 20000;
+		public const uint SUSPENSION_PERIOD = 300000;
 	}
 }

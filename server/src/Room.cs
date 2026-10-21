@@ -34,7 +34,8 @@ namespace NeuralNonsense {
 				AnswersDue,
 				VotesDue,
 				R3VotesDue,
-				ResultsDone
+				ResultsDone,
+				CancelGame
 			}
 
 			public Kind kind;
@@ -300,6 +301,20 @@ namespace NeuralNonsense {
 			//Get rid of connection ID
 			members[ndc.memberID].currentConnection = "";
 
+			//Phase-specific behavior
+			if(phase == Phase.Lobby) {
+				//If we're in the lobby, your spot is gone
+				await RemoveMemberAndPromote(ndc.memberID);
+			} else {
+				//If we're in a game, then we trigger suspension
+				Deadline cancel = new Deadline() {
+					kind = Deadline.Kind.JoinExpire,
+					cancel = new CancellationTokenSource(),
+					dueBy = ComputeDeadline(Constants.SUSPENSION_PERIOD / 1000)
+				};
+				deadlines.Add(cancel);
+			}
+
 			//Set the result
 			ndc.task.SetResult();
 		}
@@ -458,6 +473,10 @@ namespace NeuralNonsense {
 
 			//Set the result
 			vc.task.SetResult();
+		}
+
+		private async Task HandlePlayAgain(PlayAgainCommand pac) {
+
 		}
 
 		private async Task EndVoting() {
@@ -697,6 +716,10 @@ namespace NeuralNonsense {
 									break;
 								case Deadline.Kind.R3VotesDue:
 									await EndVotingR3();
+									break;
+								case Deadline.Kind.CancelGame:
+									await ServiceContainer.instance.hubCtx.Clients.Group(code).Disconnected("This room has closed due to inactivity.");
+									closeRoom = true;
 									break;
 								default: break;
 							}

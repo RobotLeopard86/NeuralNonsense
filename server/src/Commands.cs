@@ -76,4 +76,8 @@ namespace NeuralNonsense {
 
 		public required string memberID;
 	}
+
+	public class PlayAgainCommand : CommandWithoutValue {
+		public required string memberID;
+	}
 }

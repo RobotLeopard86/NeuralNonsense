@@ -346,5 +346,17 @@ namespace NeuralNonsense {
 			//Return
 			return gvc.task.Task.Result;
 		}
+
+		public async Task PlayAgain() {
+			//Verify
+			await LoadUserAndVerify();
+
+			//Send command
+			PlayAgainCommand pac = new PlayAgainCommand() {
+				memberID = memberID
+			};
+			await ServiceContainer.instance.gameManager.rooms[roomCode].writer.WriteAsync(pac);
+			await pac.task.Task;
+		}
 	}
 }

@@ -47,7 +47,7 @@
 	</svg>
 	<div class="absolute flex flex-col items-center">
 		<span class={`text-xl font-black ${urgent ? "text-[#FF2D78]" : "text-white"}`}>
-			{secondsRemaining}
+			{secondsRemaining < 60 ? secondsRemaining : `${Math.floor(secondsRemaining / 60).toFixed(0)}:${(secondsRemaining % 60) > 9 ? (secondsRemaining % 60) : "0" + (secondsRemaining % 60)}`}
 		</span>
 	</div>
 </div>
