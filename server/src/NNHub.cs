@@ -6,6 +6,7 @@ namespace NeuralNonsense {
 		Task Disconnected(string reason);
 		Task ViewTransition(string view);
 		Task UpdateMemberList(ClientMember[] members);
+		Task UpdateType(string type);
 		Task HostChanged(string newHost);
 		Task SetRound(uint round);
 		Task UpdateScore(uint newScore);

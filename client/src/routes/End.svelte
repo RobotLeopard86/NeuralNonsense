@@ -8,10 +8,12 @@
     import NeonButton from "../components/NeonButton.svelte";
     import { HomeOutline, RefreshOutline } from "flowbite-svelte-icons";
 
-    //onMount(ejectIfNoConnection);
+	let results: { place: number, attainers: Member[] }[] = $state([]);
+    onMount(async() => {
+		await ejectIfNoConnection();
 
-    let results = $derived.by(() => {
-        let scoreMappings: Map<number, Member[]> = new Map<number, Member[]>();
+		//Determine results (very cursed)
+		let scoreMappings: Map<number, Member[]> = new Map<number, Member[]>();
         game.state.members.filter((m) => m.type === MemberType.Player).forEach((m) => {
             if(!scoreMappings.has(m.score)) scoreMappings.set(m.score, []);
             scoreMappings.get(m.score)!.push(m);
@@ -20,13 +22,18 @@
         scoreMappings.forEach((v, k) => {
             data.push({ score: k, attainers: v });
         });
-        return data.sort((a, b) => a.score - b.score).map((entry, idx) => {
+        results = data.sort((a, b) => a.score - b.score).map((entry, idx) => {
             return {
                 place: idx + 1,
                 attainers: entry.attainers
             };
         });
-    });
+
+		//Projector is always ready
+		if(game.self.type === MemberType.Projector) {
+			await connection().invoke("SignalReady");
+		}
+	});
 
     const playAgain = async() => {
         await connection().invoke("PlayAgain");
@@ -80,10 +87,12 @@
     <br />
 
     <!-- Post-game options -->
-    <NeonButton variant="Yellow" onclick={playAgain} class="w-full mb-4">
-        <RefreshOutline size="xl" />&nbsp;&nbsp;Play Again
-    </NeonButton>
-    <NeonButton variant="Translucent" onclick={leaveRoom} class="w-full mb-4">
-        <HomeOutline size="xl" />&nbsp;&nbsp;Leave Room
-    </NeonButton>
+    {#if game.self.type !== MemberType.Projector}
+		<NeonButton variant="Yellow" onclick={playAgain} class="w-full mb-4">
+			<RefreshOutline size="xl" />&nbsp;&nbsp;Play Again
+		</NeonButton>
+		<NeonButton variant="Translucent" onclick={leaveRoom} class="w-full mb-4">
+			<HomeOutline size="xl" />&nbsp;&nbsp;Leave Room
+		</NeonButton>
+	{/if}
 </main>

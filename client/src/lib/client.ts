@@ -3,7 +3,7 @@ import { connection, tabClosePreventHandler } from "./connection.svelte";
 import { push } from "svelte-spa-router";
 import { resetState, type ServerMember, game, deriveMember, MemberType } from "./state.svelte";
 import { addToast } from "./toast.svelte";
-import type { AnswerPhaseData, ResultsPhaseData, VotePhaseData } from "./phase";
+import type { AnswerPhaseData, R3ResultsPhaseData, R3VotePhaseData, ResultsPhaseData, VotePhaseData } from "./phase";
 
 export const configureHandlers = (hc: HubConnection) => {
     //Disconnection
@@ -45,6 +45,7 @@ export const configureHandlers = (hc: HubConnection) => {
     hc.on("UpdateType", (newType: string) => {
         switch(newType) {
             case "p":
+				if(game.self.type !== MemberType.Player) addToast("You have been promoted to the player role!", 5000);
                 game.self.type = MemberType.Player;
                 break;
             case "a":
@@ -84,6 +85,12 @@ export const configureHandlers = (hc: HubConnection) => {
     });
     hc.on("PushResultsPhaseData", (rpd: ResultsPhaseData) => {
         game.phase = rpd;
+    });
+    hc.on("PushR3VotePhaseData", (r3vpd: R3VotePhaseData) => {
+        game.phase = r3vpd;
+    });
+    hc.on("PushR3ResultsPhaseData", (r3rpd: R3ResultsPhaseData) => {
+        game.phase = r3rpd;
     });
 }
 

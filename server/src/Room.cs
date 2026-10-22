@@ -116,10 +116,10 @@ namespace NeuralNonsense {
 			//Promotion check
 			if(phase == Phase.Lobby) {
 				//Promotion permitted in the lobby
-				try {
-					members.Values.First(m => m.type == Member.Type.Audience).type = Member.Type.Player;
-				} catch {
-					//Exception means no audience members to promote, ok to swallow
+				Member? m = members.Values.First(m => m.type == Member.Type.Audience);
+				if(m != null) {
+					m.type = Member.Type.Player;
+					await ServiceContainer.instance.hubCtx.Clients.Client(m.currentConnection).UpdateType("p");
 				}
 			}
 
@@ -209,7 +209,8 @@ namespace NeuralNonsense {
 				type = new Func<Member.Type>(() => {
 					if(phase != Phase.Lobby) return Member.Type.Spectator;
 					return members.Count <= 8 ? Member.Type.Player : Member.Type.Audience;
-				}).Invoke()
+				}).Invoke(),
+				ready = false
 			};
 			members.Add(member.uuid, member);
 
@@ -260,6 +261,7 @@ namespace NeuralNonsense {
 			}
 
 			//Save connection
+			members[mccc.memberID].ready = true;
 			members[mccc.memberID].currentConnection = mccc.connID;
 
 			//Send client to the appropriate view
@@ -302,8 +304,8 @@ namespace NeuralNonsense {
 			members[ndc.memberID].currentConnection = "";
 
 			//Phase-specific behavior
-			if(phase == Phase.Lobby) {
-				//If we're in the lobby, your spot is gone
+			if(phase == Phase.Lobby || phase == Phase.End) {
+				//If we're in the lobby or on the end screen, your spot is gone
 				await RemoveMemberAndPromote(ndc.memberID);
 			} else {
 				//If we're in a game, then we trigger suspension
@@ -323,6 +325,19 @@ namespace NeuralNonsense {
 			//Set phase
 			phaseChangeProcessed = false;
 			phase = Phase.ContentGen;
+
+			//Reset member scores
+			foreach(Member m in members.Values) {
+				m.score = 0;
+				await ServiceContainer.instance.hubCtx.Clients.Client(m.currentConnection).UpdateScore(m.score);
+			}
+
+			//Kick any non-ready players
+			foreach(Member m in members.Values.Where(m => !m.ready)) {
+				await ServiceContainer.instance.hubCtx.Clients.Client(m.currentConnection).Disconnected("The game session started before you (re)connected!");
+				await ServiceContainer.instance.hubCtx.Groups.RemoveFromGroupAsync(m.currentConnection, code);
+				await RemoveMemberAndPromote(m.uuid);
+			}
 
 			//View transition
 			await ServiceContainer.instance.hubCtx.Clients.Group(code).ViewTransition("generation");
@@ -476,7 +491,19 @@ namespace NeuralNonsense {
 		}
 
 		private async Task HandlePlayAgain(PlayAgainCommand pac) {
+			//If we're in the end state, revert to the lobby
+			if(phase == Phase.End) {
+				phase = Phase.Lobby;
+				foreach(Member m in members.Values.Where(m => m.type == Member.Type.Projector)) {
+					await ServiceContainer.instance.hubCtx.Clients.Client(m.currentConnection).ViewTransition("lobby");
+				}
+			}
 
+			//Mark the player as "ready" to signal rejoin
+			members[pac.memberID].ready = true;
+
+			//Send the user to the lobby
+			await ServiceContainer.instance.hubCtx.Clients.Client(members[pac.memberID].currentConnection).ViewTransition("lobby");
 		}
 
 		private async Task EndVoting() {
@@ -658,6 +685,9 @@ namespace NeuralNonsense {
 								break;
 							case VoteCommand vc:
 								await HandleVote(vc);
+								break;
+							case PlayAgainCommand pac:
+								await HandlePlayAgain(pac);
 								break;
 						}
 					} catch(Exception e) {
