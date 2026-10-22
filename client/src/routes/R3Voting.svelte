@@ -17,7 +17,7 @@
     let answers = $derived(_answers.map((_, i) => ({ value: _answers[game.r3AnswerIndexMapping[i]], originalIdx: i})));
 
     const toggleAnswer = async(index: number) => {
-        if(!selected[index] && selected.filter(v => v).length >= ((game.phase ? game.phase : {}) as R3VotePhaseData).selectCount) return;
+        if(!selected[index] && selected.filter(v => v).length + sending.filter(v => v).length >= ((game.phase ? game.phase : {}) as R3VotePhaseData).selectCount) return;
         sending[index] = true;
         await connection().invoke(selected[index] ? "RmVoteR3" : "AddVoteR3", index);
         selected[index] = !selected[index];

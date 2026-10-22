@@ -505,6 +505,66 @@ namespace NeuralNonsense {
 			vc.task.SetResult();
 		}
 
+		private async Task HandleR3AddVote(R3AddVoteCommand avc) {
+			//Add user array if they don't have one
+			if(!votesR3.ContainsKey(avc.memberID)) votesR3.Add(avc.memberID, []);
+
+			//If this answer is already selected, ignore
+			if(votesR3[avc.memberID].Contains(avc.answerID)) {
+				avc.task.SetResult();
+				return;
+			}
+
+			//Check that we haven't submitted too many
+			if(votesR3[avc.memberID].Length >= GetR3VotePhaseData(avc.memberID).selectCount) {
+				avc.task.SetException(new ClientCausedException("Too many answers selected already!"));
+				return;
+			}
+
+			//Lodge vote
+			votesR3[avc.memberID].Append(avc.answerID);
+
+			//Set the result
+			avc.task.SetResult();
+		}
+
+		private async Task HandleR3RemoveVote(R3RemoveVoteCommand rvc) {
+			//Ignore if no user array
+			if(!votesR3.ContainsKey(rvc.memberID)) {
+				rvc.task.SetResult();
+				return;
+			}
+
+			//If this answer is not selected, ignore
+			if(!votesR3[rvc.memberID].Contains(rvc.answerID)) {
+				rvc.task.SetResult();
+				return;
+			}
+
+			//Take away the vote
+			votesR3[rvc.memberID] = votesR3[rvc.memberID].Where(v => v != rvc.answerID).ToArray();
+
+			//Set the result
+			rvc.task.SetResult();
+		}
+
+		private async Task HandleR3GetVotes(R3GetVotesCommand gvc) {
+			//Get votes
+			byte[] memberVotes = [];
+			if(votesR3.ContainsKey(gvc.memberID)) {
+				memberVotes = votesR3[gvc.memberID];
+			}
+
+			//Transform to bool array
+			bool[] output = new bool[answers.Count + content.r3AiAnswers.Length];
+			for(byte i = 0; i < output.Length; i++) {
+				output[i] = memberVotes.Contains(i);
+			}
+
+			//Set the result
+			gvc.task.SetResult(output);
+		}
+
 		private async Task HandlePlayAgain(PlayAgainCommand pac) {
 			//If we're in the end state, revert to the lobby
 			if(phase == Phase.End) {
@@ -700,6 +760,15 @@ namespace NeuralNonsense {
 								break;
 							case VoteCommand vc:
 								await HandleVote(vc);
+								break;
+							case R3AddVoteCommand avc:
+								await HandleR3AddVote(avc);
+								break;
+							case R3RemoveVoteCommand rvc:
+								await HandleR3RemoveVote(rvc);
+								break;
+							case R3GetVotesCommand gvc:
+								await HandleR3GetVotes(gvc);
 								break;
 							case PlayAgainCommand pac:
 								await HandlePlayAgain(pac);
