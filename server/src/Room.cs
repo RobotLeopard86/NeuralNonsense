@@ -185,7 +185,7 @@ namespace NeuralNonsense {
 				selectCount = (byte)members.Values.Count(m => m.type == Member.Type.Player)
 			};
 			int answerIndex = (byte)answers.Keys.ToArray().IndexOf(memberID);
-			if(answerIndex != -1) cr3vpd.yourAnswerIndex = (byte)answerIndex;
+			if(answerIndex != -1) cr3vpd.yourAnswerIndex = (byte)(answerIndex + content.r3AiAnswers.Length);
 			else cr3vpd.yourAnswerIndex = byte.MaxValue;
 			byte i;
 			for(i = 0; i < content.r3AiAnswers.Length; i++) cr3vpd.answers[i] = content.r3AiAnswers[i];
