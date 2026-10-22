@@ -339,6 +339,11 @@ namespace NeuralNonsense {
 				await RemoveMemberAndPromote(m.uuid);
 			}
 
+			//Now reset people back to being not ready
+			foreach(Member m in members.Values) {
+				m.ready = false;
+			}
+
 			//View transition
 			await ServiceContainer.instance.hubCtx.Clients.Group(code).ViewTransition("generation");
 
