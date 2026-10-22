@@ -180,7 +180,7 @@ namespace NeuralNonsense {
 		private ClientR3VotePhaseData GetR3VotePhaseData(string memberID) {
 			ClientR3VotePhaseData cr3vpd = new ClientR3VotePhaseData {
 				prompt = content.r3Prompt,
-				timer = Constants.VOTING_PERIOD,
+				timer = Constants.R3_VOTING_PERIOD,
 				answers = new string[answers.Count + content.r3AiAnswers.Length],
 				selectCount = (byte)members.Values.Count(m => m.type == Member.Type.Player)
 			};
