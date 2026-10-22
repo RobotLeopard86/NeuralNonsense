@@ -27,5 +27,9 @@ namespace NeuralNonsense {
 		public const uint R3_VOTING_PERIOD = 120000;
 		public const uint R3_RESULTS_DISPLAY_PERIOD = 20000;
 		public const uint SUSPENSION_PERIOD = 300000;
+
+		//AI generation data
+		public const string OLLAMA_HOSTNAME = "http://localhost:11434";
+		public const string OLLAMA_MODEL = "gemma4:cloud";
 	}
 }

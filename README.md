@@ -22,6 +22,8 @@ The server is written in C# using ASP.NET with SignalR and stores all state in-m
 ## How to Run
 First, install dependencies. You'll need Node.js, PNPM, and the .NET SDK including ASP.NET, version 10.0.0 or newer.  
 
-Then, simply clone the repository and use the provided `setup.sh` script. Neural Nonsense is designed to run on Unix-like systems **only**. Do not expect to get it running on Windows. On first run, all necessary NPM packages will be installed via `pnpm`. The development HTTPS certificate will also be created at this point, and will ask for a root password to generate it.  
+Then, simply clone the repository and use the provided `setup.sh` script. Neural Nonsense is designed to run on Unix-like systems **only**. Do not expect to get it running on Windows. On first run, all necessary NPM packages will be installed via `pnpm`. The development HTTPS certificate will also be created at this point, and will ask for a root password to generate it. 
+
+Finally, go to the `server/src` directory, rename `Secrets.cs.template` to `Secrets.cs`, and fill out the required fields.
 
 You can then start the development servers using the provided `run.sh` script (requires `tmux`), which will open the Vite dev server on port `5173`, making it available to the network, and also the ASP.NET backend server on port `6171`. Both use HTTPS, so you may need to add the generated root certificate file (`.certs/rootCA.pem`) to your system's trust store. It is recommended to add `set -g mouse on` to your `tmux` configuration file, which should be at `~/.tmux.conf` to enable mouse and scrolling support in the interface.

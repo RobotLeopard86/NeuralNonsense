@@ -112,3 +112,6 @@ Desktop.ini
 # Vim
 *.swp
 *.swo
+
+# Secrets
+server/src/Secrets.cs

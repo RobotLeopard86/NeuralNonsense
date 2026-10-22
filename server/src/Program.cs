@@ -78,7 +78,7 @@ ServiceContainer.instance = new ServiceContainer {
 	badWordChecker = new FakeBadWordCheckerService(),
 	gameManager = new GameManagerService(),
 	tokenGenerator = new TokenGeneratorService(jwtSigningKey),
-	aiGenerator = new FakeAIGeneratorService()
+	aiGenerator = new OllamaAIGeneratorService()
 };
 
 //Map routes
