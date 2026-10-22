@@ -26,6 +26,7 @@
 	const join = async () => {
 		working = true;
 		await joinRoom(roomCode, memberName);
+		working = false;
 	};
 
 	const create = async () => {
@@ -38,6 +39,7 @@
 		//Alert if it went wrong
 		if (!result.ok) {
 			addToast("Failed to create room!", 5000);
+			working = false;
 			return;
 		}
 
