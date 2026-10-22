@@ -263,6 +263,12 @@ namespace NeuralNonsense {
 			//Save connection
 			members[mccc.memberID].ready = true;
 			members[mccc.memberID].currentConnection = mccc.connID;
+			if(members.Values.Count(m => m.type == Member.Type.Player && !string.IsNullOrEmpty(m.currentConnection)) >= 3) {
+				Deadline? deadline = deadlines.First(d => d.kind == Deadline.Kind.CancelGame);
+				if(deadline.HasValue) {
+					deadline.Value.cancel.Cancel();
+				}
+			}
 
 			//Send client to the appropriate view
 			switch(phase) {
@@ -308,13 +314,15 @@ namespace NeuralNonsense {
 				//If we're in the lobby or on the end screen, your spot is gone
 				await RemoveMemberAndPromote(ndc.memberID);
 			} else {
-				//If we're in a game, then we trigger suspension
-				Deadline cancel = new Deadline() {
-					kind = Deadline.Kind.JoinExpire,
-					cancel = new CancellationTokenSource(),
-					dueBy = ComputeDeadline(Constants.SUSPENSION_PERIOD / 1000)
-				};
-				deadlines.Add(cancel);
+				//If we're in a game, then we trigger suspension if there are too few people
+				if(members.Values.Count(m => m.type == Member.Type.Player && !string.IsNullOrEmpty(m.currentConnection)) < 3) {
+					Deadline cancel = new Deadline() {
+						kind = Deadline.Kind.JoinExpire,
+						cancel = new CancellationTokenSource(),
+						dueBy = ComputeDeadline(Constants.SUSPENSION_PERIOD / 1000)
+					};
+					deadlines.Add(cancel);
+				}
 			}
 
 			//Set the result
@@ -334,8 +342,10 @@ namespace NeuralNonsense {
 
 			//Kick any non-ready players
 			foreach(Member m in members.Values.Where(m => !m.ready)) {
-				await ServiceContainer.instance.hubCtx.Clients.Client(m.currentConnection).Disconnected("The game session started before you (re)connected!");
-				await ServiceContainer.instance.hubCtx.Groups.RemoveFromGroupAsync(m.currentConnection, code);
+				if(!string.IsNullOrEmpty(m.currentConnection)) {
+					await ServiceContainer.instance.hubCtx.Clients.Client(m.currentConnection).Disconnected("The game session started before you (re)connected!");
+					await ServiceContainer.instance.hubCtx.Groups.RemoveFromGroupAsync(m.currentConnection, code);
+				}
 				await RemoveMemberAndPromote(m.uuid);
 			}
 
@@ -706,10 +716,12 @@ namespace NeuralNonsense {
 				long now = TimeProvider.System.GetTimestamp();
 				foreach(Deadline deadline in deadlines) {
 					if(deadline.cancel.IsCancellationRequested) {
+						deadline.cancel.Dispose();
 						toRemove.Add(deadline);
 						continue;
 					}
 					if(deadline.dueBy <= now) {
+						deadline.cancel.Dispose();
 						toRemove.Add(deadline);
 						try {
 							switch(deadline.kind) {
