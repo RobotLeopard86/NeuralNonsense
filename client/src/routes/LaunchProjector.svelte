@@ -4,6 +4,7 @@
     import { deriveGameState, game, MemberType, resetTabState, type ServerGameState, type ServerMember } from "../lib/state.svelte";
     import { connect, connection, tabClosePreventHandler, type JWTPayload } from "../lib/connection.svelte";
     import * as jose from "jose";
+    import { fly } from "svelte/transition";
 
     let { params = {} } = $props();
 
@@ -43,8 +44,13 @@
         game.self.score = self.score;
         game.self.type = MemberType.Projector;
     });
+
+	let ready = $state(false);
+	onMount(() => ready = true);
 </script>
 
-<main class="w-full min-h-full flex flex-col place-content-center px-4">
+{#if ready}
+<main in:fly={{ delay: 500, duration: 500, x: 0, y: 100 }} out:fly={{ duration: 500, x: 0, y: -100 }}  class="w-full min-h-full flex flex-col place-content-center px-4">
     <LoadingSpinner size={150} stroke={7} minDegrees={1} maxDegrees={120} />
 </main>
+{/if}

@@ -7,6 +7,7 @@
     import { Trophy } from "@lucide/svelte";
     import NeonButton from "../components/NeonButton.svelte";
     import { HomeOutline, RefreshOutline } from "flowbite-svelte-icons";
+    import { fly } from "svelte/transition";
 
 	let results: { place: number, attainers: Member[] }[] = $state([]);
     onMount(async() => {
@@ -38,9 +39,13 @@
     const playAgain = async() => {
         await connection().invoke("PlayAgain");
     }
+
+	let ready = $state(false);
+	onMount(() => ready = true);
 </script>
 
-<main class="mb-auto w-full flex flex-col items-center px-4">
+{#if ready}
+<main in:fly={{ delay: 500, duration: 500, x: 0, y: 100 }} out:fly={{ duration: 500, x: 0, y: -100 }}  class="mb-auto w-full flex flex-col items-center px-4">
     <!-- Trophy -->
     <div class="rounded-full bg-[#FF2D78] shadow-[0_0_20px_rgba(255,45,120,0.4)] mb-8">
         <Trophy size={125} color="white" class="m-12" />
@@ -96,3 +101,4 @@
 		</NeonButton>
 	{/if}
 </main>
+{/if}

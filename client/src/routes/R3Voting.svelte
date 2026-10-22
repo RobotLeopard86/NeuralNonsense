@@ -39,9 +39,13 @@
         }
         game.r3AnswerIndexMapping = game.r3AnswerIndexMapping.map(v => ({ value: v, sort: Math.random() })).sort((a, b) => a.sort - b.sort).map(v => v.value);
 	});
+
+	let ready = $state(false);
+	onMount(() => ready = true);
 </script>
 
-<main class="w-full min-h-full flex flex-col items-center px-4">
+{#if ready}
+<main in:fly={{ delay: 500, duration: 500, x: 0, y: 100 }} out:fly={{ duration: 500, x: 0, y: -100 }}  class="w-full min-h-full flex flex-col items-center px-4">
 	<!-- Leave button -->
 	{#if game.self.type !== MemberType.Projector}
 		<SmallNeonButton variant="Red" onclick={leaveRoom} class="absolute top-4 left-4"><OpenDoorOutline size="lg" />&nbsp;&nbsp;Leave Room</SmallNeonButton>
@@ -151,3 +155,4 @@
 		</div>	
 	{/if}
 </main>
+{/if}

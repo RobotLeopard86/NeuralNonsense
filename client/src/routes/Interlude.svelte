@@ -2,7 +2,7 @@
     import { onMount } from "svelte";
     import { connection, ejectIfNoConnection, leaveRoom } from "../lib/connection.svelte";
     import { game, MemberType } from "../lib/state.svelte";
-    import { fade } from "svelte/transition";
+    import { fade, fly } from "svelte/transition";
     import { OpenDoorOutline } from "flowbite-svelte-icons";
     import SmallNeonButton from "../components/SmallNeonButton.svelte";
 
@@ -43,9 +43,13 @@
             await connection().invoke("SignalReady");
         }, 5000);
 	});
+
+	let ready = $state(false);
+	onMount(() => ready = true);
 </script>
 
-<main class="w-full min-h-full flex flex-col place-content-center px-4">
+{#if ready}
+<main in:fly={{ delay: 500, duration: 500, x: 0, y: 100 }} out:fly={{ duration: 500, x: 0, y: -100 }}  class="w-full min-h-full flex flex-col place-content-center px-4">
     <!-- Leave button -->
 	{#if game.self.type !== MemberType.Projector}
 		<SmallNeonButton variant="Red" onclick={leaveRoom} class="absolute top-4 left-4"><OpenDoorOutline size="lg" />&nbsp;&nbsp;Leave Room</SmallNeonButton>
@@ -62,3 +66,4 @@
         {/key}
     </div>
 </main>
+{/if}

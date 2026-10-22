@@ -7,6 +7,7 @@
 	import { onMount } from "svelte";
     import { addToast } from "../lib/toast.svelte";
     import LoadingSpinner from "../components/LoadingSpinner.svelte";
+    import { fly } from "svelte/transition";
 
 	type Phase = "Initial" | "Join" | "Create";
 	let phase: Phase = $state("Initial");
@@ -45,12 +46,16 @@
 		roomCode = body.code;
 		await join();
 	};
+
+	let ready = $state(false);
+	onMount(() => ready = true);
 </script>
 
 <Logo />
 <p class="text-center text-white/50 text-sm mb-8">Can you out-funny an AI?</p>
 
-<main class="mb-auto w-full flex flex-col items-center px-4">
+{#if ready}
+<main in:fly={{ delay: 500, duration: 500, x: 0, y: 100 }} out:fly={{ duration: 500, x: 0, y: -100 }} class="mb-auto w-full flex flex-col items-center px-4">
 	{#if phase == "Initial"}
 		<NeonButton variant="Cyan" onclick={() => (phase = "Join")} class="w-full max-w-md my-4">Join an Existing Room</NeonButton>
 		<NeonButton variant="Red" onclick={() => (phase = "Create")} class="w-full max-w-md my-4">Create a New Room</NeonButton>
@@ -101,3 +106,4 @@
 		</div>
 	{/if}
 </main>
+{/if}

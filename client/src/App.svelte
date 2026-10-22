@@ -4,6 +4,8 @@
     import Toast from "./components/Toast.svelte";
     import { toasts } from "./lib/toast.svelte";
     import { game, MemberType } from "./lib/state.svelte";
+
+	let blah = $state(0);
 </script>
 
 <div class="relative min-h-dvh bg-[#1A1035] overflow-hidden">

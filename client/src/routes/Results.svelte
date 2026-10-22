@@ -5,15 +5,20 @@
     import SmallNeonButton from "../components/SmallNeonButton.svelte";
     import { OpenDoorOutline, ServerOutline, UserOutline } from "flowbite-svelte-icons";
     import type { ResultsPhaseData } from "../lib/phase";
+    import { fly } from "svelte/transition";
 
     onMount(async() => {
 		await ejectIfNoConnection();
 		let { data }: { data: ResultsPhaseData, timeRemaining: number, finished: boolean } = await connection().invoke("RefreshResultsPhaseData");
 		game.phase = data;
 	});
+
+	let ready = $state(false);
+	onMount(() => ready = true);
 </script>
 
-<main class="w-full min-h-full flex flex-col items-center px-4">
+{#if ready}
+<main in:fly={{ delay: 500, duration: 500, x: 0, y: 100 }} out:fly={{ duration: 500, x: 0, y: -100 }}  class="w-full min-h-full flex flex-col items-center px-4">
 	<!-- Leave button -->
 	{#if game.self.type !== MemberType.Projector}
 		<SmallNeonButton variant="Red" onclick={leaveRoom} class="absolute top-4 left-4"><OpenDoorOutline size="lg" />&nbsp;&nbsp;Leave Room</SmallNeonButton>
@@ -71,3 +76,4 @@
 		</div>
 	</div>
 </main>
+{/if}

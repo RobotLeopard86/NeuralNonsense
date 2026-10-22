@@ -8,6 +8,7 @@
 	import { push } from "svelte-spa-router";
     import { addToast } from "../lib/toast.svelte";
 	import xss from "xss";
+    import { fly } from "svelte/transition";
 
 	let { params = {} } = $props();
 	let memberName = $state("");
@@ -24,12 +25,16 @@
 	const join = async () => {
 		await joinRoom(roomCode, xss(memberName));
 	};
+
+	let ready = $state(false);
+	onMount(() => ready = true);
 </script>
 
 <Logo />
 <p class="text-center text-white/50 text-sm mb-8">Can you out-funny an AI?</p>
 
-<main class="mb-auto w-full flex flex-col items-center px-4">
+{#if ready}
+<main in:fly={{ delay: 500, duration: 500, x: 0, y: 100 }} out:fly={{ duration: 500, x: 0, y: -100 }}  class="mb-auto w-full flex flex-col items-center px-4">
 	<div class="flex flex-col max-w-md w-full">
 		<div class="gap-1">
 			<p class="text-center text-white text-2xl font-bold">You've Been Invited!</p>
@@ -42,3 +47,4 @@
 		<NeonButton variant="Yellow" onclick={join} class="w-full max-w-md my-4" disabled={!memberName}>Join Game <ArrowRightOutline size="xl" /></NeonButton>
 	</div>
 </main>
+{/if}

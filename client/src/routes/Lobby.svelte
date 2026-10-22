@@ -10,6 +10,7 @@
     import SmallNeonButton from "../components/SmallNeonButton.svelte";
     import LoadingSpinner from "../components/LoadingSpinner.svelte";
     import { startGame } from "../lib/client";
+    import { fly } from "svelte/transition";
 
 	onMount(ejectIfNoConnection);
 
@@ -39,12 +40,16 @@
 		//Open the projector window with the token
 		window.open(`/#/projector-launch/${ptoken}`, "_blank");
 	}
+
+	let ready = $state(false);
+	onMount(() => ready = true);
 </script>
 
 <Logo />
 <p class="text-center text-white/50 text-sm mb-8">Can you out-funny an AI?</p>
 
-<main class="mb-auto w-full flex flex-col items-center px-4">
+{#if ready}
+<main in:fly={{ delay: 500, duration: 500, x: 0, y: 100 }} out:fly={{ duration: 500, x: 0, y: -100 }}  class="mb-auto w-full flex flex-col items-center px-4">
 	<!-- Leave button -->
 	{#if game.self.type !== MemberType.Projector}
 		<SmallNeonButton variant="Red" onclick={leaveRoom} class="absolute top-4 left-4"><OpenDoorOutline size="lg" />&nbsp;&nbsp;Leave Room</SmallNeonButton>
@@ -149,3 +154,4 @@
 		</div>
 	{/if}
 </main>
+{/if}
