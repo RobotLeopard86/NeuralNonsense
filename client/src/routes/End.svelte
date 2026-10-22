@@ -23,7 +23,7 @@
         scoreMappings.forEach((v, k) => {
             data.push({ score: k, attainers: v });
         });
-        results = data.sort((a, b) => a.score - b.score).map((entry, idx) => {
+        results = data.sort((a, b) => b.score - a.score).map((entry, idx) => {
             return {
                 place: idx + 1,
                 attainers: entry.attainers

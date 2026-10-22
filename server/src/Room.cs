@@ -116,10 +116,13 @@ namespace NeuralNonsense {
 			//Promotion check
 			if(phase == Phase.Lobby) {
 				//Promotion permitted in the lobby
-				Member? m = members.Values.First(m => m.type == Member.Type.Audience);
-				if(m != null) {
+				Member m;
+				try {
+					m = members.Values.First(m => m.type == Member.Type.Audience);
 					m.type = Member.Type.Player;
 					await ServiceContainer.instance.hubCtx.Clients.Client(m.currentConnection).UpdateType("p");
+				} catch {
+					//Exception swallowed because it just means that there were no audience members to promote
 				}
 			}
 
@@ -264,10 +267,9 @@ namespace NeuralNonsense {
 			members[mccc.memberID].ready = true;
 			members[mccc.memberID].currentConnection = mccc.connID;
 			if(members.Values.Count(m => m.type == Member.Type.Player && !string.IsNullOrEmpty(m.currentConnection)) >= 3) {
-				Deadline? deadline = deadlines.First(d => d.kind == Deadline.Kind.CancelGame);
-				if(deadline.HasValue) {
-					deadline.Value.cancel.Cancel();
-				}
+				try {
+					deadlines.First(d => d.kind == Deadline.Kind.CancelGame).cancel.Cancel();
+				} catch { }
 			}
 
 			//Send client to the appropriate view
@@ -307,7 +309,7 @@ namespace NeuralNonsense {
 
 		private async Task HandleNotifyDisconnected(NotifyDisconnectedCommand ndc) {
 			//Get rid of connection ID
-			members[ndc.memberID].currentConnection = "";
+			if(members.ContainsKey(ndc.memberID)) members[ndc.memberID].currentConnection = "";
 
 			//Phase-specific behavior
 			if(phase == Phase.Lobby || phase == Phase.End) {
@@ -413,9 +415,12 @@ namespace NeuralNonsense {
 			};
 
 			//Compute remaining time
-			Deadline? deadline = deadlines.First(d => d.kind == Deadline.Kind.AnswersDue);
-			if(deadline.HasValue) res.timeRemaining = ComputeTimeUntilDeadline(deadline.Value.dueBy) * 1000;
-			else res.timeRemaining = Constants.ANSWER_PERIOD * 1000;
+			try {
+				Deadline deadline = deadlines.First(d => d.kind == Deadline.Kind.AnswersDue);
+				res.timeRemaining = ComputeTimeUntilDeadline(deadline.dueBy) * 1000;
+			} catch {
+				res.timeRemaining = Constants.ANSWER_PERIOD * 1000;
+			}
 
 			//Set value
 			cpdc.task.SetResult(res);
@@ -429,9 +434,12 @@ namespace NeuralNonsense {
 			};
 
 			//Compute remaining time
-			Deadline? deadline = deadlines.First(d => d.kind == Deadline.Kind.VotesDue);
-			if(deadline.HasValue) res.timeRemaining = ComputeTimeUntilDeadline(deadline.Value.dueBy) * 1000;
-			else res.timeRemaining = Constants.ANSWER_PERIOD * 1000;
+			try {
+				Deadline deadline = deadlines.First(d => d.kind == Deadline.Kind.VotesDue);
+				res.timeRemaining = ComputeTimeUntilDeadline(deadline.dueBy) * 1000;
+			} catch {
+				res.timeRemaining = Constants.VOTING_PERIOD * 1000;
+			}
 
 			//Set value
 			cpdc.task.SetResult(res);
@@ -457,9 +465,12 @@ namespace NeuralNonsense {
 			};
 
 			//Compute remaining time
-			Deadline? deadline = deadlines.First(d => d.kind == Deadline.Kind.VotesDue);
-			if(deadline.HasValue) res.timeRemaining = ComputeTimeUntilDeadline(deadline.Value.dueBy) * 1000;
-			else res.timeRemaining = Constants.ANSWER_PERIOD * 1000;
+			try {
+				Deadline deadline = deadlines.First(d => d.kind == Deadline.Kind.R3VotesDue);
+				res.timeRemaining = ComputeTimeUntilDeadline(deadline.dueBy) * 1000;
+			} catch {
+				res.timeRemaining = Constants.R3_VOTING_PERIOD * 1000;
+			}
 
 			//Set value
 			cpdc.task.SetResult(res);
@@ -934,7 +945,9 @@ namespace NeuralNonsense {
 								Random.Shared.Shuffle(votingOrder);
 								phaseChangeProcessed = false;
 								phase = roundNumber < 3 ? Phase.Vote : Phase.R3Vote;
-								deadlines.First(d => d.kind == Deadline.Kind.AnswersDue).cancel.Cancel();
+								try {
+									deadlines.First(d => d.kind == Deadline.Kind.AnswersDue).cancel.Cancel();
+								} catch { }
 								continue;
 							}
 
@@ -976,7 +989,9 @@ namespace NeuralNonsense {
 							if(votes.Count == members.Values.Count(m => !string.IsNullOrEmpty(m.currentConnection) && (m.type == Member.Type.Player || m.type == Member.Type.Audience))) {
 								//Advance to results
 								await EndVoting();
-								deadlines.First(d => d.kind == Deadline.Kind.VotesDue).cancel.Cancel();
+								try {
+									deadlines.First(d => d.kind == Deadline.Kind.VotesDue).cancel.Cancel();
+								} catch { }
 								continue;
 							}
 

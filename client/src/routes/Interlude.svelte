@@ -24,7 +24,7 @@
 					body2: "Are you ready?",
 				};
 				break;
-			case 0:
+			case 3:
 				currentSlide = {
 					title: "It's Time for Round 3: Neural Showdown",
 					body: "Now, everyone faces the same prompt, and your answers go up all at once!",
