@@ -18,6 +18,7 @@ export interface ResultsPhaseData {
     humanAnswer: string,
     aiAnswer: string,
     humanPoints: number,
+	numVotes: number,
     unanimity: boolean
 }
 
@@ -34,6 +35,7 @@ export interface R3ResultsPhaseData {
     answers: string[], //Indices shared <-----| (use game.r3AnswerIndexMapping for consistent ordering)
 	wasHuman: boolean[], //Indices shared <---|
     humanPoints: number[], //Indices shared <-|
+	numVotes: number[], //Indices shared <----|
     unanimity: boolean[], //Indices shared <--|
 	creators: string[], //Indices shared <----|
 }

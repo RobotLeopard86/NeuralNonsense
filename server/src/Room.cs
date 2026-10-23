@@ -1110,6 +1110,11 @@ namespace NeuralNonsense {
 								await ServiceContainer.instance.hubCtx.Clients.Group(code).ViewTransition("end");
 								roundNumber = 0;
 								phaseChangeProcessed = true;
+								foreach(Deadline d in deadlines) {
+									d.cancel.Cancel();
+									d.cancel.Dispose();
+								}
+								deadlines.Clear();
 							}
 							break;
 					}
