@@ -57,8 +57,8 @@
     </div>
 
     <!-- Winner display -->
-    <p class="text-white text-base font-bold">WINNER{results[0] ? results[0].attainers.length > 1 ? "S" : "" : ""}</p>
-    <span class="flex flex-row text-white font-bold text-4xl mb-8 text-wrap max-w-2/3">
+    <p class="text-white text-base font-bold text-center">WINNER{results[0] ? results[0].attainers.length > 1 ? "S" : "" : ""}</p>
+    <span class="flex flex-row text-white font-bold text-4xl mb-8 text-wrap text-center w-full">
         {#if results.length > 0}
         {#each results[0].attainers as winner}
             <span class="mx-4">{winner.name}</span>

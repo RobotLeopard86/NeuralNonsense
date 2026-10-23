@@ -32,7 +32,7 @@
 	{/if}
         
 	<!-- Body zone -->
-	<div class="w-3/4 min-h-[85dvh] flex flex-col place-content-center px-4">
+	<div class="w-full min-h-[85dvh] flex flex-col place-content-center px-4">
 		<!-- Header -->
 		<div class="w-full flex flex-row items-center mb-25">
 			<!-- Round indicator -->
@@ -56,7 +56,7 @@
 					else return game.state.members.find((m) => m.uuid === id)!.name;
 				})()}
 			</div>
-			{((game.phase ? game.phase : {}) as ResultsPhaseData).humanAnswer || "What an incredible human answer!"}
+			<span class="wrap-break-word">{((game.phase ? game.phase : {}) as ResultsPhaseData).humanAnswer || "What an incredible human answer!"}</span>
 			<div class="flex flex-row justify-start items-center w-full">
 				<div class="w-11/12 rounded-full h-2 bg-white/10">
 					<div class="rounded-full h-2 bg-[#FF2D78]" style={`width: ${Math.max(0, Math.min(((game.phase ? game.phase : {}) as ResultsPhaseData).humanPoints || 0, game.state.round * 1000)) / (game.state.round * 10)}%`}></div>

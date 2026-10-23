@@ -184,12 +184,10 @@ namespace NeuralNonsense {
 				answers = new string[answers.Count + content.r3AiAnswers.Length],
 				selectCount = (byte)members.Values.Count(m => m.type == Member.Type.Player)
 			};
-			int answerIndex = (byte)answers.Keys.ToArray().IndexOf(memberID);
-			if(answerIndex != -1) cr3vpd.yourAnswerIndex = (byte)(answerIndex + content.r3AiAnswers.Length);
-			else cr3vpd.yourAnswerIndex = byte.MaxValue;
 			byte i;
 			for(i = 0; i < content.r3AiAnswers.Length; i++) cr3vpd.answers[i] = content.r3AiAnswers[i];
 			for(; i < content.r3AiAnswers.Length + answers.Count; i++) cr3vpd.answers[i] = answers.Values.ElementAt(i - content.r3AiAnswers.Length);
+			cr3vpd.yourAnswerIndex = (byte)cr3vpd.answers.IndexOf(answers[memberID]);
 			return cr3vpd;
 		}
 
@@ -895,7 +893,7 @@ namespace NeuralNonsense {
 								phaseChangeProcessed = false;
 								phase = Phase.Answer;
 								foreach(Member m in members.Values) m.ready = false;
-								roundNumber = 1;
+								roundNumber = 3;
 								continue;
 							}
 

@@ -60,7 +60,7 @@
         
 	<!-- Body zone -->
 	{#if game.self.type === MemberType.Player || game.self.type === MemberType.Audience}
-		<div class="w-3/4 min-h-[85dvh] flex flex-col place-content-center px-4">
+		<div class="w-full min-h-[85dvh] flex flex-col place-content-center px-4">
 			{#if !timeUp}
 				<div out:fly={{ duration: 500, x: 0, y: 100 }}>
 					<!-- Header -->
@@ -113,7 +113,7 @@
 			{/if}
 		</div>
 	{:else}
-		<div class="w-3/4 min-h-[85dvh] flex flex-col place-content-center px-4">
+		<div class="w-full min-h-[85dvh] flex flex-col place-content-center px-4">
 			<!-- Header -->
 			<div class="w-full flex flex-row items-center mb-25">
 				<!-- Round indicator -->

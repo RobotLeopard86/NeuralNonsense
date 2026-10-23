@@ -52,7 +52,7 @@
 	{/if}
         
 	<!-- Body zone -->
-	<div class="w-3/4 min-h-[85dvh] flex flex-col place-content-center px-4">
+	<div class="w-full min-h-[85dvh] flex flex-col place-content-center px-4">
 		<!-- Header -->
 		<div class="w-full flex flex-row items-center mb-25">
 			<!-- Round indicator -->
@@ -84,7 +84,7 @@
 						</div>
 					{/if}
 					&nbsp;&nbsp;&nbsp;
-					<span class="font-normal">{ans.value}</span>
+					<span class="font-normal wrap-break-word">{ans.value}</span>
 					{#if ans.human}
 						<div class="flex flex-row justify-start items-center w-full">
 							<div class="w-11/12 rounded-full h-2 bg-white/10">
