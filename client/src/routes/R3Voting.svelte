@@ -1,43 +1,43 @@
 <script lang="ts">
-    import { onMount } from "svelte";
-    import { connection, ejectIfNoConnection, leaveRoom } from "../lib/connection.svelte";
-    import { game, MemberType } from "../lib/state.svelte";
-    import SmallNeonButton from "../components/SmallNeonButton.svelte";
-    import { CheckCircleSolid, OpenDoorOutline } from "flowbite-svelte-icons";
-    import type { R3VotePhaseData } from "../lib/phase";
-    import RingTimer from "../components/RingTimer.svelte";
-    import NeonButton from "../components/NeonButton.svelte";
-    import LoadingSpinner from "../components/LoadingSpinner.svelte";
-    import { fly } from "svelte/transition";
+	import { onMount } from "svelte";
+	import { connection, ejectIfNoConnection, leaveRoom } from "../lib/connection.svelte";
+	import { game, MemberType } from "../lib/state.svelte";
+	import SmallNeonButton from "../components/SmallNeonButton.svelte";
+	import { CheckCircleSolid, OpenDoorOutline } from "flowbite-svelte-icons";
+	import type { R3VotePhaseData } from "../lib/phase";
+	import RingTimer from "../components/RingTimer.svelte";
+	import NeonButton from "../components/NeonButton.svelte";
+	import LoadingSpinner from "../components/LoadingSpinner.svelte";
+	import { fly } from "svelte/transition";
 
-    let sending: boolean[] = $state([]);
-    let selected: boolean[] = $state([]);
-    let timeUp = $state(false);
-    let _answers = $derived(((game.phase ? game.phase : {}) as R3VotePhaseData).answers || []);
-    let answers = $derived(_answers.map((_, i) => ({ value: _answers[game.r3AnswerIndexMapping[i]], originalIdx: i})));
+	let sending: boolean[] = $state([]);
+	let selected: boolean[] = $state([]);
+	let timeUp = $state(false);
+	let _answers = $derived(((game.phase ? game.phase : {}) as R3VotePhaseData).answers || []);
+	let answers = $derived(_answers.map((_, i) => ({ value: _answers[game.r3AnswerIndexMapping[i]], originalIdx: game.r3AnswerIndexMapping[i]})));
 
-    const toggleAnswer = async(index: number) => {
-        if(!selected[index] && selected.filter(v => v).length + sending.filter(v => v).length >= ((game.phase ? game.phase : {}) as R3VotePhaseData).selectCount) return;
-        sending[index] = true;
-        await connection().invoke(selected[index] ? "RmVoteR3" : "AddVoteR3", index);
-        selected[index] = !selected[index];
-        sending[index] = false;
-    };
+	const toggleAnswer = async(index: number) => {
+		if(!selected[index] && selected.filter(v => v).length + sending.filter(v => v).length >= ((game.phase ? game.phase : {}) as R3VotePhaseData).selectCount) return;
+		sending[index] = true;
+		await connection().invoke(selected[index] ? "RmVoteR3" : "AddVoteR3", index);
+		selected[index] = !selected[index];
+		sending[index] = false;
+	};
 
-    let initialTimeRemaining: number = $derived(((game.phase ? game.phase : {}) as R3VotePhaseData).timer || 1200000);
-    onMount(async() => {
+	let initialTimeRemaining: number = $derived(((game.phase ? game.phase : {}) as R3VotePhaseData).timer || 1200000);
+	onMount(async() => {
 		await ejectIfNoConnection();
 		let { data, timeRemaining }: { data: R3VotePhaseData, timeRemaining: number, finished: boolean } = await connection().invoke("RefreshR3VotePhaseData");
 		game.phase = data;
-        initialTimeRemaining = timeRemaining;
-        timeUp = initialTimeRemaining <= 0;
-        selected = await connection().invoke("RefreshR3Votes");
-        game.r3AnswerIndexMapping = [];
-        for(let i = 0; i < game.phase.answers.length; i++) {
-            game.r3AnswerIndexMapping.push(i);
-            sending.push(false);
-        }
-        game.r3AnswerIndexMapping = game.r3AnswerIndexMapping.map(v => ({ value: v, sort: Math.random() })).sort((a, b) => a.sort - b.sort).map(v => v.value);
+		initialTimeRemaining = timeRemaining;
+		timeUp = initialTimeRemaining <= 0;
+		selected = await connection().invoke("RefreshR3Votes");
+		game.r3AnswerIndexMapping = [];
+		for(let i = 0; i < game.phase.answers.length; i++) {
+			game.r3AnswerIndexMapping.push(i);
+			sending.push(false);
+		}
+		game.r3AnswerIndexMapping = game.r3AnswerIndexMapping.map(v => ({ value: v, sort: Math.random() })).sort((a, b) => a.sort - b.sort).map(v => v.value);
 	});
 
 	let ready = $state(false);
@@ -52,12 +52,12 @@
 	{/if}
 
 	<!-- Score indicator -->
-    {#if game.self.type === MemberType.Player || game.self.type === MemberType.Audience}
+	{#if game.self.type === MemberType.Player || game.self.type === MemberType.Audience}
 		<div class="absolute top-4 right-4 px-4 py-1 rounded-2xl font-bold text-sm flex items-center justify-center bg-white/5 border-2 border-white/20 text-white">
 			{game.self.score} Points
 		</div>
 	{/if}
-        
+		
 	<!-- Body zone -->
 	{#if game.self.type === MemberType.Player || game.self.type === MemberType.Audience}
 		<div class="w-full min-h-[85dvh] flex flex-col place-content-center px-4">
@@ -83,7 +83,7 @@
 
 					<!-- Responses -->
 					<p class="text-white/50 text-sm text-left mb-2">Selected {selected.filter(v => v).length}/{((game.phase ? game.phase : {}) as R3VotePhaseData).selectCount} answers</p>
-					<div class="grid gap-5 grid-cols-1 lg:grid-cols-2 grid-rows-[{game.r3AnswerIndexMapping.length}] lg:grid-rows-[{game.r3AnswerIndexMapping.length / 2}]">
+					<div class="grid gap-5 grid-cols-1 grid-rows-[{game.r3AnswerIndexMapping.length}]">
 						{#each answers.filter(a => a.originalIdx !== (((game.phase ? game.phase : {}) as R3VotePhaseData).yourAnswerIndex || -1)) as ans}
 							<NeonButton variant="Translucent" onclick={() => toggleAnswer(ans.originalIdx)} disabled={sending[ans.originalIdx]} class="flex flex-row mb-8 justify-start items-center w-full">
 								{#if sending[ans.originalIdx]}
@@ -98,7 +98,7 @@
 									{/if}
 								{/if}
 								&nbsp;&nbsp;&nbsp;
-								<span class="font-normal">{ans.value}</span>
+								<span class="text-left font-normal">{ans.value}</span>
 							</NeonButton>
 						{/each}
 					</div>

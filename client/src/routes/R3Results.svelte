@@ -66,7 +66,7 @@
 		<p class="text-white font-black text-4xl text-left mb-4 pb-6">{((game.phase ? game.phase : {}) as R3ResultsPhaseData).prompt || "An amazing prompt"}</p>
 
 		<!-- Responses -->
-		<div class="grid gap-5 grid-cols-1 lg:grid-cols-2 grid-rows-[{game.r3AnswerIndexMapping.length}] lg:grid-rows-[{game.r3AnswerIndexMapping.length / 2}]">
+		<div class="grid gap-5 grid-cols-1 grid-rows-[{game.r3AnswerIndexMapping.length}]">
 			{#each answers as ans}
 				<div class="px-8 py-4 rounded-2xl font-normal text-lg bg-white/5 border-2 border-white/20 text-white flex flex-col mb-8 justify-start items-center w-full">
 					{#if ans.human}
@@ -84,7 +84,7 @@
 						</div>
 					{/if}
 					&nbsp;&nbsp;&nbsp;
-					<span class="font-normal wrap-break-word">{ans.value}</span>
+					<span class="w-full text-left font-normal wrap-break-word">{ans.value}</span>
 					{#if ans.human}
 						<div class="flex flex-row justify-start items-center w-full">
 							<div class="w-11/12 rounded-full h-2 bg-white/10">
@@ -94,10 +94,10 @@
 							<span class="text-[#FF2D78] text-4xl font-bold">+{ans.points}</span>
 						</div>
 						{#if ans.unanimous}
-							<span class="text-[#FFE600] text-base font-bold">Unanimity bonus!</span>
+							<span class="text-[#FFE600] text-base font-bold text-left">Unanimity bonus!</span>
 						{/if}
 					{:else if ans.unanimous}
-						<span class="text-[#FFE600] text-base font-bold">Unanimity — seems like the AI did a good job!</span>
+						<span class="text-[#FFE600] text-base font-bold text-left">Unanimity — seems like the AI did a good job!</span>
 					{/if}
 				</div>
 			{/each}

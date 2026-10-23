@@ -153,7 +153,7 @@ namespace NeuralNonsense {
 			if(memberID != room.hostUUID) throw new ClientCausedException("You cannot perform this action as you are not the host!");
 
 			//Validate player count to be sure
-			//if(room.members.Count < 3) throw new ClientCausedException("3+ players required to start the game!");
+			if(room.members.Count < 3) throw new ClientCausedException("3+ players required to start the game!");
 
 			//Send start command
 			StartCommand sc = new StartCommand();

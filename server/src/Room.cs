@@ -79,7 +79,7 @@ namespace NeuralNonsense {
 		private Dictionary<string, bool> votes = new Dictionary<string, bool>(); //UUID, selected human answer or not
 		public byte currentAnswerToVoteOn { get; private set; } = 0;
 		private string[] votingOrder = { }; //Order of member UUIDs to vote in
-		private Dictionary<string, byte[]> votesR3 = new Dictionary<string, byte[]>(); //UUID, answer IDs
+		private Dictionary<string, List<byte>> votesR3 = new Dictionary<string, List<byte>>(); //UUID, answer IDs
 
 		private ClientResultsPhaseData currentResults = new ClientResultsPhaseData();
 		private ClientR3ResultsPhaseData currentR3Results = new ClientR3ResultsPhaseData();
@@ -187,7 +187,12 @@ namespace NeuralNonsense {
 			byte i;
 			for(i = 0; i < content.r3AiAnswers.Length; i++) cr3vpd.answers[i] = content.r3AiAnswers[i];
 			for(; i < content.r3AiAnswers.Length + answers.Count; i++) cr3vpd.answers[i] = answers.Values.ElementAt(i - content.r3AiAnswers.Length);
-			cr3vpd.yourAnswerIndex = (byte)cr3vpd.answers.IndexOf(answers[memberID]);
+			byte userPos = 0;
+			foreach(var key in answers.Keys) {
+				if(key == memberID) break;
+				userPos++;
+			}
+			cr3vpd.yourAnswerIndex = (byte)(content.r3AiAnswers.Length + userPos);
 			return cr3vpd;
 		}
 
@@ -525,13 +530,22 @@ namespace NeuralNonsense {
 			}
 
 			//Check that we haven't submitted too many
-			if(votesR3[avc.memberID].Length >= GetR3VotePhaseData(avc.memberID).selectCount) {
+			if(votesR3[avc.memberID].Count >= GetR3VotePhaseData(avc.memberID).selectCount) {
 				avc.task.SetException(new ClientCausedException("Too many answers selected already!"));
 				return;
 			}
 
 			//Lodge vote
-			votesR3[avc.memberID].Append(avc.answerID);
+			votesR3[avc.memberID].Add(avc.answerID);
+
+			//Advance early if all votes are submitted
+			if(votesR3.Count == members.Values.Count(m => (m.type == Member.Type.Player || m.type == Member.Type.Audience) && !string.IsNullOrEmpty(m.currentConnection))
+				&& votesR3.Values.Count(ballot => ballot.Count == GetR3VotePhaseData(avc.memberID).selectCount) == votesR3.Values.Count) {
+				try {
+					deadlines.First(d => d.kind == Deadline.Kind.R3VotesDue).cancel.Cancel();
+					await EndVotingR3();
+				} catch { }
+			}
 
 			//Set the result
 			avc.task.SetResult();
@@ -551,7 +565,7 @@ namespace NeuralNonsense {
 			}
 
 			//Take away the vote
-			votesR3[rvc.memberID] = votesR3[rvc.memberID].Where(v => v != rvc.answerID).ToArray();
+			votesR3[rvc.memberID].Remove(rvc.answerID);
 
 			//Set the result
 			rvc.task.SetResult();
@@ -561,7 +575,7 @@ namespace NeuralNonsense {
 			//Get votes
 			byte[] memberVotes = [];
 			if(votesR3.ContainsKey(gvc.memberID)) {
-				memberVotes = votesR3[gvc.memberID];
+				memberVotes = votesR3[gvc.memberID].ToArray();
 			}
 
 			//Transform to bool array
@@ -637,8 +651,8 @@ namespace NeuralNonsense {
 
 			//Precompute ballot sizes and the largest ballot across all submitted ballots.
 			int maxBallotSize = 0;
-			foreach(byte[] ballot in votesR3.Values) {
-				if(ballot.Length > maxBallotSize) maxBallotSize = ballot.Length;
+			foreach(List<byte> ballot in votesR3.Values) {
+				if(ballot.Count > maxBallotSize) maxBallotSize = ballot.Count;
 			}
 
 			//Unanimity check function
@@ -653,7 +667,7 @@ namespace NeuralNonsense {
 					if(voterID == excludedVoterID) continue;
 
 					//Skip empty ballots
-					int k = ballot.Length;
+					int k = ballot.Count;
 					if(k == 0) continue;
 
 					//Qualifying ballots are those where their sizes are greater than the largest ballot size times the unanimity qualifier threshold
@@ -661,7 +675,7 @@ namespace NeuralNonsense {
 
 					//Update data
 					qualifyingBallots++;
-					if(Array.IndexOf(ballot, answerID) >= 0) qualifyingPicks++;
+					if(ballot.IndexOf(answerID) >= 0) qualifyingPicks++;
 				}
 
 				//At last, the magic
@@ -695,12 +709,12 @@ namespace NeuralNonsense {
 					if(voterID == authorID) continue;
 
 					//Skip empty ballots
-					uint k = (uint)ballot.Length;
+					uint k = (uint)ballot.Count;
 					if(k == 0) continue;
 
 					//Add to weighting
 					totalWeight += k;
-					if(Array.IndexOf(ballot, i) >= 0) weightedPicks += k;
+					if(ballot.IndexOf(i) >= 0) weightedPicks += k;
 				}
 
 				//Set fields
