@@ -56,7 +56,7 @@
 					else return game.state.members.find((m) => m.uuid === id)!.name;
 				})()}
 			</div>
-			<span class="wrap-break-word">{((game.phase ? game.phase : {}) as ResultsPhaseData).humanAnswer || "What an incredible human answer!"}</span>
+			<span class="text-left wrap-break-word">{((game.phase ? game.phase : {}) as ResultsPhaseData).humanAnswer || "What an incredible human answer!"}</span>
 			<div class="flex flex-row justify-start items-center w-full">
 				<div class="w-11/12 rounded-full h-2 bg-white/10">
 					<div class="rounded-full h-2 bg-[#FF2D78]" style={`width: ${Math.max(0, Math.min(((game.phase ? game.phase : {}) as ResultsPhaseData).humanPoints || 0, game.state.round * 1000)) / (game.state.round * 10)}%`}></div>

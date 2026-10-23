@@ -42,7 +42,15 @@ namespace NeuralNonsense {
 			if(!ServiceContainer.instance.gameManager.rooms.ContainsKey(roomCode)) { await Abort("No such room!"); await base.OnConnectedAsync(); }
 
 			//Validate room membership
-			if(!ServiceContainer.instance.gameManager.rooms[roomCode].members.ContainsKey(memberID)) { await Abort("You are not part of this room!"); await base.OnConnectedAsync(); }
+			try {
+				if(!ServiceContainer.instance.gameManager.rooms[roomCode].members.ContainsKey(memberID)) {
+					await Abort("You are not part of this room!");
+					await base.OnConnectedAsync();
+				}
+			} catch {
+				await Abort("You are not part of this room!");
+				await base.OnConnectedAsync();
+			}
 		}
 
 		public override async Task OnConnectedAsync() {

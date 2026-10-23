@@ -83,6 +83,7 @@
 
 					<!-- Responses -->
 					<p class="text-white/50 text-sm text-left mb-2">Selected {selected.filter(v => v).length}/{((game.phase ? game.phase : {}) as R3VotePhaseData).selectCount} answers</p>
+					<p class="text-white font-bold text-sm text-left mb-2">Scroll down to be sure you see everything!</p>
 					<div class="grid gap-5 grid-cols-1 grid-rows-[{game.r3AnswerIndexMapping.length}]">
 						{#each answers.filter(a => a.originalIdx !== (((game.phase ? game.phase : {}) as R3VotePhaseData).yourAnswerIndex || -1)) as ans}
 							<NeonButton variant="Translucent" onclick={() => toggleAnswer(ans.originalIdx)} disabled={sending[ans.originalIdx]} class="flex flex-row mb-8 justify-start items-center w-full">

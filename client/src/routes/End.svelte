@@ -58,13 +58,13 @@
 
     <!-- Winner display -->
     <p class="text-white text-base font-bold text-center">WINNER{results[0] ? results[0].attainers.length > 1 ? "S" : "" : ""}</p>
-    <div class="flex flex-row text-white font-bold text-4xl mb-8 text-wrap place-items-center w-full">
+    <span class="text-white font-bold text-4xl mb-8 text-wrap text-center mx-auto">
         {#if results.length > 0}
-        {#each results[0].attainers as winner}
-            <span class="mx-auto">{winner.name}</span>
+        {#each results[0].attainers as winner, i}
+            {winner.name}{(i < results[0].attainers.length - 1) ? ", " : ""}
         {/each}
         {/if}
-    </div>
+    </span>
 
     <!-- Scoreboard list -->
     <Card class="w-full flex flex-col items-center">

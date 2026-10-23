@@ -36,6 +36,8 @@
 
 	let ready = $state(false);
 	onMount(() => ready = true);
+
+	$inspect(answers);
 </script>
 
 {#if ready}

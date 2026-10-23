@@ -182,7 +182,7 @@
 						<text x="14" y="26" style="fill: white;">1</text>
 					</svg>
 					&nbsp;&nbsp;&nbsp;
-					{((game.phase ? game.phase : {}) as VotePhaseData).humanAnswer || "Answer A"}
+					<span class="text-left wrap-break-word">{((game.phase ? game.phase : {}) as VotePhaseData).humanAnswer || "Answer A"}</span>
 				</div>
 				<div class="px-8 py-4 rounded-2xl font-normal text-lg bg-white/5 border-2 border-white/20 text-white flex flex-row mb-8 justify-start items-center w-full">
 					<svg width="40" height="40">
@@ -190,7 +190,7 @@
 						<text x="15" y="26" style="fill: #1A1035;">2</text>
 					</svg>
 					&nbsp;&nbsp;&nbsp;
-					{((game.phase ? game.phase : {}) as VotePhaseData).aiAnswer || "Answer B"}
+					<span class="text-left wrap-break-word">{((game.phase ? game.phase : {}) as VotePhaseData).aiAnswer || "Answer B"}</span>
 				</div>
 			{:else}
 				<div class="px-8 py-4 rounded-2xl font-normal text-lg bg-white/5 border-2 border-white/20 text-white flex flex-row mb-8 justify-start items-center w-full">
@@ -199,7 +199,7 @@
 						<text x="14" y="26" style="fill: white;">1</text>
 					</svg>
 					&nbsp;&nbsp;&nbsp;
-					{((game.phase ? game.phase : {}) as VotePhaseData).aiAnswer || "Answer B"}
+					<span class="text-left wrap-break-word">{((game.phase ? game.phase : {}) as VotePhaseData).aiAnswer || "Answer B"}</span>
 				</div>
 				<div class="px-8 py-4 rounded-2xl font-normal text-lg bg-white/5 border-2 border-white/20 text-white flex flex-row mb-8 justify-start items-center w-full">
 					<svg width="40" height="40">
@@ -207,7 +207,7 @@
 						<text x="15" y="26" style="fill: #1A1035;">2</text>
 					</svg>
 					&nbsp;&nbsp;&nbsp;
-					{((game.phase ? game.phase : {}) as VotePhaseData).humanAnswer || "Answer A"}
+					<span class="text-left wrap-break-word">{((game.phase ? game.phase : {}) as VotePhaseData).humanAnswer || "Answer A"}</span>
 				</div>
 			{/if}
 
