@@ -624,6 +624,7 @@ namespace NeuralNonsense {
 				humanAnswer = answers[votingOrder[currentAnswerToVoteOn]],
 				aiAnswer = p.aiAnswer,
 				humanPoints = (uint)Math.Ceiling((double)votes.Values.Count(v => v) / votes.Count * roundNumber * 1000),
+				numVotes = (byte)votes.Values.Count(v => v),
 				unanimity = votes.Values.Count(v => v) == votes.Count
 			};
 			if(currentResults.unanimity) currentResults.humanPoints += 500;
@@ -645,6 +646,7 @@ namespace NeuralNonsense {
 				answers = new string[answers.Count + content.r3AiAnswers.Length],
 				wasHuman = new bool[answers.Count + content.r3AiAnswers.Length],
 				humanPoints = new uint[answers.Count + content.r3AiAnswers.Length],
+				numVotes = new byte[answers.Count + content.r3AiAnswers.Length],
 				unanimity = new bool[answers.Count + content.r3AiAnswers.Length],
 				creators = new string[answers.Count + content.r3AiAnswers.Length],
 			};
@@ -688,6 +690,7 @@ namespace NeuralNonsense {
 				currentR3Results.answers[i] = content.r3AiAnswers[i];
 				currentR3Results.wasHuman[i] = false;
 				currentR3Results.humanPoints[i] = 0;
+				currentR3Results.numVotes[i] = (byte)votesR3.Values.Count(ballot => ballot.Contains(i));
 				currentR3Results.unanimity[i] = IsUnanimous(i, "");
 				currentR3Results.creators[i] = "";
 			}
@@ -721,6 +724,7 @@ namespace NeuralNonsense {
 				currentR3Results.answers[i] = answers.Values.ElementAt(j);
 				currentR3Results.wasHuman[i] = true;
 				currentR3Results.humanPoints[i] = totalWeight > 0 ? ((1000 * weightedPicks + totalWeight - 1) / totalWeight) : 0; //This is just integer ceiling division
+				currentR3Results.numVotes[i] = (byte)votesR3.Values.Count(ballot => ballot.Contains(i));
 				currentR3Results.unanimity[i] = IsUnanimous(i, authorID);
 				currentR3Results.creators[i] = answers.Keys.ElementAt(j);
 				if(currentR3Results.unanimity[i]) currentR3Results.humanPoints[i] += 500;
@@ -908,7 +912,7 @@ namespace NeuralNonsense {
 								phaseChangeProcessed = false;
 								phase = Phase.Answer;
 								foreach(Member m in members.Values) m.ready = false;
-								roundNumber = 3;
+								roundNumber = 1;
 								continue;
 							}
 

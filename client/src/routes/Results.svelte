@@ -64,8 +64,9 @@
 				&nbsp;&nbsp;&nbsp;
 				<span class="text-[#FF2D78] text-4xl font-bold">+{((game.phase ? game.phase : {}) as ResultsPhaseData).humanPoints || 0}</span>
 			</div>
+			<p class="text-sm text-white/50 text-left w-full">{((game.phase ? game.phase : {}) as ResultsPhaseData).numVotes} votes</p>
 			{#if ((game.phase ? game.phase : {}) as ResultsPhaseData).unanimity}
-			<span class="text-[#FFE600] text-base font-bold">Unanimity bonus!</span>
+			<span class="text-[#FFE600] text-base font-bold text-left w-full">Unanimity bonus!</span>
 			{/if}
 		</div>
 		<div class="px-8 py-4 rounded-2xl font-normal text-lg bg-white/5 border-2 border-white/20 text-white flex flex-col mb-8 justify-start items-start w-full">

@@ -16,6 +16,7 @@
 				human: phase.wasHuman[idx],
 				points: phase.wasHuman[idx] ? phase.humanPoints[idx] : 0,
 				unanimous: phase.unanimity[idx],
+				numVotes: phase.numVotes[idx],
 				creator: phase.wasHuman[idx] ? phase.creators[idx] : "AI"
 			};
 		});
@@ -93,11 +94,12 @@
 							&nbsp;&nbsp;&nbsp;
 							<span class="text-[#FF2D78] text-4xl font-bold">+{ans.points}</span>
 						</div>
+						<p class="text-sm text-white/50 text-left w-full">{ans.numVotes} votes</p>
 						{#if ans.unanimous}
-							<span class="text-[#FFE600] text-base font-bold text-left">Unanimity bonus!</span>
+							<span class="text-[#FFE600] text-base font-bold text-left w-full">Unanimity bonus!</span>
 						{/if}
 					{:else if ans.unanimous}
-						<span class="text-[#FFE600] text-base font-bold text-left">Unanimity — seems like the AI did a good job!</span>
+						<span class="text-[#FFE600] text-base font-bold text-left w-full">Unanimity — seems you got out-funnied!</span>
 					{/if}
 				</div>
 			{/each}
