@@ -723,6 +723,7 @@ namespace NeuralNonsense {
 				currentR3Results.humanPoints[i] = totalWeight > 0 ? ((1000 * weightedPicks + totalWeight - 1) / totalWeight) : 0; //This is just integer ceiling division
 				currentR3Results.unanimity[i] = IsUnanimous(i, authorID);
 				currentR3Results.creators[i] = answers.Keys.ElementAt(j);
+				if(currentR3Results.unanimity[i]) currentR3Results.humanPoints[i] += 500;
 
 				//Apply member scoring
 				Member m = members[currentR3Results.creators[i]];
