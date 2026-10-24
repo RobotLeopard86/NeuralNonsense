@@ -24,6 +24,13 @@ First, install dependencies. You'll need Node.js, PNPM, and the .NET SDK includi
 
 Then, simply clone the repository and use the provided `setup.sh` script. Neural Nonsense is designed to run on Unix-like systems **only**. Do not expect to get it running on Windows. On first run, all necessary NPM packages will be installed via `pnpm`. The development HTTPS certificate will also be created at this point, and will ask for a root password to generate it. 
 
-Finally, go to the `server/src` directory, rename `Secrets.cs.template` to `Secrets.cs`, and fill out the required fields.
+Finally, go to the `server/src` directory, rename `Secrets.cs.template` to `Secrets.cs`, and fill out the required fields. You may also want to customize `Constants.cs` to your liking.
 
 You can then start the development servers using the provided `run.sh` script (requires `tmux`), which will open the Vite dev server on port `5173`, making it available to the network, and also the ASP.NET backend server on port `6171`. Both use HTTPS, so you may need to add the generated root certificate file (`.certs/rootCA.pem`) to your system's trust store. It is recommended to add `set -g mouse on` to your `tmux` configuration file, which should be at `~/.tmux.conf` to enable mouse and scrolling support in the interface.
+
+## Building for Production
+Assuming you've followed all the steps above to get started, simply run the provided `dist.sh` script. This will build the server for production, package the web bundle, and put it together in one package folder. The HTTPS certificates are inherited from before, but you can customize them if you like by simply replacing the certificate files (`cert.pem` is the public certificate, `dev.pem` is the private key).  
+
+The production build packages the .NET runtime, so you don't need to install anything on the system you'd like to run it on. It should just work.
+
+In addition, when running in production, the server will attempt to serve on port `443`, the standard port for HTTPS. This will require root priviliges on most systems, as binding to ports below `1000` is usually restricted. You will be able to access the client on that port, since the ASP.NET Core server assumes responsibility for hosting both the frontend and backend in production.
