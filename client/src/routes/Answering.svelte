@@ -74,7 +74,7 @@
 					<!-- Header -->
 					<div class="w-full flex flex-row items-center mb-8">
 						<!-- Round indicator -->
-						<span class="px-4 py-1 rounded-2xl w-1/5 font-bold text-lg flex items-center justify-center bg-white/5 border-2 border-white/20 text-white">
+						<span class="px-4 py-1 rounded-2xl w-1/3 font-bold text-lg flex items-center justify-center bg-white/5 border-2 border-white/20 text-white">
 							Round {game.state.round}
 						</span>
 
