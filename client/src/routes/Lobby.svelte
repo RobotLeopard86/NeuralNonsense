@@ -6,7 +6,7 @@
 	import { onMount } from "svelte";
 	import { connection, ejectIfNoConnection, leaveRoom } from "../lib/connection.svelte";
 	import NeonButton from "../components/NeonButton.svelte";
-	import { ArrowRightOutline, EyeOutline, OpenDoorOutline, UserRemoveOutline } from "flowbite-svelte-icons";
+	import { ArrowRightOutline, EyeOutline, MinusOutline, OpenDoorOutline, PlusOutline, UserRemoveOutline } from "flowbite-svelte-icons";
     import SmallNeonButton from "../components/SmallNeonButton.svelte";
     import LoadingSpinner from "../components/LoadingSpinner.svelte";
     import { startGame } from "../lib/client";
@@ -43,6 +43,8 @@
 
 	let ready = $state(false);
 	onMount(() => ready = true);
+
+	let showJoinInfo = $state(window.matchMedia("(min-width: 64rem)").matches)
 </script>
 
 <Logo />
@@ -56,40 +58,49 @@
 	{/if}
 
 	<!-- How to join -->
-	<Card class="w-full">
-		<p class="text-center text-white/50 text-base col-span-2">HOW TO JOIN</p>
-		<div class="grid grid-rows-2 grid-cols-1 lg:grid-rows-1 lg:grid-cols-2 gap-5">
-			<div class="flex-row items-center">
-				<p class="text-left text-white font-bold text-base">Go to:</p>
-				<p class="text-left text-white text-4xl font-bold min-w-0 wrap-break-word">{window.location.host}</p>
-				{#if game.self.type !== MemberType.Projector}
-					{#if copiedLink}
-						<button class="text-left text-[#00E5FF] font-semibold text-sm">Copied to clipboard!</button>
-					{:else}
-						<button class="text-left text-white/50 underline text-sm cursor-pointer" onclick={copyLink}>Copy link</button>
+	{#if showJoinInfo}
+		<Card class="w-full">
+			<p class="text-center text-white/50 text-base col-span-2">HOW TO JOIN</p>
+			<div class="grid grid-rows-2 grid-cols-1 lg:grid-rows-1 lg:grid-cols-2 gap-5">
+				<div class="flex-row items-center">
+					<p class="text-left text-white font-bold text-base">Go to:</p>
+					<p class="text-left text-white text-4xl font-bold min-w-0 wrap-break-word">{window.location.host}</p>
+					{#if game.self.type !== MemberType.Projector}
+						{#if copiedLink}
+							<button class="text-left text-[#00E5FF] font-semibold text-sm">Copied to clipboard!</button>
+						{:else}
+							<button class="text-left text-white/50 underline text-sm cursor-pointer" onclick={copyLink}>Copy link</button>
+						{/if}
 					{/if}
-				{/if}
-				<br />
-				<br />
-				<p class="text-left text-white font-bold text-base">Use room code:</p>
-				<p class="text-left text-white text-4xl font-bold tracking-[0.5em] lg:tracking-[0.9em] wrap-break-word">{game.roomCode}</p>
-				{#if game.self.type !== MemberType.Projector}
-					{#if copiedCode}
-						<button class="text-left text-[#00E5FF] font-semibold text-sm">Copied to clipboard!</button>
-					{:else}
-						<button class="text-left text-white/50 underline text-sm cursor-pointer" onclick={copyCode}>Copy game code</button>
+					<br />
+					<br />
+					<p class="text-left text-white font-bold text-base">Use room code:</p>
+					<p class="text-left text-white text-4xl font-bold tracking-[0.5em] lg:tracking-[0.9em] wrap-break-word">{game.roomCode}</p>
+					{#if game.self.type !== MemberType.Projector}
+						{#if copiedCode}
+							<button class="text-left text-[#00E5FF] font-semibold text-sm">Copied to clipboard!</button>
+						{:else}
+							<button class="text-left text-white/50 underline text-sm cursor-pointer" onclick={copyCode}>Copy game code</button>
+						{/if}
 					{/if}
-				{/if}
-			</div>
-			<div class="flex-row place-items-center">
-				<p class="text-left lg:text-center text-white font-bold text-base">Or, scan me:</p>
-				<div class="rounded-2xl w-1/2 bg-white border-black border-5">
-					<SVGQR data={joinLink} class="inset-3" />
+				</div>
+				<div class="flex-row place-items-center">
+					<p class="text-left lg:text-center text-white font-bold text-base">Or, scan me:</p>
+					<div class="rounded-2xl w-1/2 bg-white border-black border-5">
+						<SVGQR data={joinLink} class="inset-3" />
+					</div>
 				</div>
 			</div>
-		</div>
-	</Card>
-	<br />
+			<SmallNeonButton variant="Translucent" onclick={() => showJoinInfo = false} class="w-full mx-auto mt-4">
+				<MinusOutline size="xl" />&nbsp;&nbsp;Hide Joining Info
+			</SmallNeonButton>
+		</Card>
+		<br />
+	{:else}
+		<SmallNeonButton variant="Translucent" onclick={() => showJoinInfo = true} class="w-full mx-auto my-4">
+			<PlusOutline size="xl" />&nbsp;&nbsp;Show Joining Info
+		</SmallNeonButton>
+	{/if}
 
 	<!-- Players list -->
 	<Card class="w-full flex flex-col items-center">
@@ -100,9 +111,6 @@
 					{member.name}
 					{#if member.uuid == game.self.uuid}
 						<span class="text-[#00E5FF] rounded-4xl bg-[#00E5FF]/25 px-4 py-1 mx-4">YOU</span>
-						{#if member.uuid == game.state.hostID}
-							<span class="text-[#FF2D78] rounded-4xl bg-[#FF2D78]/25 px-4 py-1">HOST</span>
-						{/if}
 					{:else if member.uuid == game.state.hostID}
 						<span class="text-[#FF2D78] rounded-4xl bg-[#FF2D78]/25 px-4 py-1 mx-4">HOST</span>
 					{/if}
@@ -124,7 +132,7 @@
 	<!-- Projector view launch button -->
 	{#if game.self.uuid == game.state.hostID}
 		<NeonButton variant="Translucent" onclick={launchProjector} class="w-full my-4">
-			<EyeOutline size="xl" />&nbsp;&nbsp;Launch Projector View (New Tab)
+			<EyeOutline size="xl" />&nbsp;&nbsp;Open Projector Tab
 		</NeonButton>
 	{/if}
 
