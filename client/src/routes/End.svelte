@@ -93,9 +93,10 @@
 
     <!-- Post-game options -->
     {#if game.self.type !== MemberType.Projector}
+		<!-- Currently broken and thus disabled
 		<NeonButton variant="Yellow" onclick={playAgain} class="w-full mb-4">
 			<RefreshOutline size="xl" />&nbsp;&nbsp;Play Again
-		</NeonButton>
+		</NeonButton> -->
 		<NeonButton variant="Translucent" onclick={leaveRoom} class="w-full mb-4">
 			<HomeOutline size="xl" />&nbsp;&nbsp;Leave Room
 		</NeonButton>

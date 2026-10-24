@@ -88,6 +88,7 @@
 					{/if}
 					&nbsp;&nbsp;&nbsp;
 					<span class="w-full text-left font-normal wrap-break-word">{ans.value}</span>
+					<p class="text-sm text-white/50 text-left w-full">{ans.numVotes} votes</p>
 					{#if ans.human}
 						<div class="flex flex-row justify-start items-center w-full">
 							<div class="w-11/12 rounded-full h-2 bg-white/10">
@@ -96,12 +97,10 @@
 							&nbsp;&nbsp;&nbsp;
 							<span class="text-[#FF2D78] text-4xl font-bold">+{ans.points}</span>
 						</div>
-						<p class="text-sm text-white/50 text-left w-full">{ans.numVotes} votes</p>
 						{#if ans.unanimous}
 							<span class="text-[#FFE600] text-base font-bold text-left w-full">Unanimity bonus!</span>
 						{/if}
 					{:else if ans.unanimous}
-						<p class="text-sm text-white/50 text-left w-full">{ans.numVotes} votes</p>
 						<span class="text-[#FFE600] text-base font-bold text-left w-full">Unanimity — seems you got out-funnied!</span>
 					{/if}
 				</div>
