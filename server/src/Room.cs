@@ -627,7 +627,7 @@ namespace NeuralNonsense {
 				humanPoints = (uint)Math.Ceiling((double)votes.Values.Count(v => v) / votes.Count * roundNumber * 1000),
 				humanVotes = (uint)votes.Values.Count(v => v),
 				aiVotes = (uint)votes.Values.Count(v => !v),
-				unanimity = votes.Values.Count(v => v) == votes.Count
+				unanimity = votes.Count > 0 && votes.Values.Count(v => v) == votes.Count
 			};
 			if(currentResults.unanimity) currentResults.humanPoints += 500;
 
@@ -1007,7 +1007,7 @@ namespace NeuralNonsense {
 							}
 
 							//Early proceed
-							if(votes.Count == members.Values.Count(m => !string.IsNullOrEmpty(m.currentConnection) && (m.type == Member.Type.Player || m.type == Member.Type.Audience))) {
+							if(votes.Count >= members.Values.Count(m => !string.IsNullOrEmpty(m.currentConnection) && (m.type == Member.Type.Player || m.type == Member.Type.Audience)) - 1) {
 								//Advance to results
 								await EndVoting();
 								try {

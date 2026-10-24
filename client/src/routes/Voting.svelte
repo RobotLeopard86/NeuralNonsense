@@ -91,7 +91,7 @@
 							{#if voted && choseHuman}
 								<LoadingSpinner size={30} stroke={4} minDegrees={1} maxDegrees={120} />
 							{:else}
-								<svg width="40" height="40">
+								<svg width="40" height="40" class="w-10 h-10">
 									<circle cx="20" cy="20" r="15" fill="#FF2D78" style="filter: drop-shadow(0 0 2px #FF2D78);" />
 									<text x="14" y="26" style="fill: white;">1</text>
 								</svg>
@@ -103,7 +103,7 @@
 							{#if voted && !choseHuman}
 								<LoadingSpinner size={30} stroke={4} minDegrees={1} maxDegrees={120} />
 							{:else}
-								<svg width="40" height="40">
+								<svg width="40" height="40" class="w-10 h-10">
 									<circle cx="20" cy="20" r="15" fill="#00E5FF" style="filter: drop-shadow(0 0 2px #00E5FF);" />
 									<text x="15" y="26" style="fill: #1A1035;">2</text>
 								</svg>
@@ -116,7 +116,7 @@
 							{#if voted && !choseHuman}
 								<LoadingSpinner size={30} stroke={4} minDegrees={1} maxDegrees={120} />
 							{:else}
-								<svg width="40" height="40">
+								<svg width="40" height="40" class="w-10 h-10">
 									<circle cx="20" cy="20" r="15" fill="#FF2D78" style="filter: drop-shadow(0 0 2px #FF2D78);" />
 									<text x="14" y="26" style="fill: white;">1</text>
 								</svg>
@@ -128,7 +128,7 @@
 							{#if voted && choseHuman}
 								<LoadingSpinner size={30} stroke={4} minDegrees={1} maxDegrees={120} />
 							{:else}
-								<svg width="40" height="40">
+								<svg width="40" height="40" class="w-10 h-10">
 									<circle cx="20" cy="20" r="15" fill="#00E5FF" style="filter: drop-shadow(0 0 2px #00E5FF);" />
 									<text x="15" y="26" style="fill: #1A1035;">2</text>
 								</svg>
@@ -174,43 +174,43 @@
 			<p class="text-white/50 text-base text-left mb-2">THE PROMPT WAS:</p>
 			<p class="text-white font-black text-4xl text-left mb-4 pb-6">{((game.phase ? game.phase : {}) as VotePhaseData).prompt || "An amazing prompt"}</p>
 			{#if ((game.phase ? game.phase : {}) as VotePhaseData).humanID === game.self.uuid}
-			<p class="text-white font-bold text-xl text-center mb-4">Your answer is being judged!</p>
+			<p class="text-white font-semibold text-xl text-center mb-4">Your answer is being judged!</p>
 			{/if}
 
 			<!-- Answers -->
 			{#if showHumanFirst}
 				<div class="px-8 py-4 rounded-2xl font-normal text-lg bg-white/5 border-2 border-white/20 opacity-30 cursor-not-allowed text-white flex flex-row mb-8 justify-start items-center w-full">
-					<svg width="40" height="40">
+					<svg width="40" height="40" class="w-10 h-10">
 						<circle cx="20" cy="20" r="15" fill="#FF2D78" style="filter: drop-shadow(0 0 2px #FF2D78);" />
 						<text x="14" y="26" style="fill: white;">1</text>
 					</svg>
-					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-					<span class="text-left wrap-break-word">{((game.phase ? game.phase : {}) as VotePhaseData).humanAnswer || "Answer A"}</span>
+					&nbsp;&nbsp;&nbsp;
+					<span class="text-left wrap-break-word w-full font-normal">{((game.phase ? game.phase : {}) as VotePhaseData).humanAnswer || "Answer A"}</span>
 				</div>
 				<div class="px-8 py-4 rounded-2xl font-normal text-lg bg-white/5 border-2 border-white/20 opacity-30 cursor-not-allowed text-white flex flex-row mb-8 justify-start items-center w-full">
-					<svg width="40" height="40">
+					<svg width="40" height="40" class="w-10 h-10">
 						<circle cx="20" cy="20" r="15" fill="#00E5FF" style="filter: drop-shadow(0 0 2px #00E5FF);" />
 						<text x="15" y="26" style="fill: #1A1035;">2</text>
 					</svg>
-					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-					<span class="text-left wrap-break-word">{((game.phase ? game.phase : {}) as VotePhaseData).aiAnswer || "Answer B"}</span>
+					&nbsp;&nbsp;&nbsp;
+					<span class="text-left wrap-break-word w-full font-normal">{((game.phase ? game.phase : {}) as VotePhaseData).aiAnswer || "Answer B"}</span>
 				</div>
 			{:else}
 				<div class="px-8 py-4 rounded-2xl font-normal text-lg bg-white/5 border-2 border-white/20 opacity-30 cursor-not-allowed text-white flex flex-row mb-8 justify-start items-center w-full">
-					<svg width="40" height="40">
+					<svg width="40" height="40" class="w-10 h-10">
 						<circle cx="20" cy="20" r="15" fill="#FF2D78" style="filter: drop-shadow(0 0 2px #FF2D78);" />
 						<text x="14" y="26" style="fill: white;">1</text>
 					</svg>
-					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-					<span class="text-left wrap-break-word">{((game.phase ? game.phase : {}) as VotePhaseData).aiAnswer || "Answer B"}</span>
+					&nbsp;&nbsp;&nbsp;
+					<span class="text-left wrap-break-word w-full font-normal">{((game.phase ? game.phase : {}) as VotePhaseData).aiAnswer || "Answer B"}</span>
 				</div>
 				<div class="px-8 py-4 rounded-2xl font-normal text-lg bg-white/5 border-2 border-white/20 opacity-30 cursor-not-allowed text-white flex flex-row mb-8 justify-start items-center w-full">
-					<svg width="40" height="40">
+					<svg width="40" height="40" class="w-10 h-10">
 						<circle cx="20" cy="20" r="15" fill="#00E5FF" style="filter: drop-shadow(0 0 2px #00E5FF);" />
 						<text x="15" y="26" style="fill: #1A1035;">2</text>
 					</svg>
-					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-					<span class="text-left wrap-break-word">{((game.phase ? game.phase : {}) as VotePhaseData).humanAnswer || "Answer A"}</span>
+					&nbsp;&nbsp;&nbsp;
+					<span class="text-left wrap-break-word w-full font-normal">{((game.phase ? game.phase : {}) as VotePhaseData).humanAnswer || "Answer A"}</span>
 				</div>
 			{/if}
 
