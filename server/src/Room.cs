@@ -162,7 +162,8 @@ namespace NeuralNonsense {
 		private ClientVotePhaseData GetVotePhaseData() {
 			ClientVotePhaseData cvpd = new ClientVotePhaseData {
 				timer = Constants.VOTING_PERIOD,
-				humanAnswer = answers[votingOrder[currentAnswerToVoteOn]]
+				humanAnswer = answers[votingOrder[currentAnswerToVoteOn]],
+				humanID = votingOrder[currentAnswerToVoteOn]
 			};
 			switch(roundNumber) {
 				case 1:
@@ -891,7 +892,9 @@ namespace NeuralNonsense {
 									r3AiAnswers = new string[playerCount],
 									r3Prompt = ""
 								};
-								ServiceContainer.instance.aiGenerator.GenerateContent(ref content);
+								_ = ServiceContainer.instance.aiGenerator.GenerateContent((uint)members.Values.Count(m => m.type == Member.Type.Player)).ContinueWith(t => {
+									content = t.Result;
+								});
 
 								//Assign IDs
 								idContentMappings = new Dictionary<string, byte>();
@@ -907,12 +910,12 @@ namespace NeuralNonsense {
 							}
 
 							//Readiness check
-							if(members.Values.Where(m => m.type == Member.Type.Player || m.type == Member.Type.Audience).Count(m => !m.ready) == 0) {
+							if(!string.IsNullOrEmpty(content.r3Prompt) && members.Values.Where(m => m.type == Member.Type.Player || m.type == Member.Type.Audience).Count(m => !m.ready) == 0) {
 								//Set phases and client state
 								phaseChangeProcessed = false;
 								phase = Phase.Answer;
 								foreach(Member m in members.Values) m.ready = false;
-								roundNumber = 3;
+								roundNumber = 1;
 								continue;
 							}
 

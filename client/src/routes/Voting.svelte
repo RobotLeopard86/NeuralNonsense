@@ -97,7 +97,7 @@
 								</svg>
 							{/if}
 							&nbsp;&nbsp;&nbsp;
-							<span class="font-normal">{((game.phase ? game.phase : {}) as VotePhaseData).humanAnswer || "Answer A"}</span>
+							<span class="text-left w-full wrap-break-word font-normal">{((game.phase ? game.phase : {}) as VotePhaseData).humanAnswer || "Answer A"}</span>
 						</NeonButton>
 						<NeonButton variant="Translucent" onclick={() => submit(false)} disabled={voted} class="flex flex-row mb-8 justify-start items-center w-full">
 							{#if voted && !choseHuman}
@@ -109,7 +109,7 @@
 								</svg>
 							{/if}
 							&nbsp;&nbsp;&nbsp;
-							<span class="font-normal">{((game.phase ? game.phase : {}) as VotePhaseData).aiAnswer || "Answer B"}</span>
+							<span class="text-left w-full wrap-break-word font-normal">{((game.phase ? game.phase : {}) as VotePhaseData).aiAnswer || "Answer B"}</span>
 						</NeonButton>
 					{:else}
 						<NeonButton variant="Translucent" onclick={() => submit(false)} disabled={voted} class="flex flex-row mb-8 justify-start items-center w-full">
@@ -122,7 +122,7 @@
 								</svg>
 							{/if}
 							&nbsp;&nbsp;&nbsp;
-							<span class="font-normal">{((game.phase ? game.phase : {}) as VotePhaseData).aiAnswer || "Answer B"}</span>
+							<span class="text-left w-full wrap-break-word font-normal">{((game.phase ? game.phase : {}) as VotePhaseData).aiAnswer || "Answer B"}</span>
 						</NeonButton>
 						<NeonButton variant="Translucent" onclick={() => submit(true)} disabled={voted} class="flex flex-row mb-8 justify-start items-center w-full">
 							{#if voted && choseHuman}
@@ -134,7 +134,7 @@
 								</svg>
 							{/if}
 							&nbsp;&nbsp;&nbsp;
-							<span class="font-normal">{((game.phase ? game.phase : {}) as VotePhaseData).humanAnswer || "Answer A"}</span>
+							<span class="text-left w-full wrap-break-word font-normal">{((game.phase ? game.phase : {}) as VotePhaseData).humanAnswer || "Answer A"}</span>
 						</NeonButton>
 					{/if}
 				</div>

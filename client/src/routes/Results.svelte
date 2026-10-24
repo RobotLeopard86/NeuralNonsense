@@ -56,7 +56,7 @@
 					else return game.state.members.find((m) => m.uuid === id)!.name;
 				})()}
 			</div>
-			<span class="text-left wrap-break-word">{((game.phase ? game.phase : {}) as ResultsPhaseData).humanAnswer || "What an incredible human answer!"}</span>
+			<span class="text-left w-full wrap-break-word">{((game.phase ? game.phase : {}) as ResultsPhaseData).humanAnswer || "What an incredible human answer!"}</span>
 			<div class="flex flex-row justify-start items-center w-full">
 				<div class="w-11/12 rounded-full h-2 bg-white/10">
 					<div class="rounded-full h-2 bg-[#FF2D78]" style={`width: ${Math.max(0, Math.min(((game.phase ? game.phase : {}) as ResultsPhaseData).humanPoints || 0, game.state.round * 1000)) / (game.state.round * 10)}%`}></div>
@@ -73,7 +73,7 @@
 			<div class="flex flex-row justify-start items-center w-full mb-4">
 				<span class="bg-[#00E5FF] text-[#1A1035] font-bold text-sm px-8 py-1 rounded-full flex flex-row items-center"><ServerOutline size="md" />&nbsp;AI</span>
 			</div>
-			{((game.phase ? game.phase : {}) as ResultsPhaseData).aiAnswer || "What an incredible robot answer!"}
+			<span class="text-left w-full wrap-break-word">{((game.phase ? game.phase : {}) as ResultsPhaseData).aiAnswer || "What an incredible robot answer!"}</span>
 		</div>
 	</div>
 </main>

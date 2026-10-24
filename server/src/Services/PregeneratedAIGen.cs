@@ -18,7 +18,15 @@ namespace NeuralNonsense {
 			sourceData = JsonSerializer.Deserialize<List<PregenData>>(json) ?? throw new InvalidOperationException("Failed to deserialize pregen_content.json");
 		}
 
-		public void GenerateContent(ref Room.AIContent content) {
+		public async Task<Room.AIContent> GenerateContent(uint playerCount) {
+			//Prepare
+			Room.AIContent content = new Room.AIContent {
+				r1 = new Room.AIContent.Pair[playerCount],
+				r2 = new Room.AIContent.Pair[playerCount],
+				r3Prompt = "",
+				r3AiAnswers = new string[playerCount]
+			};
+
 			//Shuffle the source data for *random magic*
 			PregenData[] pool = sourceData.ToArray();
 			Random.Shared.Shuffle(pool);
@@ -72,6 +80,8 @@ namespace NeuralNonsense {
 					}
 				}
 			}
+
+			return content;
 		}
 	}
 }
