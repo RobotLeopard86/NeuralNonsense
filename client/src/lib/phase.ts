@@ -18,7 +18,8 @@ export interface ResultsPhaseData {
     humanAnswer: string,
     aiAnswer: string,
     humanPoints: number,
-	numVotes: number,
+	humanVotes: number,
+	aiVotes: number,
     unanimity: boolean
 }
 

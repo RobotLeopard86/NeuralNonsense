@@ -74,7 +74,8 @@ namespace NeuralNonsense {
 		public string humanAnswer;
 		public string aiAnswer;
 		public uint humanPoints;
-		public byte numVotes;
+		public uint humanVotes;
+		public uint aiVotes;
 		public bool unanimity;
 	}
 

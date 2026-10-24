@@ -625,7 +625,8 @@ namespace NeuralNonsense {
 				humanAnswer = answers[votingOrder[currentAnswerToVoteOn]],
 				aiAnswer = p.aiAnswer,
 				humanPoints = (uint)Math.Ceiling((double)votes.Values.Count(v => v) / votes.Count * roundNumber * 1000),
-				numVotes = (byte)votes.Values.Count(v => v),
+				humanVotes = (uint)votes.Values.Count(v => v),
+				aiVotes = (uint)votes.Values.Count(v => !v),
 				unanimity = votes.Values.Count(v => v) == votes.Count
 			};
 			if(currentResults.unanimity) currentResults.humanPoints += 500;
