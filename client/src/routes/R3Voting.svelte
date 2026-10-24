@@ -3,7 +3,7 @@
 	import { connection, ejectIfNoConnection, leaveRoom } from "../lib/connection.svelte";
 	import { game, MemberType } from "../lib/state.svelte";
 	import SmallNeonButton from "../components/SmallNeonButton.svelte";
-	import { CheckCircleSolid, OpenDoorOutline } from "flowbite-svelte-icons";
+	import { CheckCircleOutline, CheckCircleSolid, OpenDoorOutline } from "flowbite-svelte-icons";
 	import type { R3VotePhaseData } from "../lib/phase";
 	import RingTimer from "../components/RingTimer.svelte";
 	import NeonButton from "../components/NeonButton.svelte";
@@ -93,9 +93,7 @@
 									{#if selected[ans.originalIdx]}
 										<CheckCircleSolid size="lg" class="text-[#00E5FF]" />
 									{:else}
-										<svg class="w-6 h-6 text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"> 
-											<path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
-										</svg>
+										<CheckCircleOutline size="lg" class="text-white" />
 									{/if}
 								{/if}
 								&nbsp;&nbsp;&nbsp;
@@ -138,7 +136,7 @@
 			<div class="grid gap-5 grid-cols-1 lg:grid-cols-2 grid-rows-[{game.r3AnswerIndexMapping.length}] lg:grid-rows-[{game.r3AnswerIndexMapping.length / 2}]">
 				{#each answers.filter(a => a.originalIdx !== (((game.phase ? game.phase : {}) as R3VotePhaseData).yourAnswerIndex || 255)) as ans}
 					<div class="px-8 py-4 rounded-2xl font-normal text-lg bg-white/5 border-2 border-white/20 text-white flex flex-row mb-8 justify-start items-center w-full">
-						<svg class="w-6 h-6 text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"> 
+						<svg class="w-6 h-6 shrink-0 text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"> 
 							<path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
 						</svg>
 						&nbsp;&nbsp;&nbsp;

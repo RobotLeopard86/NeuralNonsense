@@ -49,7 +49,7 @@
 		<div class="px-8 py-4 rounded-2xl font-normal text-lg bg-white/5 border-2 border-white/20 text-white flex flex-col mb-8 items-start w-full">
 			<div class="flex flex-row justify-start items-center w-full mb-4 text-white/50 text-sm">
 				<span class="bg-[#FF2D78] text-white font-bold text-sm px-3 py-1 rounded-full flex flex-row items-center"><UserOutline size="md" />&nbsp;HUMAN</span>
-				&nbsp;&nbsp;&nbsp;
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 				{(() => {
 					let id = ((game.phase ? game.phase : {}) as ResultsPhaseData).humanID || undefined;
 					if(id == undefined) return "Someone";
@@ -61,10 +61,10 @@
 				<div class="w-11/12 rounded-full h-2 bg-white/10">
 					<div class="rounded-full h-2 bg-[#FF2D78]" style={`width: ${Math.max(0, Math.min(((game.phase ? game.phase : {}) as ResultsPhaseData).humanPoints || 0, game.state.round * 1000)) / (game.state.round * 10)}%`}></div>
 				</div>
-				&nbsp;&nbsp;&nbsp;
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 				<span class="text-[#FF2D78] text-4xl font-bold">+{((game.phase ? game.phase : {}) as ResultsPhaseData).humanPoints || 0}</span>
 			</div>
-			<p class="text-sm text-white/50 text-left w-full">{((game.phase ? game.phase : {}) as ResultsPhaseData).numVotes} votes</p>
+			<p class="text-sm text-white/50 text-left w-full">{((game.phase ? game.phase : {}) as ResultsPhaseData).numVotes} vote{((game.phase ? game.phase : {}) as ResultsPhaseData).numVotes != 1 ? "s" : ""}</p>
 			{#if ((game.phase ? game.phase : {}) as ResultsPhaseData).unanimity}
 			<span class="text-[#FFE600] text-base font-bold text-left w-full">Unanimity bonus!</span>
 			{/if}
@@ -74,6 +74,7 @@
 				<span class="bg-[#00E5FF] text-[#1A1035] font-bold text-sm px-8 py-1 rounded-full flex flex-row items-center"><ServerOutline size="md" />&nbsp;AI</span>
 			</div>
 			<span class="text-left w-full wrap-break-word">{((game.phase ? game.phase : {}) as ResultsPhaseData).aiAnswer || "What an incredible robot answer!"}</span>
+			<p class="text-sm text-white/50 text-left w-full">{game.state.members.length - ((game.phase ? game.phase : {}) as ResultsPhaseData).numVotes} vote{(game.state.members.length - ((game.phase ? game.phase : {}) as ResultsPhaseData).numVotes) != 1 ? "s" : ""}</p>
 		</div>
 	</div>
 </main>

@@ -101,6 +101,7 @@
 							<span class="text-[#FFE600] text-base font-bold text-left w-full">Unanimity bonus!</span>
 						{/if}
 					{:else if ans.unanimous}
+						<p class="text-sm text-white/50 text-left w-full">{ans.numVotes} votes</p>
 						<span class="text-[#FFE600] text-base font-bold text-left w-full">Unanimity — seems you got out-funnied!</span>
 					{/if}
 				</div>
