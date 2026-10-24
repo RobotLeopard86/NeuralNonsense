@@ -48,13 +48,13 @@
 	onMount(() => ready = true);
 </script>
 
+<!-- Leave button -->
+{#if game.self.type !== MemberType.Projector}
+	<SmallNeonButton variant="Red" onclick={leaveRoom} class="absolute top-4 left-4"><OpenDoorOutline size="lg" />&nbsp;&nbsp;Leave Room</SmallNeonButton>
+{/if}
+
 {#if ready}
 <main in:fly={{ delay: 500, duration: 500, x: 0, y: 100 }} out:fly={{ duration: 500, x: 0, y: -100 }}  class="w-full min-h-full flex flex-col place-content-center px-4">
-    <!-- Leave button -->
-	{#if game.self.type !== MemberType.Projector}
-		<SmallNeonButton variant="Red" onclick={leaveRoom} class="absolute top-4 left-4"><OpenDoorOutline size="lg" />&nbsp;&nbsp;Leave Room</SmallNeonButton>
-	{/if}
-
     <!-- Message -->
     <div class="grid">
         {#key currentSlide}

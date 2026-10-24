@@ -40,13 +40,13 @@
 	$inspect(answers);
 </script>
 
+<!-- Leave button -->
+{#if game.self.type !== MemberType.Projector}
+	<SmallNeonButton variant="Red" onclick={leaveRoom} class="absolute top-4 left-4"><OpenDoorOutline size="lg" />&nbsp;&nbsp;Leave Room</SmallNeonButton>
+{/if}
+
 {#if ready}
 <main in:fly={{ delay: 500, duration: 500, x: 0, y: 100 }} out:fly={{ duration: 500, x: 0, y: -100 }}  class="w-full min-h-full flex flex-col items-center px-4">
-	<!-- Leave button -->
-	{#if game.self.type !== MemberType.Projector}
-		<SmallNeonButton variant="Red" onclick={leaveRoom} class="absolute top-4 left-4"><OpenDoorOutline size="lg" />&nbsp;&nbsp;Leave Room</SmallNeonButton>
-	{/if}
-
 	<!-- Score indicator -->
     {#if game.self.type === MemberType.Player || game.self.type === MemberType.Audience}
 		<div class="absolute top-4 right-4 px-4 py-1 rounded-2xl font-bold text-sm flex items-center justify-center bg-white/5 border-2 border-white/20 text-white">
