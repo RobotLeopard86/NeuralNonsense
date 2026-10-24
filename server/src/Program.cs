@@ -14,7 +14,7 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 //Configure HTTPS certificates
 X509Certificate2 cert = X509Certificate2.CreateFromPemFile(Constants.HTTPS_CERT_PATH, Constants.HTTPS_KEY_PATH);
 builder.WebHost.ConfigureKestrel(kopts => {
-	kopts.ListenAnyIP(6171, lopts => {
+	kopts.ListenAnyIP(builder.Environment.IsDevelopment() ? 6171 : 443, lopts => {
 		lopts.UseHttps(cert);
 	});
 });
