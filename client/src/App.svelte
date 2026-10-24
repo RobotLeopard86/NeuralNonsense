@@ -2,10 +2,24 @@
 	import Router from "svelte-spa-router";
 	import routes from "./routes";
     import Toast from "./components/Toast.svelte";
-    import { toasts } from "./lib/toast.svelte";
+    import { addToast, toasts } from "./lib/toast.svelte";
     import { game, MemberType } from "./lib/state.svelte";
 
-	let blah = $state(0);
+	let smallScreen = $state(false);
+    $effect(() => {
+		//The check
+        const mediaQuery = window.matchMedia("(min-width: 64rem)");
+        smallScreen = !mediaQuery.matches;
+
+		//Update listener
+        const update = (event: MediaQueryListEvent) => {
+            smallScreen = !event.matches;
+        };
+        mediaQuery.addEventListener("change", update);
+        return () => {
+            mediaQuery.removeEventListener("change", update);
+        };
+    });
 </script>
 
 <div class="relative min-h-dvh bg-[#1A1035] overflow-hidden">
@@ -19,11 +33,19 @@
     ">
 	</div>
 
-	<div class="absolute top-4 right-4 flex flex-col max-w-1/3 items-start align-bottom">
-		{#each toasts.filter((t) => !t.done) as toast (toast.id)}
-			<Toast message={toast.message} duration={toast.duration} bind:done={toast.done} />
-		{/each}
-	</div>
+	{#if smallScreen}
+		<div class="absolute top-4 left-0 right-0 mx-auto flex flex-col max-w-10/12 items-center align-bottom">
+			{#each toasts.filter((t) => !t.done) as toast (toast.id)}
+				<Toast message={toast.message} duration={toast.duration} bind:done={toast.done} smallScreen={true} />
+			{/each}
+		</div>
+	{:else}
+		<div class="absolute top-4 right-4 flex flex-col max-w-1/3 items-start align-bottom">
+			{#each toasts.filter((t) => !t.done) as toast (toast.id)}
+				<Toast message={toast.message} duration={toast.duration} bind:done={toast.done} smallScreen={false} />
+			{/each}
+		</div>
+	{/if}
 
 	{#if game.self.uuid && game.self.type === MemberType.Spectator}
 	<header class="h-10 bg-amber-300/50 border-b-2 border-amber-400 border-solid flex flex-col">

@@ -5,6 +5,7 @@
     interface Props {
         message: string,
         duration: number,
+		smallScreen: boolean,
 		done: boolean
     }
 
@@ -25,8 +26,8 @@
 </script>
 
 {#if timeRemaining > 0}
-	<div class="rounded-2xl bg-[#FF2D78] shadow-[0_0_5px_rgba(255,45,120,0.4)] flex flex-row-reverse items-center px-4 py-2 z-50" in:fly={{ duration: 1000, x: 1000 }} out:fade={{ duration: 1000 }}>
-		<span class="text-white text-base text-right">{props.message}</span>
+	<div class="rounded-2xl bg-[#FF2D78] shadow-[0_0_5px_rgba(255,45,120,0.4)] flex flex-row-reverse items-center px-4 py-2 z-50" in:fly={{ duration: 1000, x: props.smallScreen ? 0 : 1000, y: props.smallScreen ? -100 : 0 }} out:fade={{ duration: 1000 }}>
+		<span class="text-white text-base text-center lg:text-right">{props.message}</span>
 		<span class="mx-2"></span>
 		<button onclick={() => timeRemaining = 0}><CloseOutline size="sm" class="text-white" /></button>
 	</div>
