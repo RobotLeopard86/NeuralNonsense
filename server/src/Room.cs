@@ -183,7 +183,7 @@ namespace NeuralNonsense {
 				prompt = content.r3Prompt,
 				timer = Constants.R3_VOTING_PERIOD,
 				answers = new string[answers.Count + content.r3AiAnswers.Length],
-				selectCount = (byte)members.Values.Count(m => m.type == Member.Type.Player)
+				selectCount = (byte)Math.Floor((float)members.Values.Count(m => m.type == Member.Type.Player) / 2)
 			};
 			byte i;
 			for(i = 0; i < content.r3AiAnswers.Length; i++) cr3vpd.answers[i] = content.r3AiAnswers[i];

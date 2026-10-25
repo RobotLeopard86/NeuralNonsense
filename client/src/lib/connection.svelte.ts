@@ -1,5 +1,5 @@
 import * as SignalR from "@microsoft/signalr";
-import { deriveGameState, deriveMember, game, MemberType, resetState, type ServerGameState, type Member, type ServerMember } from "./state.svelte";
+import { deriveGameState, game, MemberType, resetState, type ServerGameState, type Member, type ServerMember } from "./state.svelte";
 import { push } from "svelte-spa-router";
 import * as jose from "jose";
 import { configureHandlers } from "./client";
