@@ -12,12 +12,19 @@ Environment.SetEnvironmentVariable("DOTNET_hostBuilder:reloadConfigOnChange", "f
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 //Configure HTTPS certificates
-X509Certificate2 cert = X509Certificate2.CreateFromPemFile(Constants.HTTPS_CERT_PATH, Constants.HTTPS_KEY_PATH);
-builder.WebHost.ConfigureKestrel(kopts => {
-	kopts.ListenAnyIP(builder.Environment.IsDevelopment() ? 6171 : 443, lopts => {
-		lopts.UseHttps(cert);
+if(builder.Environment.IsDevelopment()) {
+	X509Certificate2 cert = X509Certificate2.CreateFromPemFile(Constants.HTTPS_CERT_PATH, Constants.HTTPS_KEY_PATH);
+	builder.WebHost.ConfigureKestrel(kopts => {
+		kopts.ListenAnyIP(6171, lopts => {
+			lopts.UseHttps(cert);
+		});
 	});
-});
+} else {
+	X509Certificate2 cert = X509Certificate2.CreateFromPemFile(Constants.HTTPS_CERT_PATH, Constants.HTTPS_KEY_PATH);
+	builder.WebHost.ConfigureKestrel(kopts => {
+		kopts.ListenAnyIP(80);
+	});
+}
 
 //Generate JWT key
 builder.Services.Configure<KeyManagementOptions>(opts => opts.XmlEncryptor = new NullXmlEncryptor());

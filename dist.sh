@@ -13,17 +13,12 @@ mkdir -p dist
 echo "*" > dist/.gitignore
 
 echo "building server... "
-dotnet publish --sc server/NeuralNonsense.Server.csproj -o dist/app -c Release
-rm dist/app/appsettings.Development.json
-echo -en "#!/usr/bin/env bash\n\nset -euo pipefail\ncd \$(dirname "\$0")/app\nexport ASPNETCORE_ENVIRONMENT=Production\nexec ./NeuralNonsense.Server" > dist/run.sh
+dotnet publish --sc server/NeuralNonsense.Server.csproj -o dist -c Release
+rm dist/appsettings.Development.json
+echo -en "#!/usr/bin/env bash\n\nset -euo pipefail\ncd \$(dirname "\$0")\nexport ASPNETCORE_ENVIRONMENT=Production\nexec ./NeuralNonsense.Server" > dist/run.sh
 chmod +x dist/run.sh
 
 echo "building client bundle... "
-pnpm -C client run build --outDir ../dist/app/wwwroot  --minify -m production
-
-echo "copying certificates... "
-mkdir -p dist/.certs
-cp .certs/cert.pem dist/.certs
-cp .certs/dev.pem dist/.certs
+pnpm -C client run build --outDir ../dist/wwwroot  --minify -m production
 
 echo "distribution packaging complete."
