@@ -15,7 +15,7 @@ echo "*" > dist/.gitignore
 echo "building server... "
 dotnet publish --sc server/NeuralNonsense.Server.csproj -o dist/app -c Release
 rm dist/app/appsettings.Development.json
-echo -en "#!/usr/bin/env bash\n\nset -euo pipefail\ncd \$(dirname "\$0")/app\nASPNETCORE_ENVIRONMENT=Production ./NeuralNonsense.Server" > dist/run.sh
+echo -en "#!/usr/bin/env bash\n\nset -euo pipefail\ncd \$(dirname "\$0")/app\nexport ASPNETCORE_ENVIRONMENT=Production\nexec ./NeuralNonsense.Server" > dist/run.sh
 chmod +x dist/run.sh
 
 echo "building client bundle... "

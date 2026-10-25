@@ -58,6 +58,7 @@
 	</div>
 
 	<footer class="h-10">
+		<p class="text-center text-amber-300 text-sm mb-2">This is beta software; expect bugs!</p>
 		<p class="text-center text-white/50 text-sm mb-8">
 			&#169; 2026 Owen Z. Siebers. <a href="https://github.com/RobotLeopard86/NeuralNonsense" target="_blank"><u>Source code</u></a> available under the PolyForm Perimeter License 1.0.1.
 		</p>
