@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.DataProtection.XmlEncryption;
 
 //Setup ASP.NET
 Environment.SetEnvironmentVariable("DOTNET_hostBuilder:reloadConfigOnChange", "false");
+Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 //Configure HTTPS certificates
@@ -20,7 +21,6 @@ if(builder.Environment.IsDevelopment()) {
 		});
 	});
 } else {
-	X509Certificate2 cert = X509Certificate2.CreateFromPemFile(Constants.HTTPS_CERT_PATH, Constants.HTTPS_KEY_PATH);
 	builder.WebHost.ConfigureKestrel(kopts => {
 		kopts.ListenAnyIP(80);
 	});
@@ -66,14 +66,15 @@ builder.Services.AddAuthentication().AddJwtBearer(opts => {
 	};
 });
 builder.Services.AddAuthorization();
+builder.Services.AddHealthChecks();
 
 //Prepare app
 WebApplication app = builder.Build();
 if(app.Environment.IsDevelopment()) {
 	app.UseHsts();
 	app.UseExceptionHandler("/Error");
+	app.UseHttpsRedirection();
 }
-app.UseHttpsRedirection();
 app.UseDefaultFiles();
 app.UseStaticFiles();
 app.UseAuthentication();
@@ -89,6 +90,7 @@ ServiceContainer.instance = new ServiceContainer {
 };
 
 //Map routes
+app.MapHealthChecks("/hchk");
 app.MapHub<NNHub>("/portal/hub");
 app.MapPost("/portal/create", async () => {
 	try {
