@@ -30,7 +30,7 @@ namespace NeuralNonsense {
 
 		//AI generation data
 		public const string OLLAMA_HOSTNAME = "http://localhost:11434";
-		public const string OLLAMA_MODEL = "gemma4:e4b";
+		public const string OLLAMA_MODEL = "gemma4:cloud";
 		public const bool USE_LIVE_GEN = false;
 	}
 }

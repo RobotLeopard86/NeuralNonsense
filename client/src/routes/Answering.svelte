@@ -74,7 +74,7 @@
 					<!-- Header -->
 					<div class="w-full flex flex-row items-center mb-8">
 						<!-- Round indicator -->
-						<span class="px-4 py-1 rounded-2xl w-1/3 font-bold text-lg flex items-center justify-center bg-white/5 border-2 border-white/20 text-white">
+						<span class="px-2 lg:px-4 py-1 rounded-2xl w-1/3 font-bold text-lg flex items-center justify-center bg-white/5 border-2 border-white/20 text-white">
 							Round {game.state.round}
 						</span>
 
@@ -91,7 +91,7 @@
 
 					<!-- Response area -->
 					<p class="text-white/50 text-base text-left mb-2">YOUR RESPONSE:</p>
-					<textarea name="Answer" placeholder="Respond to the prompt!" rows={3} maxlength={maxAnswerLength} bind:value={answer} disabled={submitted}
+					<textarea name="Answer" placeholder="Respond to the prompt!" rows={5} maxlength={maxAnswerLength} bind:value={answer} disabled={submitted}
 						class="w-full bg-white/5 rounded-2xl p-4 text-white text-lg border-2 border-white/10 focus:border-[#FF2D78] focus:outline-none resize-none transition-colors">
 					</textarea>
 					<p class={`w-full text-right ${answer.length == maxAnswerLength ? "font-semibold text-[#FF2D78]" : "text-white/50"} text-sm mr-8`}>{answer.length}/{maxAnswerLength}</p>

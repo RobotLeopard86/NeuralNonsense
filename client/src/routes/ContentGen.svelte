@@ -19,7 +19,7 @@
     const pslides: Slide[] = [
         {
             title: "Read the Prompt",
-            body: "You'll see a prompt on your device. Try to respond in a funny, clever, or absurd way.",
+            body: "You'll see a prompt on your device. Try to respond with something that's funny, clever, or absurd.",
             body2: "Everyone gets a different prompt, and you'll have 60 seconds to answer."
         },
         {
@@ -29,7 +29,7 @@
         },
         {
             title: "3 Rounds. One Winner.",
-            body: "You'll earn points each round depending on how well your answer does.",
+            body: "You'll earn points each round depending on how many votes you get.",
             body2: "Stack 'em up across all 3 rounds to take the crown."
         },
         {
@@ -51,7 +51,7 @@
         },
         {
             title: "3 Rounds. One Winner.",
-            body: "Players earn points each round depending on how well their answers do.",
+            body: "Players earn points each round depending on how many votes they get.",
             body2: "The player with the most points after all 3 rounds wins!"
         },
         {
@@ -73,7 +73,7 @@
         },
         {
             title: "3 Rounds. One Winner.",
-            body: "Players earn points each round depending on how well their answers do.",
+            body: "Players earn points each round depending on how many votes they get.",
             body2: "The player with the most points after all 3 rounds wins!"
         },
         {
