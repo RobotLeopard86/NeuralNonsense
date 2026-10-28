@@ -317,13 +317,19 @@ namespace NeuralNonsense {
 
 			//Phase-specific behavior
 			if(phase == Phase.Lobby || phase == Phase.End) {
-				//If we're in the lobby or on the end screen, your spot is gone
-				await RemoveMemberAndPromote(ndc.memberID);
+				//If we're in the lobby or on the end screen, your spot is gone after a minute
+				Deadline expiry = new Deadline() {
+					kind = Deadline.Kind.JoinExpire,
+					cancel = new CancellationTokenSource(),
+					dueBy = ComputeDeadline(60),
+					additionalData = ndc.memberID
+				};
+				deadlines.Add(expiry);
 			} else {
 				//If we're in a game, then we trigger suspension if there are too few people
 				if(members.Values.Count(m => m.type == Member.Type.Player && !string.IsNullOrEmpty(m.currentConnection)) < 3) {
 					Deadline cancel = new Deadline() {
-						kind = Deadline.Kind.JoinExpire,
+						kind = Deadline.Kind.CancelGame,
 						cancel = new CancellationTokenSource(),
 						dueBy = ComputeDeadline(Constants.SUSPENSION_PERIOD / 1000)
 					};
