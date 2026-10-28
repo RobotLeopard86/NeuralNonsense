@@ -19,4 +19,4 @@ WORKDIR /opt/neuralnonsense
 # Start the server directly as PID 1
 # Using the shell form or a direct call ensures that if run.sh exits,
 # the container exits, triggering the container engine's restart policy.
-ENTRYPOINT ["/opt/neuralnonsense/NeuralNonsense.Server"]
+CMD ["/opt/neuralnonsense/NeuralNonsense.Server"]
